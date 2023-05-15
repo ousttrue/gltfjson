@@ -374,10 +374,10 @@ struct Parser
             break;
           }
           // key
-          assert(it->Range[0]=='"');
+          assert(it->Range[0] == '"');
           auto key = it->String();
+          ++it;
           if (key == target) {
-            ++it;
             return *it;
           }
           // value

@@ -83,5 +83,5 @@ TEST(GltfTest, Parse)
   EXPECT_TRUE(result);
   auto asset = parser.GetProperty(*result, u8"asset");
   auto version = parser.GetProperty(*asset, u8"version");
-  EXPECT_EQ(*version, gltfjson::json::Value(u8"2.0"));
+  EXPECT_EQ(*version, gltfjson::json::Value(u8"\"2.0\""));
 }
