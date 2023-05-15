@@ -1,0 +1,4 @@
+{
+    "C_Cpp.default.compileCommands": "builddir\\vscode_compile_commands.json",
+    "testMate.cpp.test.executables": "prefix/bin/tests.exe",
+}

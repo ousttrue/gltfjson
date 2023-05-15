@@ -146,3 +146,18 @@ TEST(GltfJson, ParseNumber)
     }
   }
 }
+
+TEST(GltfJson, ParseString)
+{
+  {
+    auto SRC = u8R"(
+"abc"
+)";
+    gltfjson::json::Parser parser(SRC);
+    auto result = parser.Parse();
+    EXPECT_TRUE(result);
+    if (result) {
+      EXPECT_EQ(*result, gltfjson::json::Json(u8"\"abc\""));
+    }
+  }
+}

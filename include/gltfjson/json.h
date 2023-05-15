@@ -1,6 +1,7 @@
 #pragma once
 #include "format.h"
 #include <algorithm>
+#include <assert.h>
 #include <charconv>
 #include <expected>
 #include <string>
@@ -49,12 +50,22 @@ struct Parser
 
   std::u8string_view Remain() const { return Src.substr(Pos); }
 
-  std::optional<std::u8string_view> Peek(size_t size) const
+  std::optional<std::u8string_view> Peek(uint32_t size) const
   {
     if (Pos + size > Src.size()) {
       return std::nullopt;
     }
     return Src.substr(Pos, size);
+  }
+
+  std::optional<std::u8string_view> Get(uint32_t size)
+  {
+    if (Pos + size > Src.size()) {
+      return std::nullopt;
+    }
+    auto result = Src.substr(Pos, size);
+    Pos += size;
+    return result;
   }
 
   std::expected<Json, std::u8string> Parse()
@@ -64,16 +75,17 @@ struct Parser
       return std::unexpected{ u8"empty" };
     }
 
-    if (Src[0] == '{') {
+    auto ch = Src[Pos];
+    if (ch == '{') {
       return ParseObject();
-    } else if (Src[0] == '[') {
+    } else if (ch == '[') {
       return ParseArray();
     } else {
       // primitive
 
-      switch (Src[0]) {
+      switch (ch) {
         case u8'"':
-          return std::unexpected{ u8"not implemented" };
+          return ParseString();
 
         case u8'-':
         case u8'0':
@@ -128,8 +140,28 @@ struct Parser
         ec == std::errc{}) {
       return Json{ src.substr(0, ptr - (const char*)src.data()) };
     } else {
-      return std::unexpected{ u8"fail to ParseNumber" };
+      return std::unexpected{ u8"Invaild number" };
     }
+  }
+
+  std::expected<Json, std::u8string> ParseString()
+  {
+    assert(Src[Pos] == '"');
+
+    auto close = Pos + 1;
+    for (; close < Src.size(); ++close) {
+      // TODO: escape
+      // TODO: utf-8 multibyte
+      if (Src[close] == '"') {
+        break;
+      }
+    }
+
+    if (Src[close] != '"') {
+      return std::unexpected{ u8"unclosed string" };
+    }
+
+    return Json{ { *Get(close - Pos + 1) } };
   }
 
   std::expected<Json, std::u8string> ParseObject()
