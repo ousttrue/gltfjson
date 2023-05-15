@@ -3,5 +3,5 @@ executable(
     'tests',
     ['test_json.cpp'],
     install: true,
-    dependencies: [gtest_main_dep],
+    dependencies: [gtest_main_dep, gltfjson_dep],
 )

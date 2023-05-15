@@ -1,5 +1,4 @@
 #pragma once
-#if __cplusplus == 202002L
 #include <array>
 #include <optional>
 #include <string>
@@ -8,40 +7,54 @@
 namespace gltfjson {
 namespace format {
 
-struct Json {
+struct Json
+{
   std::string Source;
 };
 
 // https://github.com/KhronosGroup/glTF/blob/main/specification/2.0/schema/glTFProperty.schema.json
-struct Property {
+struct Property
+{
   Json Extensions;
   Json Extras;
 };
 
 // https://github.com/KhronosGroup/glTF/blob/main/specification/2.0/schema/glTFChildOfRootProperty.schema.json
-struct ChildOfRootProperty : Property {
+struct ChildOfRootProperty : Property
+{
   std::string Name;
 };
 
 // https://github.com/KhronosGroup/glTF/blob/main/specification/2.0/schema/glTFid.schema.json
-template <Property T> struct PropertyList {};
-template <Property T> struct Id {
-  PropertyList<T> &List;
+template<typename T>
+struct PropertyList
+{};
+template<typename T>
+struct Id
+{
+  PropertyList<T>& List;
   uint32_t Index;
 };
 
-struct Accessor : ChildOfRootProperty {};
+struct Accessor : ChildOfRootProperty
+{};
 
-struct Camera : ChildOfRootProperty {};
+struct Camera : ChildOfRootProperty
+{};
 
-struct Skin : ChildOfRootProperty {};
+struct Skin : ChildOfRootProperty
+{};
 
-struct Material : ChildOfRootProperty {};
+struct Material : ChildOfRootProperty
+{};
 
-struct MeshPrimitiveAttributes {};
-struct MeshPrimitiveMorphTarget {};
+struct MeshPrimitiveAttributes
+{};
+struct MeshPrimitiveMorphTarget
+{};
 
-enum class MeshPrimitiveTopology {
+enum class MeshPrimitiveTopology
+{
   POINTS,
   LINES,
   LINE_LOOP,
@@ -52,7 +65,8 @@ enum class MeshPrimitiveTopology {
 };
 
 // https://github.com/KhronosGroup/glTF/blob/main/specification/2.0/schema/mesh.primitive.schema.json
-struct MeshPrimitive : Property {
+struct MeshPrimitive : Property
+{
   MeshPrimitiveAttributes Attributes;
   std::optional<Id<Accessor>> Indices;
   std::optional<Id<Material>> Material;
@@ -61,13 +75,15 @@ struct MeshPrimitive : Property {
 };
 
 // https://github.com/KhronosGroup/glTF/blob/main/specification/2.0/schema/mesh.schema.json
-struct Mesh : ChildOfRootProperty {
+struct Mesh : ChildOfRootProperty
+{
   std::vector<MeshPrimitive> Primitives;
   std::vector<float> Weights;
 };
 
 // https://github.com/KhronosGroup/glTF/blob/main/specification/2.0/schema/node.schema.json
-struct Node : ChildOfRootProperty {
+struct Node : ChildOfRootProperty
+{
   std::optional<Id<Camera>> Camera;
   std::vector<Id<Node>> Children;
   std::optional<Id<Skin>> Skin;
@@ -80,10 +96,10 @@ struct Node : ChildOfRootProperty {
 };
 
 // https://github.com/KhronosGroup/glTF/blob/main/specification/2.0/schema/glTF.schema.json
-struct Root {
-  RootList<Node> Nodes;
+struct Root
+{
+  PropertyList<Node> Nodes;
 };
 
 } // namespace format
 } // namespace gltfjson
-#endif
