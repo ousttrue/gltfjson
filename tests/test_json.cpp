@@ -165,13 +165,31 @@ TEST(GltfJson, ParseString)
 TEST(GltfJson, ParseArray)
 {
   {
-    auto SRC = u8"[1, 2, 3]";
+    auto SRC = u8"[ ]";
     gltfjson::json::Parser parser(SRC);
     auto result = parser.Parse();
     EXPECT_TRUE(result);
+    EXPECT_EQ(parser.Values.size(), 1);
+    EXPECT_EQ(parser.ChildCount(*result), 0);
+  }
+  {
+    auto SRC = u8"[1, 2, 3]";
+    gltfjson::json::Parser parser(SRC);
+    auto result = parser.Parse();
+    EXPECT_EQ(parser.Values.size(), 4);
     if (result) {
-      // EXPECT_EQ(result->Size(), 3);
-      // EXPECT_EQ(result->Get(0), gltfjson::json::Json("1"));
+      EXPECT_EQ(parser.ChildCount(*result), 3);
+      EXPECT_EQ(*parser.GetChild(*result, 0), gltfjson::json::Value(u8"1"));
+    }
+  }
+  {
+    auto SRC = u8"[1, [2, 3]]";
+    gltfjson::json::Parser parser(SRC);
+    auto result = parser.Parse();
+    EXPECT_EQ(parser.Values.size(), 5);
+    if (result) {
+      auto inner = parser.GetChild(*result, 1);
+      EXPECT_EQ(*parser.GetChild(*inner, 1), gltfjson::json::Value(u8"3"));
     }
   }
 }

@@ -4,6 +4,7 @@
 #include <assert.h>
 #include <charconv>
 #include <expected>
+#include <stack>
 #include <string>
 
 namespace gltfjson {
@@ -22,9 +23,19 @@ IsSpace(char8_t ch)
   return false;
 }
 
+enum class ValueType
+{
+  // null, true, false, number or string
+  Primitive,
+  Array,
+  Object,
+};
+
 struct Value
 {
   std::u8string_view Range;
+  ValueType Type = ValueType::Primitive;
+  std::optional<uint32_t> ParentIndex;
   bool operator==(const Value& rhs) const { return Range == rhs.Range; }
 };
 
@@ -32,6 +43,7 @@ struct Parser
 {
   std::u8string_view Src;
   std::vector<Value> Values;
+  std::stack<uint32_t> Stack;
   uint32_t Pos = 0;
 
   Parser(std::u8string_view src)
@@ -58,14 +70,21 @@ struct Parser
     return Src.substr(Pos, size);
   }
 
-  std::optional<std::u8string_view> Get(uint32_t size)
+  bool Push(uint32_t size)
   {
     if (Pos + size > Src.size()) {
-      return std::nullopt;
+      return false;
     }
-    auto result = Src.substr(Pos, size);
+
+    auto range = Src.substr(Pos, size);
+    Values.push_back({
+      .Range = range,
+    });
     Pos += size;
-    return result;
+    if (Stack.size()) {
+      Values.back().ParentIndex = Stack.top();
+    }
+    return true;
   }
 
   std::expected<Value, std::u8string> Parse()
@@ -119,8 +138,7 @@ struct Parser
   {
     if (auto src = Peek(symbol.size())) {
       if (src->starts_with(symbol)) {
-        Pos += src->size();
-        Values.push_back({ *src });
+        Push(src->size());
         return Values.back();
       } else {
         return std::unexpected{ std::u8string(u8"Not match: ") +
@@ -138,7 +156,8 @@ struct Parser
     if (auto [ptr, ec] = std::from_chars(
           (const char*)src.data(), (const char*)src.data() + src.size(), value);
         ec == std::errc{}) {
-      return Value{ src.substr(0, ptr - (const char*)src.data()) };
+      Push(ptr - (const char*)src.data());
+      return Values.back();
     } else {
       return std::unexpected{ u8"Invaild number" };
     }
@@ -158,10 +177,11 @@ struct Parser
     }
 
     if (Src[close] != '"') {
-      return std::unexpected{ u8"unclosed string" };
+      return std::unexpected{ u8"Unclosed string" };
     }
 
-    return Value{ { *Get(close - Pos + 1) } };
+    Push(close - Pos + 1);
+    return Values.back();
   }
 
   std::expected<Value, std::u8string> ParseObject()
@@ -171,7 +191,80 @@ struct Parser
 
   std::expected<Value, std::u8string> ParseArray()
   {
-    return std::unexpected{ u8"not implemented" };
+    assert(Src[Pos] == '[');
+
+    auto beginPos = Pos;
+    auto arrayIndex = Values.size();
+    Push(1);
+    Values.back().Type = ValueType::Array;
+    Stack.push(arrayIndex);
+
+    for (int i = 0; !IsEnd(); ++i) {
+      SkipSpace();
+      if (Src[Pos] == ']') {
+        // closed
+        ++Pos;
+        auto& array = Values[arrayIndex];
+        array.Range = Src.substr(beginPos, Pos - beginPos);
+        Stack.pop();
+        return array;
+      }
+
+      if (i) {
+        // must comma
+        if (Src[Pos] != ',') {
+          return std::unexpected{ u8"comma required" };
+        }
+        ++Pos;
+        SkipSpace();
+      }
+
+      Parse();
+    }
+
+    return std::unexpected{ u8"Unclosed array" };
+  }
+
+  uint32_t ChildCount(const Value& value) const
+  {
+    int i = 0;
+    for (auto it = Values.begin(); it != Values.end(); ++it, ++i) {
+      if (it->Range.data() == value.Range.data()) {
+        // found
+        ++it;
+        int j = 0;
+        for (; it != Values.end(); ++it, ++j) {
+          if (it->ParentIndex != i) {
+            break;
+          }
+        }
+        return j;
+      }
+    }
+
+    return 0;
+  }
+
+  std::optional<Value> GetChild(const Value& value, uint32_t index) const
+  {
+    int i = 0;
+    for (auto it = Values.begin(); it != Values.end(); ++it, ++i) {
+      if (it->Range.data() == value.Range.data()) {
+        // found
+        ++it;
+        int j = 0;
+        for (; it != Values.end(); ++it, ++j) {
+          if (it->ParentIndex != i) {
+            break;
+          }
+          if (j == index) {
+            return *it;
+          }
+        }
+      }
+    }
+
+    return std::nullopt;
   }
 };
 
