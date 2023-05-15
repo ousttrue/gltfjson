@@ -5,9 +5,9 @@
     "version": "0.2.0",
     "configurations": [
         {
+            "name": "tests",
             "type": "lldb",
             "request": "launch",
-            "name": "Launch",
             "program": "${workspaceFolder}/prefix/bin/tests",
             "args": [],
             "cwd": "${workspaceFolder}"

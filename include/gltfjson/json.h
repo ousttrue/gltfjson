@@ -362,26 +362,44 @@ struct Parser
   }
 
   std::optional<Value> GetProperty(const Value& value,
-                                   std::u8string_view key) const
+                                   std::u8string_view target) const
   {
     int i = 0;
     for (auto it = Values.begin(); it != Values.end(); ++it, ++i) {
       if (it->Range.data() == value.Range.data()) {
         // found
         ++it;
-        for (; it != Values.end(); ++it) {
+        for (; it != Values.end();) {
           if (it->ParentIndex != i) {
             break;
           }
-          if (it->String() == key) {
+          // key
+          assert(it->Range[0]=='"');
+          auto key = it->String();
+          if (key == target) {
             ++it;
             return *it;
           }
+          // value
+          it = NextSibling(it);
         }
       }
     }
 
     return std::nullopt;
+  }
+
+  std::vector<Value>::const_iterator NextSibling(
+    std::vector<Value>::const_iterator it) const
+  {
+    auto r = it->Range;
+    auto p = r.data() + r.size();
+    for (; it != Values.end(); ++it) {
+      if (it->Range.data() > p) {
+        break;
+      }
+    }
+    return it;
   }
 };
 
