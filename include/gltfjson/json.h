@@ -37,6 +37,15 @@ struct Value
   ValueType Type = ValueType::Primitive;
   std::optional<uint32_t> ParentIndex;
   bool operator==(const Value& rhs) const { return Range == rhs.Range; }
+
+  // get unquoted string
+  std::u8string_view String() const
+  {
+    assert(Range.size() >= 2);
+    assert(Range.front() == '"');
+    assert(Range.back() == '"');
+    return Range.substr(1, Range.size() - 2);
+  }
 };
 
 struct Parser
@@ -184,11 +193,6 @@ struct Parser
     return Values.back();
   }
 
-  std::expected<Value, std::u8string> ParseObject()
-  {
-    return std::unexpected{ u8"not implemented" };
-  }
-
   std::expected<Value, std::u8string> ParseArray()
   {
     assert(Src[Pos] == '[');
@@ -225,27 +229,93 @@ struct Parser
     return std::unexpected{ u8"Unclosed array" };
   }
 
-  uint32_t ChildCount(const Value& value) const
+  std::expected<Value, std::u8string> ParseObject()
+  {
+    assert(Src[Pos] == '{');
+
+    auto beginPos = Pos;
+    auto objectIndex = Values.size();
+    Push(1);
+    Values.back().Type = ValueType::Object;
+    Stack.push(objectIndex);
+
+    for (int i = 0; !IsEnd(); ++i) {
+      SkipSpace();
+      if (Src[Pos] == '}') {
+        // closed
+        ++Pos;
+        auto& object = Values[objectIndex];
+        object.Range = Src.substr(beginPos, Pos - beginPos);
+        Stack.pop();
+        return object;
+      }
+
+      if (i) {
+        // must comma
+        if (Src[Pos] != ',') {
+          return std::unexpected{ u8"comma required" };
+        }
+        ++Pos;
+        SkipSpace();
+      }
+
+      // key
+      Parse();
+      assert(Values.back().Type == ValueType::Primitive);
+      assert(Values.back().Range.front() == '"');
+
+      {
+        SkipSpace();
+        // must colon
+        if (Src[Pos] != ':') {
+          return std::unexpected{ u8"colon required" };
+        }
+        ++Pos;
+        SkipSpace();
+      }
+
+      // value
+      Parse();
+    }
+
+    return std::unexpected{ u8"Unclosed array" };
+  }
+
+  std::expected<uint32_t, std::u8string> ChildCount(const Value& value) const
   {
     int i = 0;
     for (auto it = Values.begin(); it != Values.end(); ++it, ++i) {
       if (it->Range.data() == value.Range.data()) {
         // found
-        ++it;
-        int j = 0;
-        for (; it != Values.end(); ++it, ++j) {
-          if (it->ParentIndex != i) {
-            break;
+        if (it->Type == ValueType::Array) {
+          ++it;
+          int j = 0;
+          for (; it != Values.end(); ++it, ++j) {
+            if (it->ParentIndex != i) {
+              break;
+            }
           }
+          return j;
+        } else if (it->Type == ValueType::Object) {
+          ++it;
+          int j = 0;
+          for (; it != Values.end(); ++it, ++j) {
+            if (it->ParentIndex != i) {
+              break;
+            }
+          }
+          assert(j % 2 == 0);
+          return j / 2;
+        } else {
+          return std::unexpected{ u8"array nor object" };
         }
-        return j;
       }
     }
 
-    return 0;
+    return std::unexpected{ u8"not found" };
   }
 
-  std::optional<Value> GetChild(const Value& value, uint32_t index) const
+  std::optional<Value> GetItem(const Value& value, uint32_t index) const
   {
     int i = 0;
     for (auto it = Values.begin(); it != Values.end(); ++it, ++i) {
@@ -258,6 +328,29 @@ struct Parser
             break;
           }
           if (j == index) {
+            return *it;
+          }
+        }
+      }
+    }
+
+    return std::nullopt;
+  }
+
+  std::optional<Value> GetProperty(const Value& value,
+                                   std::u8string_view key) const
+  {
+    int i = 0;
+    for (auto it = Values.begin(); it != Values.end(); ++it, ++i) {
+      if (it->Range.data() == value.Range.data()) {
+        // found
+        ++it;
+        for (; it != Values.end(); ++it) {
+          if (it->ParentIndex != i) {
+            break;
+          }
+          if (it->String() == key) {
+            ++it;
             return *it;
           }
         }
