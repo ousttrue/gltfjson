@@ -22,16 +22,16 @@ IsSpace(char8_t ch)
   return false;
 }
 
-struct Json
+struct Value
 {
   std::u8string_view Range;
-  bool operator==(const Json& rhs) const { return Range == rhs.Range; }
+  bool operator==(const Value& rhs) const { return Range == rhs.Range; }
 };
 
 struct Parser
 {
   std::u8string_view Src;
-  std::vector<Json> Values;
+  std::vector<Value> Values;
   uint32_t Pos = 0;
 
   Parser(std::u8string_view src)
@@ -68,7 +68,7 @@ struct Parser
     return result;
   }
 
-  std::expected<Json, std::u8string> Parse()
+  std::expected<Value, std::u8string> Parse()
   {
     SkipSpace();
     if (IsEnd()) {
@@ -115,7 +115,7 @@ struct Parser
     }
   }
 
-  std::expected<Json, std::u8string> ParseSymbol(std::u8string_view symbol)
+  std::expected<Value, std::u8string> ParseSymbol(std::u8string_view symbol)
   {
     if (auto src = Peek(symbol.size())) {
       if (src->starts_with(symbol)) {
@@ -131,20 +131,20 @@ struct Parser
     }
   }
 
-  std::expected<Json, std::u8string> ParseNumber()
+  std::expected<Value, std::u8string> ParseNumber()
   {
     auto src = Remain();
     double value;
     if (auto [ptr, ec] = std::from_chars(
           (const char*)src.data(), (const char*)src.data() + src.size(), value);
         ec == std::errc{}) {
-      return Json{ src.substr(0, ptr - (const char*)src.data()) };
+      return Value{ src.substr(0, ptr - (const char*)src.data()) };
     } else {
       return std::unexpected{ u8"Invaild number" };
     }
   }
 
-  std::expected<Json, std::u8string> ParseString()
+  std::expected<Value, std::u8string> ParseString()
   {
     assert(Src[Pos] == '"');
 
@@ -161,15 +161,15 @@ struct Parser
       return std::unexpected{ u8"unclosed string" };
     }
 
-    return Json{ { *Get(close - Pos + 1) } };
+    return Value{ { *Get(close - Pos + 1) } };
   }
 
-  std::expected<Json, std::u8string> ParseObject()
+  std::expected<Value, std::u8string> ParseObject()
   {
     return std::unexpected{ u8"not implemented" };
   }
 
-  std::expected<Json, std::u8string> ParseArray()
+  std::expected<Value, std::u8string> ParseArray()
   {
     return std::unexpected{ u8"not implemented" };
   }

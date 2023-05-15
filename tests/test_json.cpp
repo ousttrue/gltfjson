@@ -84,7 +84,7 @@ TEST(GltfJson, ParsePrimitive)
     auto result = parser.Parse();
     EXPECT_TRUE(result);
     if (result) {
-      EXPECT_EQ(*result, gltfjson::json::Json(SRC));
+      EXPECT_EQ(*result, gltfjson::json::Value(SRC));
     }
   }
   {
@@ -93,7 +93,7 @@ TEST(GltfJson, ParsePrimitive)
     auto result = parser.Parse();
     EXPECT_TRUE(result);
     if (result) {
-      EXPECT_EQ(*result, gltfjson::json::Json(SRC));
+      EXPECT_EQ(*result, gltfjson::json::Value(SRC));
     }
   }
   {
@@ -102,7 +102,7 @@ TEST(GltfJson, ParsePrimitive)
     auto result = parser.Parse();
     EXPECT_TRUE(result);
     if (result) {
-      EXPECT_EQ(*result, gltfjson::json::Json(SRC));
+      EXPECT_EQ(*result, gltfjson::json::Value(SRC));
     }
   }
 }
@@ -115,7 +115,7 @@ TEST(GltfJson, ParseNumber)
     auto result = parser.Parse();
     EXPECT_TRUE(result);
     if (result) {
-      EXPECT_EQ(*result, gltfjson::json::Json(SRC));
+      EXPECT_EQ(*result, gltfjson::json::Value(SRC));
     }
   }
   {
@@ -124,7 +124,7 @@ TEST(GltfJson, ParseNumber)
     auto result = parser.Parse();
     EXPECT_TRUE(result);
     if (result) {
-      EXPECT_EQ(*result, gltfjson::json::Json(SRC));
+      EXPECT_EQ(*result, gltfjson::json::Value(SRC));
     }
   }
   {
@@ -133,7 +133,7 @@ TEST(GltfJson, ParseNumber)
     auto result = parser.Parse();
     EXPECT_TRUE(result);
     if (result) {
-      EXPECT_EQ(*result, gltfjson::json::Json(SRC));
+      EXPECT_EQ(*result, gltfjson::json::Value(SRC));
     }
   }
   {
@@ -142,7 +142,7 @@ TEST(GltfJson, ParseNumber)
     auto result = parser.Parse();
     EXPECT_TRUE(result);
     if (result) {
-      EXPECT_EQ(*result, gltfjson::json::Json(SRC));
+      EXPECT_EQ(*result, gltfjson::json::Value(SRC));
     }
   }
 }
@@ -157,7 +157,21 @@ TEST(GltfJson, ParseString)
     auto result = parser.Parse();
     EXPECT_TRUE(result);
     if (result) {
-      EXPECT_EQ(*result, gltfjson::json::Json(u8"\"abc\""));
+      EXPECT_EQ(*result, gltfjson::json::Value(u8"\"abc\""));
+    }
+  }
+}
+
+TEST(GltfJson, ParseArray)
+{
+  {
+    auto SRC = u8"[1, 2, 3]";
+    gltfjson::json::Parser parser(SRC);
+    auto result = parser.Parse();
+    EXPECT_TRUE(result);
+    if (result) {
+      // EXPECT_EQ(result->Size(), 3);
+      // EXPECT_EQ(result->Get(0), gltfjson::json::Json("1"));
     }
   }
 }
