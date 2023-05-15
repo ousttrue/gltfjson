@@ -177,6 +177,7 @@ TEST(GltfJson, ParseArray)
     gltfjson::json::Parser parser(SRC);
     auto result = parser.Parse();
     EXPECT_EQ(parser.Values.size(), 4);
+    EXPECT_TRUE(result);
     if (result) {
       EXPECT_EQ(parser.ChildCount(*result), 3);
       EXPECT_EQ(*parser.GetItem(*result, 0), gltfjson::json::Value(u8"1"));
@@ -187,6 +188,7 @@ TEST(GltfJson, ParseArray)
     gltfjson::json::Parser parser(SRC);
     auto result = parser.Parse();
     EXPECT_EQ(parser.Values.size(), 5);
+    EXPECT_TRUE(result);
     if (result) {
       auto inner = parser.GetItem(*result, 1);
       EXPECT_EQ(*parser.GetItem(*inner, 1), gltfjson::json::Value(u8"3"));

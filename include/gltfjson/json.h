@@ -36,6 +36,24 @@ struct Value
   std::u8string_view Range;
   ValueType Type = ValueType::Primitive;
   std::optional<uint32_t> ParentIndex;
+
+  Value(std::u8string_view range = {},
+        ValueType type = ValueType::Primitive,
+        std::optional<uint32_t> parentIndex = std::nullopt)
+    : Range(range)
+    , Type(type)
+    , ParentIndex(parentIndex)
+  {
+  }
+  Value(const Value& rhs) { *this = rhs; }
+  Value& operator=(const Value& rhs)
+  {
+    Range = rhs.Range;
+    Type = rhs.Type;
+    ParentIndex = rhs.ParentIndex;
+    return *this;
+  }
+
   bool operator==(const Value& rhs) const { return Range == rhs.Range; }
 
   // get unquoted string
@@ -86,9 +104,7 @@ struct Parser
     }
 
     auto range = Src.substr(Pos, size);
-    Values.push_back({
-      .Range = range,
-    });
+    Values.push_back({ range });
     Pos += size;
     if (Stack.size()) {
       Values.back().ParentIndex = Stack.top();
@@ -161,6 +177,7 @@ struct Parser
   std::expected<Value, std::u8string> ParseNumber()
   {
     auto src = Remain();
+#ifdef _MSC_VER
     double value;
     if (auto [ptr, ec] = std::from_chars(
           (const char*)src.data(), (const char*)src.data() + src.size(), value);
@@ -170,6 +187,14 @@ struct Parser
     } else {
       return std::unexpected{ u8"Invaild number" };
     }
+#else
+    std::string str((const char*)src.data(),
+                    (const char*)src.data() + src.size());
+    size_t i;
+    std::stod(str, &i);
+    Push(i);
+    return Values.back();
+#endif
   }
 
   std::expected<Value, std::u8string> ParseString()
@@ -208,10 +233,9 @@ struct Parser
       if (Src[Pos] == ']') {
         // closed
         ++Pos;
-        auto& array = Values[arrayIndex];
-        array.Range = Src.substr(beginPos, Pos - beginPos);
+        Values[arrayIndex].Range = Src.substr(beginPos, Pos - beginPos);
         Stack.pop();
-        return array;
+        return Values[arrayIndex];
       }
 
       if (i) {
