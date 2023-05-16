@@ -11,6 +11,7 @@
 
 namespace gltfjson {
 
+struct Value;
 inline bool
 IsSpace(char8_t ch)
 {
@@ -34,19 +35,53 @@ enum class ValueType
 
 struct ArrayValue
 {
-  const struct Value* m_arrayValue;
+  struct Iterator
+  {
+    const Value* m_arrayValue = nullptr;
+    const Value* m_current = nullptr;
+    bool operator!=(const Iterator& rhs) const
+    {
+      return m_current != rhs.m_current;
+    }
+    Iterator& operator++();
+    const Value& operator*() const { return *m_current; }
+  };
 
+  const Value* m_arrayValue;
+
+  Iterator begin() const;
+  Iterator end() const;
   uint32_t Size() const;
-  const struct Value* Get(uint32_t index) const;
+  const Value* Get(uint32_t index) const;
 };
 
 struct ObjectValue
 {
-  const struct Value* m_objectValue;
+  struct KeyValue
+  {
+    const Value* Key = nullptr;
+    const Value* Value = nullptr;
+  };
 
+  struct Iterator
+  {
+    const Value* m_objectValue = nullptr;
+    KeyValue m_current;
+    bool operator!=(const Iterator& rhs) const
+    {
+      return m_current.Key != (*rhs).Key || m_current.Value != (*rhs).Value;
+    }
+    Iterator& operator++();
+    KeyValue operator*() const { return m_current; }
+  };
+
+  const Value* m_objectValue;
+
+  Iterator begin() const;
+  Iterator end() const;
   uint32_t Size() const;
-  const struct Value* Get(std::u8string_view key) const;
-  const struct Value* Get(std::string_view key) const
+  const Value* Get(std::u8string_view key) const;
+  const Value* Get(std::string_view key) const
   {
     return Get(std::u8string_view((const char8_t*)key.data(),
                                   (const char8_t*)key.data() + key.size()));
@@ -83,7 +118,7 @@ struct Value
 
   bool operator==(const Value& rhs) const { return Range == rhs.Range; }
 
-  bool Overlap(const Value& rhs) const
+  bool Contains(const Value& rhs) const
   {
     if (rhs.Range.data() + rhs.Range.size() < Range.data()) {
       return false;
@@ -394,70 +429,6 @@ struct Parser
     return std::unexpected{ u8"Unclosed array" };
   }
 
-private:
-  uint32_t ChildCount(const Value& value) const
-  {
-    int i = 0;
-    for (auto it = Values.begin(); it != Values.end(); ++it, ++i) {
-      if (it->Range.data() == value.Range.data()) {
-        // found
-        if (it->Type == ValueType::Array) {
-          ++it;
-          int j = 0;
-          for (; it != Values.end(); ++it, ++j) {
-            if (!it->m_parentIndex || *it->m_parentIndex != i) {
-              break;
-            }
-          }
-          return j;
-        } else if (it->Type == ValueType::Object) {
-          ++it;
-          int j = 0;
-          for (; it != Values.end(); ++it, ++j) {
-            if (!it->m_parentIndex || *it->m_parentIndex != i) {
-              break;
-            }
-          }
-          assert(j % 2 == 0);
-          return j / 2;
-        } else {
-          // return std::unexpected{ u8"array nor object" };
-          return 0;
-        }
-      }
-    }
-
-    // return std::unexpected{ u8"not found" };
-    return 0;
-  }
-
-  const Value* GetProperty(const Value& value, std::u8string_view target) const
-  {
-    int i = 0;
-    for (auto it = Values.begin(); it != Values.end(); ++it, ++i) {
-      if (it->Range.data() == value.Range.data()) {
-        // found
-        ++it;
-        for (; it != Values.end();) {
-          if (!it->m_parentIndex || *it->m_parentIndex != i) {
-            break;
-          }
-          // key
-          assert(it->Range[0] == '"');
-          auto key = it->String();
-          ++it;
-          if (key == target) {
-            return &*it;
-          }
-          // value
-          it = NextSibling(it);
-        }
-      }
-    }
-
-    return nullptr;
-  }
-
   std::vector<Value>::const_iterator NextSibling(
     std::vector<Value>::const_iterator it) const
   {
@@ -472,14 +443,64 @@ private:
   }
 };
 
+inline ArrayValue::Iterator&
+ArrayValue::Iterator::operator++()
+{
+  if (m_current) {
+    auto parser = m_arrayValue->m_parser;
+    for (std::vector<Value>::const_iterator it = parser->Values.begin();
+         it != parser->Values.end();
+         ++it) {
+      if (it->Range.data() == m_current->Range.data()) {
+        // found
+        it = parser->NextSibling(it);
+        if (it != parser->Values.end()) {
+          m_current = &*it;
+        } else {
+          m_current = nullptr;
+        }
+        break;
+      }
+    }
+  }
+  return *this;
+}
+
+inline ArrayValue::Iterator
+ArrayValue::begin() const
+{
+  auto parser = m_arrayValue->m_parser;
+  for (auto it = parser->Values.begin(); it != parser->Values.end(); ++it) {
+    if (it->Range.data() == m_arrayValue->Range.data()) {
+      // found
+      ++it;
+      if (it != parser->Values.end()) {
+        return { m_arrayValue, &*it };
+      }
+      break;
+    }
+  }
+
+  return {};
+}
+inline ArrayValue::Iterator
+ArrayValue::end() const
+{
+  return {};
+}
+
 inline uint32_t
 ArrayValue::Size() const
 {
-  if (auto parser = m_arrayValue->m_parser) {
-    return parser->ChildCount(*m_arrayValue);
-  } else {
+  auto parser = m_arrayValue->m_parser;
+  if (!parser) {
     return 0;
   }
+  auto i = 0;
+  for (auto& _ : *this) {
+    ++i;
+  }
+  return i;
 }
 
 inline const Value*
@@ -489,46 +510,105 @@ ArrayValue::Get(uint32_t index) const
   if (!parser) {
     return {};
   }
-
   int i = 0;
-  for (std::vector<Value>::const_iterator it = parser->Values.begin();
-       it != parser->Values.end();
-       ++it, ++i) {
-    if (it->Range.data() == m_arrayValue->Range.data()) {
-      // found
-      ++it;
-      int j = 0;
-      for (; it != parser->Values.end(); it = parser->NextSibling(it), ++j) {
-        if (!m_arrayValue->Overlap(*it)) {
-          break;
+  for (auto& value : *this) {
+    if ((i++) == index) {
+      return &value;
+    }
+  }
+  return {};
+}
+
+inline ObjectValue::Iterator&
+ObjectValue::Iterator::operator++()
+{
+  if (m_current.Key) {
+    auto parser = m_objectValue->m_parser;
+    for (std::vector<Value>::const_iterator it = parser->Values.begin();
+         it != parser->Values.end();
+         ++it) {
+      if (it->Range.data() == m_current.Key->Range.data()) {
+        // found
+        ++it;
+        assert(*it == *m_current.Value);
+        m_current = {};
+        auto key = parser->NextSibling(it);
+        if (key != parser->Values.end()) {
+          auto value = parser->NextSibling(key);
+          if (value != parser->Values.end()) {
+            m_current = {
+              .Key = &*key,
+              .Value = &*value,
+            };
+          }
         }
-        if (j == index) {
-          return &*it;
-        }
+        break;
       }
     }
   }
+  return *this;
+}
+
+inline ObjectValue::Iterator
+ObjectValue::begin() const
+{
+  auto parser = m_objectValue->m_parser;
+  for (std::vector<Value>::const_iterator it = parser->Values.begin();
+       it != parser->Values.end();
+       ++it) {
+    if (it->Range.data() == m_objectValue->Range.data()) {
+      // found
+      ++it;
+      if (it != parser->Values.end()) {
+        KeyValue kv{ &*it };
+        ++it;
+        if (it != parser->Values.end()) {
+          kv.Value = &*it;
+          return { m_objectValue, kv };
+        }
+      }
+      break;
+    }
+  }
+
+  return {};
+}
+
+inline ObjectValue::Iterator
+ObjectValue::end() const
+{
   return {};
 }
 
 inline uint32_t
 ObjectValue::Size() const
 {
-  if (auto parser = m_objectValue->m_parser) {
-    return parser->ChildCount(*m_objectValue);
-  } else {
+  auto parser = m_objectValue->m_parser;
+  if (!parser) {
     return 0;
   }
+  auto i = 0;
+  for (auto _ : *this) {
+    ++i;
+  }
+  return i;
 }
 
 inline const Value*
-ObjectValue::Get(std::u8string_view key) const
+ObjectValue::Get(std::u8string_view target) const
 {
-  if (auto parser = m_objectValue->m_parser) {
-    return parser->GetProperty(*m_objectValue, key);
-  } else {
+  auto parser = m_objectValue->m_parser;
+  if (!parser) {
     return {};
   }
+
+  for (auto [key, value] : *this) {
+    if (key->String() == target) {
+      return value;
+    }
+  }
+
+  return {};
 }
 
 }
