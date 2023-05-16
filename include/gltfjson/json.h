@@ -83,6 +83,17 @@ struct Value
 
   bool operator==(const Value& rhs) const { return Range == rhs.Range; }
 
+  bool Overlap(const Value& rhs) const
+  {
+    if (rhs.Range.data() + rhs.Range.size() < Range.data()) {
+      return false;
+    }
+    if (rhs.Range.data() > Range.data() + Range.size()) {
+      return false;
+    }
+    return true;
+  }
+
   // get unquoted string
   std::optional<std::u8string_view> String() const
   {
@@ -119,12 +130,14 @@ struct Value
     if (Type == ValueType::Array) {
       return ArrayValue{ this };
     }
+    return std::nullopt;
   }
   std::optional<ObjectValue> Object() const
   {
     if (Type == ValueType::Object) {
       return ObjectValue{ this };
     }
+    return std::nullopt;
   }
 };
 
@@ -418,28 +431,6 @@ private:
     return 0;
   }
 
-  const Value* GetItem(const Value& value, uint32_t index) const
-  {
-    int i = 0;
-    for (auto it = Values.begin(); it != Values.end(); ++it, ++i) {
-      if (it->Range.data() == value.Range.data()) {
-        // found
-        ++it;
-        int j = 0;
-        for (; it != Values.end(); ++it, ++j) {
-          if (!it->m_parentIndex || *it->m_parentIndex != i) {
-            break;
-          }
-          if (j == index) {
-            return &*it;
-          }
-        }
-      }
-    }
-
-    return nullptr;
-  }
-
   const Value* GetProperty(const Value& value, std::u8string_view target) const
   {
     int i = 0;
@@ -494,11 +485,30 @@ ArrayValue::Size() const
 inline const Value*
 ArrayValue::Get(uint32_t index) const
 {
-  if (auto parser = m_arrayValue->m_parser) {
-    return parser->GetItem(*m_arrayValue, index);
-  } else {
+  auto parser = m_arrayValue->m_parser;
+  if (!parser) {
     return {};
   }
+
+  int i = 0;
+  for (std::vector<Value>::const_iterator it = parser->Values.begin();
+       it != parser->Values.end();
+       ++it, ++i) {
+    if (it->Range.data() == m_arrayValue->Range.data()) {
+      // found
+      ++it;
+      int j = 0;
+      for (; it != parser->Values.end(); it = parser->NextSibling(it), ++j) {
+        if (!m_arrayValue->Overlap(*it)) {
+          break;
+        }
+        if (j == index) {
+          return &*it;
+        }
+      }
+    }
+  }
+  return {};
 }
 
 inline uint32_t
