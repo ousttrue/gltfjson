@@ -95,7 +95,9 @@ TEST(TestJson, ParseArray)
     auto result = parser.Parse();
     EXPECT_TRUE(result);
     EXPECT_EQ(parser.Values.size(), 1);
-    EXPECT_EQ(result->Size(), 0);
+    if (auto array = result->Array()) {
+      EXPECT_EQ(array->Size(), 0);
+    }
   }
   {
     auto SRC = u8"[1, 2, 3]";
@@ -129,16 +131,18 @@ TEST(TestJson, ParseObject)
     auto result = parser.Parse();
     EXPECT_TRUE(result);
     EXPECT_EQ(parser.Values.size(), 1);
-    EXPECT_EQ(result->Size(), 0);
+    if (auto object = result->Object()) {
+      EXPECT_EQ(object->Size(), 0);
+    }
   }
   {
     auto SRC = u8"{\"key\": 1}";
     gltfjson::Parser parser(SRC);
     auto result = parser.Parse();
     EXPECT_EQ(parser.Values.size(), 3);
-    if (result) {
-      EXPECT_EQ(result->Size(), 1);
-      EXPECT_EQ(*result->Get(u8"key"), gltfjson::Value(u8"1"));
+    if (auto object = result->Object()) {
+      EXPECT_EQ(object->Size(), 1);
+      EXPECT_EQ(*object->Get(u8"key"), gltfjson::Value(u8"1"));
     }
   }
   {
@@ -146,8 +150,8 @@ TEST(TestJson, ParseObject)
     gltfjson::Parser parser(SRC);
     auto result = parser.Parse();
     EXPECT_EQ(parser.Values.size(), 5);
-    if (result) {
-      auto inner = result->Get(u8"key");
+    if (auto object = result->Object()) {
+      auto inner = object->Get(u8"key")->Object();
       EXPECT_EQ(*inner->Get(u8"key2"), gltfjson::Value(u8"2"));
     }
   }

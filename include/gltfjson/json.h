@@ -40,6 +40,19 @@ struct ArrayValue
   const struct Value* Get(uint32_t index) const;
 };
 
+struct ObjectValue
+{
+  const struct Value* m_objectValue;
+
+  uint32_t Size() const;
+  const struct Value* Get(std::u8string_view key) const;
+  const struct Value* Get(std::string_view key) const
+  {
+    return Get(std::u8string_view((const char8_t*)key.data(),
+                                  (const char8_t*)key.data() + key.size()));
+  }
+};
+
 struct Parser;
 struct Value
 {
@@ -47,13 +60,6 @@ struct Value
   ValueType Type = ValueType::Primitive;
   Parser* m_parser = nullptr;
   std::optional<uint32_t> m_parentIndex;
-  uint32_t Size() const;
-  std::optional<Value> Get(std::u8string_view key) const;
-  std::optional<Value> Get(std::string_view key) const
-  {
-    return Get(std::u8string_view((const char8_t*)key.data(),
-                                  (const char8_t*)key.data() + key.size()));
-  }
 
   Value(std::u8string_view range = {},
         ValueType type = ValueType::Primitive,
@@ -108,13 +114,25 @@ struct Value
 #endif
   }
 
-  std::optional<ArrayValue> Array() const { return ArrayValue{ this }; }
+  std::optional<ArrayValue> Array() const
+  {
+    if (Type == ValueType::Array) {
+      return ArrayValue{ this };
+    }
+  }
+  std::optional<ObjectValue> Object() const
+  {
+    if (Type == ValueType::Object) {
+      return ObjectValue{ this };
+    }
+  }
 };
 
 struct Parser
 {
   friend struct Value;
   friend struct ArrayValue;
+  friend struct ObjectValue;
 
   std::u8string_view Src;
   std::vector<Value> Values;
@@ -422,8 +440,7 @@ private:
     return nullptr;
   }
 
-  std::optional<Value> GetProperty(const Value& value,
-                                   std::u8string_view target) const
+  const Value* GetProperty(const Value& value, std::u8string_view target) const
   {
     int i = 0;
     for (auto it = Values.begin(); it != Values.end(); ++it, ++i) {
@@ -439,7 +456,7 @@ private:
           auto key = it->String();
           ++it;
           if (key == target) {
-            return *it;
+            return &*it;
           }
           // value
           it = NextSibling(it);
@@ -447,7 +464,7 @@ private:
       }
     }
 
-    return std::nullopt;
+    return nullptr;
   }
 
   std::vector<Value>::const_iterator NextSibling(
@@ -465,10 +482,10 @@ private:
 };
 
 inline uint32_t
-Value::Size() const
+ArrayValue::Size() const
 {
-  if (m_parser) {
-    return m_parser->ChildCount(*this);
+  if (auto parser = m_arrayValue->m_parser) {
+    return parser->ChildCount(*m_arrayValue);
   } else {
     return 0;
   }
@@ -484,13 +501,23 @@ ArrayValue::Get(uint32_t index) const
   }
 }
 
-inline std::optional<Value>
-Value::Get(std::u8string_view key) const
+inline uint32_t
+ObjectValue::Size() const
 {
-  if (m_parser) {
-    return m_parser->GetProperty(*this, key);
+  if (auto parser = m_objectValue->m_parser) {
+    return parser->ChildCount(*m_objectValue);
   } else {
-    return std::nullopt;
+    return 0;
+  }
+}
+
+inline const Value*
+ObjectValue::Get(std::u8string_view key) const
+{
+  if (auto parser = m_objectValue->m_parser) {
+    return parser->GetProperty(*m_objectValue, key);
+  } else {
+    return {};
   }
 }
 

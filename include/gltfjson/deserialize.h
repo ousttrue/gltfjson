@@ -6,12 +6,12 @@
 namespace gltfjson {
 
 inline void
-Deserialize(std::optional<Value> value, format::Asset& dst)
+Deserialize(std::optional<ObjectValue> asset, format::Asset& dst)
 {
-  if (!value) {
+  if (!asset) {
     return;
   }
-  if (auto version = value->Get("version")) {
+  if (auto version = asset->Get("version")) {
     dst.Version = *version->String();
   }
 }
@@ -19,7 +19,9 @@ Deserialize(std::optional<Value> value, format::Asset& dst)
 inline void
 Deserialize(const Parser& parser, format::Root& dst)
 {
-  auto root = parser.Values[0];
-  Deserialize(root.Get(u8"asset"), dst.Asset);
+  auto root = parser.Values[0].Object();
+  if (auto asset = root->Get(u8"asset")) {
+    Deserialize(asset->Object(), dst.Asset);
+  }
 }
 }
