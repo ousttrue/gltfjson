@@ -1,18 +1,21 @@
 #pragma once
-#include "json.h"
 #include <array>
 #include <optional>
+#include <stdint.h>
 #include <string>
 #include <vector>
 
 namespace gltfjson {
 namespace format {
 
+using Id = std::optional<uint32_t>;
+
 // https://github.com/KhronosGroup/glTF/blob/main/specification/2.0/schema/glTFProperty.schema.json
 struct Property
 {
   // Value Extensions;
   // Value Extras;
+  int Extensions;
 };
 
 // https://github.com/KhronosGroup/glTF/blob/main/specification/2.0/schema/glTFChildOfRootProperty.schema.json
@@ -31,14 +34,22 @@ struct PropertyList
     Values.push_back(t);
     return Values.back();
   }
+  size_t Size() const { return Values.size(); }
 
+  auto begin() { return Values.begin(); }
+  auto end() { return Values.end(); }
+  auto begin() const { return Values.begin(); }
+  auto end() const { return Values.end(); }
   T& operator[](size_t i) { return Values[i]; }
+  const T& operator[](size_t i) const { return Values[i]; }
 };
 
-using Id = std::optional<uint32_t>;
-
-struct Buffer
-{};
+// https://github.com/KhronosGroup/glTF/blob/main/specification/2.0/schema/buffer.schema.json
+struct Buffer : ChildOfRootProperty
+{
+  std::string Uri;
+  uint32_t ByteLength = 0;
+};
 
 enum class Targets
 {
@@ -65,6 +76,7 @@ enum class ComponentTypes
   UNSIGNED_INT = 5125,
   FLOAT = 5126,
 };
+
 enum class Types
 {
   SCALAR,
@@ -76,8 +88,28 @@ enum class Types
   MAT4,
 };
 
-struct Sparse
-{};
+// https://github.com/KhronosGroup/glTF/blob/main/specification/2.0/schema/accessor.sparse.indices.schema.json
+struct SparseIndices : Property
+{
+  Id BufferView;
+  uint32_t ByteOffset = 0;
+  ComponentTypes ComponentType;
+};
+
+// https://github.com/KhronosGroup/glTF/blob/main/specification/2.0/schema/accessor.sparse.values.schema.json
+struct SparseValues : Property
+{
+  Id BufferView;
+  uint32_t ByteOffset = 0;
+};
+
+// https://github.com/KhronosGroup/glTF/blob/main/specification/2.0/schema/accessor.sparse.schema.json
+struct Sparse : Property
+{
+  uint32_t Count = 0;
+  SparseIndices Indices;
+  SparseValues Values;
+};
 
 struct Accessor : ChildOfRootProperty
 {
@@ -90,32 +122,163 @@ struct Accessor : ChildOfRootProperty
   std::vector<float> Max;
   std::vector<float> Min;
   std::optional<Sparse> Sparse;
+
+  uint32_t Stride() const { return ComponentSize() * TypeCount(); }
+  uint32_t ComponentSize() const { return 4; }
+  uint32_t TypeCount() const { return 1; }
 };
 
 struct Camera : ChildOfRootProperty
 {};
 
+// https://github.com/KhronosGroup/glTF/blob/main/specification/2.0/schema/image.schema.json
 struct Image : ChildOfRootProperty
-{};
+{
+  std::string Uri;
+  std::string MimeType;
+  Id BufferView;
+};
 
+enum class TextureMagFilter
+{
+  NEAREST = 9728,
+  LINEAR = 9729,
+};
+
+enum class TextureMinFilter
+{
+  NEAREST = 9728,
+  LINEAR = 9729,
+  NEAREST_MIPMAP_NEAREST = 9984,
+  LINEAR_MIPMAP_NEAREST = 9985,
+  NEAREST_MIPMAP_LINEAR = 9986,
+  LINEAR_MIPMAP_LINEAR = 9987,
+};
+
+enum class TextureWrap
+{
+  CLAMP_TO_EDGE = 33071,
+  MIRRORED_REPEAT = 33648,
+  REPEAT = 10497,
+};
+
+// https://github.com/KhronosGroup/glTF/blob/main/specification/2.0/schema/sampler.schema.json
 struct Sampler : ChildOfRootProperty
-{};
+{
+  TextureMagFilter MagFilter = TextureMagFilter::NEAREST;
+  TextureMinFilter MinFilter = TextureMinFilter::NEAREST;
+  TextureWrap WrapS = TextureWrap::REPEAT;
+  TextureWrap WrapT = TextureWrap::REPEAT;
+};
 
+// https://github.com/KhronosGroup/glTF/blob/main/specification/2.0/schema/texture.schema.json
 struct Texture : ChildOfRootProperty
-{};
+{
+  Id Sampler;
+  Id Source;
+};
 
+enum class AlphaModes
+{
+  Opaque,
+  Mask,
+  Blend,
+};
+
+// https://github.com/KhronosGroup/glTF/blob/main/specification/2.0/schema/textureInfo.schema.json
+struct TextureInfo : Property
+{
+  Id Index;
+  uint32_t TexCoord = 0;
+};
+
+// https://github.com/KhronosGroup/glTF/blob/main/specification/2.0/schema/material.normalTextureInfo.schema.json
+struct NormalTextureInfo : TextureInfo
+{
+  float Scale = 1.0f;
+};
+
+// https://github.com/KhronosGroup/glTF/blob/main/specification/2.0/schema/material.occlusionTextureInfo.schema.json
+struct OcclusionTextureInfo : TextureInfo
+{
+  float Strength = 1.0f;
+};
+
+// https://github.com/KhronosGroup/glTF/blob/main/specification/2.0/schema/material.pbrMetallicRoughness.schema.json
+struct PbrMetallicRoughness : Property
+{
+  std::array<float, 4> BaseColorFactor = { 1, 1, 1, 1 };
+  std::optional<TextureInfo> BaseColorTexture;
+  float MetallicFactor = 1.0f;
+  float RoughnessFactor = 1.0f;
+  std::optional<TextureInfo> MetallicRoughnessTexture;
+};
+
+// https://github.com/KhronosGroup/glTF/blob/main/specification/2.0/schema/material.schema.json
 struct Material : ChildOfRootProperty
-{};
+{
+  std::optional<PbrMetallicRoughness> PbrMetallicRoughness;
+  std::optional<NormalTextureInfo> NormalTexture;
+  std::optional<OcclusionTextureInfo> OcclusionTexture;
+  std::optional<TextureInfo> EmissiveTexture;
+  std::array<float, 3> EmissiveFactor = { 0, 0, 0 };
+  AlphaModes AlphaMode = AlphaModes::Opaque;
+  float AlphaCutoff = 0.5f;
+  bool DoubleSided = false;
+};
 
+// https://github.com/KhronosGroup/glTF/blob/main/specification/2.0/schema/skin.schema.json
 struct Skin : ChildOfRootProperty
-{};
+{
+  Id InverseBindMatrices;
+  Id Skeleton;
+  std::vector<uint32_t> Joints;
+};
 
 struct MeshPrimitiveAttributes
 {
+  Id COLOR_0;
+  Id JOINTS_0;
+  Id NORMAL;
   Id POSITION;
+  Id TANGENT;
+  Id TEXCOORD_0;
+  Id TEXCOORD_1;
+  Id TEXCOORD_2;
+  Id TEXCOORD_3;
+  Id WEIGHTS_0;
+
+  bool operator==(const MeshPrimitiveAttributes& rhs) const
+  {
+    if (COLOR_0 != rhs.COLOR_0)
+      return false;
+    if (JOINTS_0 != rhs.JOINTS_0)
+      return false;
+    if (NORMAL != rhs.NORMAL)
+      return false;
+    if (POSITION != rhs.POSITION)
+      return false;
+    if (TANGENT != rhs.TANGENT)
+      return false;
+    if (TEXCOORD_0 != rhs.TEXCOORD_0)
+      return false;
+    if (TEXCOORD_1 != rhs.TEXCOORD_1)
+      return false;
+    if (TEXCOORD_2 != rhs.TEXCOORD_2)
+      return false;
+    if (TEXCOORD_3 != rhs.TEXCOORD_3)
+      return false;
+    if (WEIGHTS_0 != rhs.WEIGHTS_0)
+      return false;
+    return true;
+  }
 };
+
 struct MeshPrimitiveMorphTarget
-{};
+{
+  Id POSITION;
+  Id NORMAL;
+};
 
 enum class MeshPrimitiveTopology
 {
@@ -148,19 +311,60 @@ struct Mesh : ChildOfRootProperty
 // https://github.com/KhronosGroup/glTF/blob/main/specification/2.0/schema/node.schema.json
 struct Node : ChildOfRootProperty
 {
-  std::optional<Id> Camera;
+  Id Camera;
   std::vector<uint32_t> Children;
-  std::optional<Id> Skin;
+  Id Skin;
   std::optional<std::array<float, 16>> Matrix;
-  std::optional<Id> Mesh;
+  Id Mesh;
   std::optional<std::array<float, 4>> Rotation;
   std::optional<std::array<float, 3>> Scale;
   std::optional<std::array<float, 3>> Translation;
   std::vector<float> Weights;
 };
 
+enum class PathTypes
+{
+  Translation,
+  Rotation,
+  Scale,
+  Weights,
+};
+
+enum class InterpolationTypes
+{
+  LINEAR,
+  STEP,
+  CUBESPLINE,
+};
+
+// https://github.com/KhronosGroup/glTF/blob/main/specification/2.0/schema/animation.sampler.schema.json
+struct AnimationSampler
+{
+  Id Input;
+  InterpolationTypes Interpolation;
+  Id Output;
+};
+
+// https://github.com/KhronosGroup/glTF/blob/main/specification/2.0/schema/animation.channel.target.schema.json
+struct AnimationTarget
+{
+  Id Node;
+  PathTypes Path;
+};
+
+// https://github.com/KhronosGroup/glTF/blob/main/specification/2.0/schema/animation.channel.schema.json
+struct AnimationChannel : Property
+{
+  Id Sampler;
+  AnimationTarget Target;
+};
+
+// https://github.com/KhronosGroup/glTF/blob/main/specification/2.0/schema/animation.schema.json
 struct Animation : ChildOfRootProperty
-{};
+{
+  std::vector<AnimationChannel> Channels;
+  std::vector<AnimationSampler> Samplers;
+};
 
 struct Scene : ChildOfRootProperty
 {
@@ -184,6 +388,7 @@ struct Root
   PropertyList<BufferView> BufferViews;
   PropertyList<Camera> Cameras;
   PropertyList<Image> Images;
+  PropertyList<Texture> Textures;
   PropertyList<Material> Materials;
   PropertyList<Mesh> Meshes;
   PropertyList<Node> Nodes;
@@ -193,5 +398,5 @@ struct Root
   PropertyList<Skin> Skins;
 };
 
-} // namespace format
-} // namespace gltfjson
+}
+}
