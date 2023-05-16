@@ -32,6 +32,14 @@ enum class ValueType
   Object,
 };
 
+struct ArrayValue
+{
+  const struct Value* m_arrayValue;
+
+  uint32_t Size() const;
+  const struct Value* Get(uint32_t index) const;
+};
+
 struct Parser;
 struct Value
 {
@@ -40,7 +48,6 @@ struct Value
   Parser* m_parser = nullptr;
   std::optional<uint32_t> m_parentIndex;
   uint32_t Size() const;
-  std::optional<Value> Get(uint32_t index) const;
   std::optional<Value> Get(std::u8string_view key) const;
   std::optional<Value> Get(std::string_view key) const
   {
@@ -100,11 +107,14 @@ struct Value
     return std::stod(str, &i);
 #endif
   }
+
+  std::optional<ArrayValue> Array() const { return ArrayValue{ this }; }
 };
 
 struct Parser
 {
   friend struct Value;
+  friend struct ArrayValue;
 
   std::u8string_view Src;
   std::vector<Value> Values;
@@ -390,7 +400,7 @@ private:
     return 0;
   }
 
-  std::optional<Value> GetItem(const Value& value, uint32_t index) const
+  const Value* GetItem(const Value& value, uint32_t index) const
   {
     int i = 0;
     for (auto it = Values.begin(); it != Values.end(); ++it, ++i) {
@@ -403,13 +413,13 @@ private:
             break;
           }
           if (j == index) {
-            return *it;
+            return &*it;
           }
         }
       }
     }
 
-    return std::nullopt;
+    return nullptr;
   }
 
   std::optional<Value> GetProperty(const Value& value,
@@ -464,13 +474,13 @@ Value::Size() const
   }
 }
 
-inline std::optional<Value>
-Value::Get(uint32_t index) const
+inline const Value*
+ArrayValue::Get(uint32_t index) const
 {
-  if (m_parser) {
-    return m_parser->GetItem(*this, index);
+  if (auto parser = m_arrayValue->m_parser) {
+    return parser->GetItem(*m_arrayValue, index);
   } else {
-    return std::nullopt;
+    return {};
   }
 }
 
