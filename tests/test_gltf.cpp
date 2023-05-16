@@ -80,8 +80,8 @@ TEST(GltfTest, Parse)
   gltfjson::Parser parser(MINIMUM);
   auto result = parser.Parse();
   EXPECT_TRUE(result);
-  auto asset = result->Object()->Get(u8"asset");
-  auto version = asset->Object()->Get(u8"version");
+  auto asset = result->Get(u8"asset");
+  auto version = asset->Get(u8"version");
   EXPECT_EQ(*version, gltfjson::Value(u8"\"2.0\""));
 
   gltfjson::format::Root gltf;

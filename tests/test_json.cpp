@@ -95,8 +95,8 @@ TEST(TestJson, ParseArray)
     auto result = parser.Parse();
     EXPECT_TRUE(result);
     EXPECT_EQ(parser.Values.size(), 1);
-    if (auto array = result->Array()) {
-      EXPECT_EQ(array->Size(), 0);
+    if (result) {
+      EXPECT_EQ(result->Size(), 0);
     }
   }
   {
@@ -105,9 +105,9 @@ TEST(TestJson, ParseArray)
     auto result = parser.Parse();
     EXPECT_EQ(parser.Values.size(), 4);
     EXPECT_TRUE(result);
-    if (auto array = result->Array()) {
-      EXPECT_EQ(array->Size(), 3);
-      EXPECT_EQ(*array->Get(0), gltfjson::Value(u8"1"));
+    if (result) {
+      EXPECT_EQ(result->Size(), 3);
+      EXPECT_EQ(*result->Get(0), gltfjson::Value(u8"1"));
     }
   }
   {
@@ -116,9 +116,9 @@ TEST(TestJson, ParseArray)
     auto result = parser.Parse();
     EXPECT_EQ(parser.Values.size(), 5);
     EXPECT_TRUE(result);
-    if (auto array = result->Array()) {
-      auto inner = array->Get(1);
-      EXPECT_EQ(*inner->Array()->Get(1), gltfjson::Value(u8"3"));
+    if (result) {
+      auto inner = result->Get(1);
+      EXPECT_EQ(*inner->Get(1), gltfjson::Value(u8"3"));
     }
   }
 }
@@ -131,8 +131,8 @@ TEST(TestJson, ParseObject)
     auto result = parser.Parse();
     EXPECT_TRUE(result);
     EXPECT_EQ(parser.Values.size(), 1);
-    if (auto object = result->Object()) {
-      EXPECT_EQ(object->Size(), 0);
+    if (result) {
+      EXPECT_EQ(result->Size(), 0);
     }
   }
   {
@@ -140,9 +140,9 @@ TEST(TestJson, ParseObject)
     gltfjson::Parser parser(SRC);
     auto result = parser.Parse();
     EXPECT_EQ(parser.Values.size(), 3);
-    if (auto object = result->Object()) {
-      EXPECT_EQ(object->Size(), 1);
-      EXPECT_EQ(*object->Get(u8"key"), gltfjson::Value(u8"1"));
+    if (result) {
+      EXPECT_EQ(result->Size(), 1);
+      EXPECT_EQ(*result->Get(u8"key"), gltfjson::Value(u8"1"));
     }
   }
   {
@@ -150,8 +150,8 @@ TEST(TestJson, ParseObject)
     gltfjson::Parser parser(SRC);
     auto result = parser.Parse();
     EXPECT_EQ(parser.Values.size(), 5);
-    if (auto object = result->Object()) {
-      auto inner = object->Get(u8"key")->Object();
+    if (result) {
+      auto inner = result->Get(u8"key");
       EXPECT_EQ(*inner->Get(u8"key2"), gltfjson::Value(u8"2"));
     }
   }

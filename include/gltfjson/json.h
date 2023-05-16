@@ -174,6 +174,44 @@ struct Value
     }
     return std::nullopt;
   }
+
+  uint32_t Size() const
+  {
+    switch (Type) {
+      case ValueType::Array:
+        if (auto array = Array()) {
+          return array->Size();
+        }
+        break;
+
+      case ValueType::Object:
+        if (auto object = Object()) {
+          return object->Size();
+        }
+        break;
+    }
+    return 0;
+  }
+  const Value* Get(uint32_t i) const
+  {
+    if (auto array = Array()) {
+      return array->Get(i);
+    }
+    return nullptr;
+  }
+  const Value* Get(std::u8string_view key) const
+  {
+    if (auto object = Object()) {
+      return object->Get(key);
+    }
+    return nullptr;
+  }
+  const Value* Get(std::string_view key) const
+  {
+    std::u8string str((const char8_t*)key.data(),
+                      (const char8_t*)key.data() + key.size());
+    return Get(str);
+  }
 };
 
 struct Parser
