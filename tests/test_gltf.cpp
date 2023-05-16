@@ -1,5 +1,4 @@
-#include <gltfjson/format.h>
-#include <gltfjson/json.h>
+#include <gltfjson.h>
 #include <gtest/gtest.h>
 
 // https://github.com/KhronosGroup/glTF-Tutorials/blob/master/gltfTutorial/gltfTutorial_003_MinimalGltfFile.md
@@ -78,10 +77,10 @@ auto MINIMUM = u8R"(
 
 TEST(GltfTest, Parse)
 {
-  gltfjson::json::Parser parser(MINIMUM);
+  gltfjson::Parser parser(MINIMUM);
   auto result = parser.Parse();
   EXPECT_TRUE(result);
-  auto asset = parser.GetProperty(*result, u8"asset");
-  auto version = parser.GetProperty(*asset, u8"version");
-  EXPECT_EQ(*version, gltfjson::json::Value(u8"\"2.0\""));
+  auto asset = result->Get(u8"asset");
+  auto version = asset->Get(u8"version");
+  EXPECT_EQ(*version, gltfjson::Value(u8"\"2.0\""));
 }

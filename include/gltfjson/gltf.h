@@ -1,4 +1,5 @@
 #pragma once
+#include "json.h"
 #include <array>
 #include <optional>
 #include <string>
@@ -7,16 +8,11 @@
 namespace gltfjson {
 namespace format {
 
-struct Json
-{
-  std::string Source;
-};
-
 // https://github.com/KhronosGroup/glTF/blob/main/specification/2.0/schema/glTFProperty.schema.json
 struct Property
 {
-  Json Extensions;
-  Json Extras;
+  // Value Extensions;
+  // Value Extras;
 };
 
 // https://github.com/KhronosGroup/glTF/blob/main/specification/2.0/schema/glTFChildOfRootProperty.schema.json

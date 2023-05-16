@@ -1,14 +1,15 @@
 #pragma once
-#include "format.h"
 #include <algorithm>
 #include <assert.h>
 #include <charconv>
 #include <expected>
+#include <optional>
 #include <stack>
+#include <stdint.h>
 #include <string>
+#include <vector>
 
 namespace gltfjson {
-namespace json {
 
 inline bool
 IsSpace(char8_t ch)
@@ -31,18 +32,25 @@ enum class ValueType
   Object,
 };
 
+struct Parser;
 struct Value
 {
   std::u8string_view Range;
   ValueType Type = ValueType::Primitive;
-  std::optional<uint32_t> ParentIndex;
+  Parser* m_parser = nullptr;
+  std::optional<uint32_t> m_parentIndex;
+  uint32_t Size() const;
+  std::optional<Value> Get(uint32_t index) const;
+  std::optional<Value> Get(std::u8string_view key) const;
 
   Value(std::u8string_view range = {},
         ValueType type = ValueType::Primitive,
+        Parser* parser = nullptr,
         std::optional<uint32_t> parentIndex = std::nullopt)
     : Range(range)
     , Type(type)
-    , ParentIndex(parentIndex)
+    , m_parser(parser)
+    , m_parentIndex(parentIndex)
   {
   }
   Value(const Value& rhs) { *this = rhs; }
@@ -50,7 +58,8 @@ struct Value
   {
     Range = rhs.Range;
     Type = rhs.Type;
-    ParentIndex = rhs.ParentIndex;
+    m_parser = rhs.m_parser;
+    m_parentIndex = rhs.m_parentIndex;
     return *this;
   }
 
@@ -68,6 +77,8 @@ struct Value
 
 struct Parser
 {
+  friend struct Value;
+
   std::u8string_view Src;
   std::vector<Value> Values;
   std::stack<uint32_t> Stack;
@@ -104,11 +115,21 @@ struct Parser
     }
 
     auto range = Src.substr(Pos, size);
-    Values.push_back({ range });
-    Pos += size;
     if (Stack.size()) {
-      Values.back().ParentIndex = Stack.top();
+      Values.push_back({
+        range,
+        ValueType::Primitive,
+        this,
+        Stack.top(),
+      });
+    } else {
+      Values.push_back({
+        range,
+        ValueType::Primitive,
+        this,
+      });
     }
+    Pos += size;
     return true;
   }
 
@@ -120,7 +141,7 @@ struct Parser
     }
 
     auto ch = Src[Pos];
-    if (ch == '{') {
+    if (ch == 0x7b) {
       return ParseObject();
     } else if (ch == '[') {
       return ParseArray();
@@ -305,7 +326,8 @@ struct Parser
     return std::unexpected{ u8"Unclosed array" };
   }
 
-  std::expected<uint32_t, std::u8string> ChildCount(const Value& value) const
+private:
+  uint32_t ChildCount(const Value& value) const
   {
     int i = 0;
     for (auto it = Values.begin(); it != Values.end(); ++it, ++i) {
@@ -315,7 +337,7 @@ struct Parser
           ++it;
           int j = 0;
           for (; it != Values.end(); ++it, ++j) {
-            if (it->ParentIndex != i) {
+            if (!it->m_parentIndex || *it->m_parentIndex != i) {
               break;
             }
           }
@@ -324,19 +346,21 @@ struct Parser
           ++it;
           int j = 0;
           for (; it != Values.end(); ++it, ++j) {
-            if (it->ParentIndex != i) {
+            if (!it->m_parentIndex || *it->m_parentIndex != i) {
               break;
             }
           }
           assert(j % 2 == 0);
           return j / 2;
         } else {
-          return std::unexpected{ u8"array nor object" };
+          // return std::unexpected{ u8"array nor object" };
+          return 0;
         }
       }
     }
 
-    return std::unexpected{ u8"not found" };
+    // return std::unexpected{ u8"not found" };
+    return 0;
   }
 
   std::optional<Value> GetItem(const Value& value, uint32_t index) const
@@ -348,7 +372,7 @@ struct Parser
         ++it;
         int j = 0;
         for (; it != Values.end(); ++it, ++j) {
-          if (it->ParentIndex != i) {
+          if (!it->m_parentIndex || *it->m_parentIndex != i) {
             break;
           }
           if (j == index) {
@@ -370,7 +394,7 @@ struct Parser
         // found
         ++it;
         for (; it != Values.end();) {
-          if (it->ParentIndex != i) {
+          if (!it->m_parentIndex || *it->m_parentIndex != i) {
             break;
           }
           // key
@@ -403,5 +427,34 @@ struct Parser
   }
 };
 
+inline uint32_t
+Value::Size() const
+{
+  if (m_parser) {
+    return m_parser->ChildCount(*this);
+  } else {
+    return 0;
+  }
 }
+
+inline std::optional<Value>
+Value::Get(uint32_t index) const
+{
+  if (m_parser) {
+    return m_parser->GetItem(*this, index);
+  } else {
+    return std::nullopt;
+  }
+}
+
+inline std::optional<Value>
+Value::Get(std::u8string_view key) const
+{
+  if (m_parser) {
+    return m_parser->GetProperty(*this, key);
+  } else {
+    return std::nullopt;
+  }
+}
+
 }
