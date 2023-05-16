@@ -1,4 +1,4 @@
-#include <gltfjson.h>
+#include <gltfjson/deserialize.h>
 #include <gtest/gtest.h>
 
 // https://github.com/KhronosGroup/glTF-Tutorials/blob/master/gltfTutorial/gltfTutorial_003_MinimalGltfFile.md
@@ -83,4 +83,8 @@ TEST(GltfTest, Parse)
   auto asset = result->Get(u8"asset");
   auto version = asset->Get(u8"version");
   EXPECT_EQ(*version, gltfjson::Value(u8"\"2.0\""));
+
+  gltfjson::format::Root gltf;
+  gltfjson::Deserialize(parser, gltf);
+  EXPECT_EQ(gltf.Asset.Version, u8"2.0");
 }

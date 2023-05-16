@@ -42,6 +42,11 @@ struct Value
   uint32_t Size() const;
   std::optional<Value> Get(uint32_t index) const;
   std::optional<Value> Get(std::u8string_view key) const;
+  std::optional<Value> Get(std::string_view key) const
+  {
+    return Get(std::u8string_view((const char8_t*)key.data(),
+                                  (const char8_t*)key.data() + key.size()));
+  }
 
   Value(std::u8string_view range = {},
         ValueType type = ValueType::Primitive,
@@ -66,12 +71,34 @@ struct Value
   bool operator==(const Value& rhs) const { return Range == rhs.Range; }
 
   // get unquoted string
-  std::u8string_view String() const
+  std::optional<std::u8string_view> String() const
   {
-    assert(Range.size() >= 2);
-    assert(Range.front() == '"');
-    assert(Range.back() == '"');
-    return Range.substr(1, Range.size() - 2);
+    if (Range.size() >= 2 && Range.front() == '"' && Range.back() == '"') {
+      return Range.substr(1, Range.size() - 2);
+    }
+
+    return std::nullopt;
+  }
+
+  template<typename T>
+  std::optional<T> Number() const
+  {
+#ifdef _MSC_VER
+    T value;
+    if (auto [ptr, ec] =
+          std::from_chars((const char*)Range.data(),
+                          (const char*)Range.data() + Range.size(),
+                          value);
+        ec == std::errc{}) {
+      return value;
+    } else {
+      return std::nullopt;
+    }
+#else
+    std::string str((const char*)Range.data(),
+                    (const char*)Range.data() + Range.size());
+    return std::stod(str, &i);
+#endif
   }
 };
 

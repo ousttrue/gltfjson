@@ -91,9 +91,15 @@ struct Node : ChildOfRootProperty
   std::vector<float> Weights;
 };
 
+struct Asset
+{
+  std::u8string Version;
+};
+
 // https://github.com/KhronosGroup/glTF/blob/main/specification/2.0/schema/glTF.schema.json
 struct Root
 {
+  Asset Asset;
   PropertyList<Node> Nodes;
 };
 
