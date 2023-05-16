@@ -4,6 +4,7 @@
 #include <charconv>
 #include <expected>
 #include <optional>
+#include <ostream>
 #include <stack>
 #include <stdint.h>
 #include <string>
@@ -129,6 +130,8 @@ struct Value
     return true;
   }
 
+  bool IsTrue() const { return Range == u8"true"; }
+
   // get unquoted string
   std::optional<std::u8string_view> String() const
   {
@@ -213,6 +216,14 @@ struct Value
     return Get(str);
   }
 };
+
+inline std::ostream&
+operator<<(std::ostream& os, const Value& value)
+{
+  os << std::string_view((const char*)value.Range.data(),
+                         (const char*)value.Range.data() + value.Range.size());
+  return os;
+}
 
 struct Parser
 {
@@ -492,7 +503,7 @@ ArrayValue::Iterator::operator++()
       if (it->Range.data() == m_current->Range.data()) {
         // found
         it = parser->NextSibling(it);
-        if (it != parser->Values.end()) {
+        if (it != parser->Values.end() && m_arrayValue->Contains(*it)) {
           m_current = &*it;
         } else {
           m_current = nullptr;
@@ -567,13 +578,13 @@ ObjectValue::Iterator::operator++()
          ++it) {
       if (it->Range.data() == m_current.Key->Range.data()) {
         // found
-        ++it;
-        assert(*it == *m_current.Value);
         m_current = {};
+        ++it;
         auto key = parser->NextSibling(it);
-        if (key != parser->Values.end()) {
+        if (key != parser->Values.end() && m_objectValue->Contains(*key)) {
           auto value = parser->NextSibling(key);
-          if (value != parser->Values.end()) {
+          if (value != parser->Values.end() &&
+              m_objectValue->Contains(*value)) {
             m_current = {
               .Key = &*key,
               .Value = &*value,

@@ -24,24 +24,103 @@ struct ChildOfRootProperty : Property
 // https://github.com/KhronosGroup/glTF/blob/main/specification/2.0/schema/glTFid.schema.json
 template<typename T>
 struct PropertyList
-{};
+{
+  std::vector<T> Values;
+  T& Push(const T& t)
+  {
+    Values.push_back(t);
+    return Values.back();
+  }
+
+  T& operator[](size_t i) { return Values[i]; }
+};
+
 template<typename T>
 struct Id
 {
-  PropertyList<T>& List;
-  uint32_t Index;
+  // PropertyList<T>& List;
+  uint32_t Index = -1;
+
+  Id(uint32_t i)
+    : Index(i)
+  {
+  }
+  Id() {}
+
+  bool operator==(const Id& id) const { return Index == id.Index; }
 };
 
-struct Accessor : ChildOfRootProperty
+struct Buffer
 {};
+
+enum class Targets
+{
+  NONE = 0,
+  ARRAY_BUFFER = 34962,
+  ELEMENT_ARRAY_BUFFER = 34963,
+};
+
+struct BufferView : ChildOfRootProperty
+{
+  Id<Buffer> Buffer;
+  uint32_t ByteOffset = 0;
+  uint32_t ByteLength = 0;
+  uint32_t ByteStride = 0;
+  Targets Target = Targets::NONE;
+};
+
+enum class ComponentTypes
+{
+  BYTE = 5120,
+  UNSIGNED_BYTE = 5121,
+  SHORT = 5122,
+  UNSIGNED_SHORT = 5123,
+  UNSIGNED_INT = 5125,
+  FLOAT = 5126,
+};
+enum class Types
+{
+  SCALAR,
+  VEC2,
+  VEC3,
+  VEC4,
+  MAT2,
+  MAT3,
+  MAT4,
+};
+
+struct Sparse
+{};
+
+struct Accessor : ChildOfRootProperty
+{
+  Id<BufferView> BufferView;
+  uint32_t ByteOffset = 0;
+  ComponentTypes ComponentType;
+  bool Normalized = false;
+  uint32_t Count = 0;
+  Types Type;
+  std::vector<float> Max;
+  std::vector<float> Min;
+  std::optional<Sparse> Sparse;
+};
 
 struct Camera : ChildOfRootProperty
 {};
 
-struct Skin : ChildOfRootProperty
+struct Image : ChildOfRootProperty
+{};
+
+struct Sampler : ChildOfRootProperty
+{};
+
+struct Texture : ChildOfRootProperty
 {};
 
 struct Material : ChildOfRootProperty
+{};
+
+struct Skin : ChildOfRootProperty
 {};
 
 struct MeshPrimitiveAttributes
@@ -91,6 +170,12 @@ struct Node : ChildOfRootProperty
   std::vector<float> Weights;
 };
 
+struct Animation : ChildOfRootProperty
+{};
+
+struct Scene : ChildOfRootProperty
+{};
+
 struct Asset
 {
   std::u8string Version;
@@ -99,8 +184,22 @@ struct Asset
 // https://github.com/KhronosGroup/glTF/blob/main/specification/2.0/schema/glTF.schema.json
 struct Root
 {
+  std::vector<std::u8string> ExtensionsUsed;
+  std::vector<std::u8string> ExtensionsRequired;
+  PropertyList<Accessor> Accessors;
+  PropertyList<Animation> Animations;
   Asset Asset;
+  PropertyList<Buffer> Buffers;
+  PropertyList<BufferView> BufferViews;
+  PropertyList<Camera> Cameras;
+  PropertyList<Image> Images;
+  PropertyList<Material> Materials;
+  PropertyList<Mesh> Meshes;
   PropertyList<Node> Nodes;
+  PropertyList<Sampler> Samplers;
+  Id<::gltfjson::format::Scene> Scene;
+  PropertyList<::gltfjson::format::Scene> Scenes;
+  PropertyList<Skin> Skins;
 };
 
 } // namespace format

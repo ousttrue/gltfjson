@@ -86,5 +86,26 @@ TEST(GltfTest, Parse)
 
   gltfjson::format::Root gltf;
   gltfjson::Deserialize(parser, gltf);
+
+  EXPECT_EQ(gltf.BufferViews[0].Buffer, 0);
+  EXPECT_EQ(gltf.BufferViews[0].ByteOffset, 0);
+  EXPECT_EQ(gltf.BufferViews[0].ByteOffset, 0);
+  EXPECT_EQ(gltf.BufferViews[0].ByteLength, 6);
+  EXPECT_EQ(gltf.BufferViews[0].Target,
+            gltfjson::format::Targets::ELEMENT_ARRAY_BUFFER);
+  // accessors.0
+  EXPECT_EQ(gltf.Accessors[0].BufferView, 0);
+  EXPECT_EQ(gltf.Accessors[0].ByteOffset, 0);
+  EXPECT_EQ(gltf.Accessors[0].ComponentType,
+            gltfjson::format::ComponentTypes::UNSIGNED_SHORT);
+  EXPECT_EQ(gltf.Accessors[0].Count, 3);
+  EXPECT_EQ(gltf.Accessors[0].Type, gltfjson::format::Types::SCALAR);
+  EXPECT_EQ(gltf.Accessors[0].Max, std::vector<float>{ 2 });
+  EXPECT_EQ(gltf.Accessors[0].Min, std::vector<float>{ 0 });
+
+  // accessors.1
+  std::vector<float> values = { 0, 0, 0 };
+  EXPECT_EQ(gltf.Accessors[1].Min, values);
+
   EXPECT_EQ(gltf.Asset.Version, u8"2.0");
 }
