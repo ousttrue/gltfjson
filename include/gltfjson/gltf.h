@@ -111,7 +111,9 @@ struct Skin : ChildOfRootProperty
 {};
 
 struct MeshPrimitiveAttributes
-{};
+{
+  Id POSITION;
+};
 struct MeshPrimitiveMorphTarget
 {};
 
@@ -130,8 +132,8 @@ enum class MeshPrimitiveTopology
 struct MeshPrimitive : Property
 {
   MeshPrimitiveAttributes Attributes;
-  std::optional<Id> Indices;
-  std::optional<Id> Material;
+  Id Indices;
+  Id Material;
   MeshPrimitiveTopology Mode = MeshPrimitiveTopology::TRIANGLES;
   std::vector<MeshPrimitiveMorphTarget> Targets;
 };
@@ -161,7 +163,9 @@ struct Animation : ChildOfRootProperty
 {};
 
 struct Scene : ChildOfRootProperty
-{};
+{
+  std::vector<uint32_t> Nodes;
+};
 
 struct Asset
 {

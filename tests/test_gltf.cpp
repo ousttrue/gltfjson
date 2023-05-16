@@ -87,8 +87,17 @@ TEST(GltfTest, Parse)
   gltfjson::format::Root gltf;
   gltfjson::Deserialize(parser, gltf);
 
-  // EXPECT_EQ(gltf.Meshes[0].Primitives[0].Attributes.POSITION, 1);
-  // EXPECT_EQ(gltf.Meshes[0].Primitives[0].indices, 0);
+  EXPECT_EQ(gltf.Scene, 0);
+
+  // scenes.0
+  EXPECT_EQ(gltf.Scenes[0].Nodes, std::vector<uint32_t>{ 0 });
+
+  // nodes.0
+  EXPECT_EQ(gltf.Nodes[0].Mesh, 0);
+
+  // meshes.0.primitives.0
+  EXPECT_EQ(gltf.Meshes[0].Primitives[0].Attributes.POSITION, 1);
+  EXPECT_EQ(gltf.Meshes[0].Primitives[0].Indices, 0);
 
   // bufferViews.0
   EXPECT_EQ(gltf.BufferViews[0].Buffer, 0);
@@ -97,6 +106,7 @@ TEST(GltfTest, Parse)
   EXPECT_EQ(gltf.BufferViews[0].ByteLength, 6);
   EXPECT_EQ(gltf.BufferViews[0].Target,
             gltfjson::format::Targets::ELEMENT_ARRAY_BUFFER);
+
   // accessors.0
   EXPECT_EQ(gltf.Accessors[0].BufferView, 0);
   EXPECT_EQ(gltf.Accessors[0].ByteOffset, 0);

@@ -6,12 +6,13 @@
 
 namespace gltfjson {
 
+template<typename T>
 inline void
-Deserialize(const Value& value, std::vector<float>& values)
+DeserializeNumberArray(const Value& value, std::vector<T>& values)
 {
   if (auto array = value.Array()) {
     for (auto& item : *array) {
-      values.push_back(*item.Number<float>());
+      values.push_back(*item.Number<T>());
     }
   }
 }
@@ -67,10 +68,10 @@ Deserialize(const Value& accessor, format::Accessor& dst)
     }
   }
   if (auto prop = accessor.Get(u8"max")) {
-    Deserialize(*prop, dst.Max);
+    DeserializeNumberArray(*prop, dst.Max);
   }
   if (auto prop = accessor.Get(u8"min")) {
-    Deserialize(*prop, dst.Min);
+    DeserializeNumberArray(*prop, dst.Min);
   }
   if (auto prop = accessor.Get(u8"sparse")) {
   }
@@ -96,14 +97,54 @@ Deserialize(const Value& bufferView, format::BufferView& dst)
   }
 }
 
+inline void
+Deserialize(const Value& primitive, format::MeshPrimitive& dst)
+{
+  if (auto prop = primitive.Get(u8"attributes")) {
+    if (auto POSITION = prop->Get(u8"POSITION")) {
+      dst.Attributes.POSITION = *POSITION->Number<uint32_t>();
+    }
+  }
+
+  if (auto prop = primitive.Get(u8"indices")) {
+    dst.Indices = *prop->Number<uint32_t>();
+  }
+}
+
+inline void
+Deserialize(const Value& mesh, format::Mesh& dst)
+{
+  if (auto prop = mesh.Get(u8"primitives")) {
+    if (auto array = prop->Array()) {
+      for (auto& item : *array) {
+        dst.Primitives.push_back({});
+        Deserialize(item, dst.Primitives.back());
+      }
+    }
+  }
+}
+
+inline void
+Deserialize(const Value& node, format::Node& dst)
+{
+  if (auto prop = node.Get(u8"mesh")) {
+    dst.Mesh = *prop->Number<uint32_t>();
+  }
+}
+
+inline void
+Deserialize(const Value& node, format::Scene& dst)
+{
+  if (auto prop = node.Get(u8"nodes")) {
+    DeserializeNumberArray(*prop, dst.Nodes);
+  }
+}
+
 template<typename T>
 inline void
-DeserializeArray(const Value* prop, format::PropertyList<T>& dst)
+DeserializeArray(const Value& values, format::PropertyList<T>& dst)
 {
-  if (!prop) {
-    return;
-  }
-  if (auto array = prop->Array()) {
+  if (auto array = values.Array()) {
     for (auto& item : *array) {
       auto& value = dst.Push(T{});
       Deserialize(item, value);
@@ -116,10 +157,23 @@ Deserialize(const Parser& parser, format::Root& dst)
 {
   auto root = parser.Values[0].Object();
   if (auto prop = root->Get(u8"accessors")) {
-    DeserializeArray(prop, dst.Accessors);
+    DeserializeArray(*prop, dst.Accessors);
   }
   if (auto prop = root->Get(u8"bufferViews")) {
-    DeserializeArray(prop, dst.BufferViews);
+    DeserializeArray(*prop, dst.BufferViews);
+  }
+  if (auto prop = root->Get(u8"meshes")) {
+    DeserializeArray(*prop, dst.Meshes);
+  }
+  if (auto prop = root->Get(u8"nodes")) {
+    DeserializeArray(*prop, dst.Nodes);
+  }
+  if (auto prop = root->Get(u8"scenes")) {
+    DeserializeArray(*prop, dst.Scenes);
+  }
+
+  if (auto prop = root->Get(u8"scene")) {
+    dst.Scene = *prop->Number<uint32_t>();
   }
   if (auto asset = root->Get(u8"asset")) {
     Deserialize(asset, dst.Asset);
