@@ -87,6 +87,10 @@ TEST(GltfTest, Parse)
   gltfjson::format::Root gltf;
   gltfjson::Deserialize(parser, gltf);
 
+  // EXPECT_EQ(gltf.Meshes[0].Primitives[0].Attributes.POSITION, 1);
+  // EXPECT_EQ(gltf.Meshes[0].Primitives[0].indices, 0);
+
+  // bufferViews.0
   EXPECT_EQ(gltf.BufferViews[0].Buffer, 0);
   EXPECT_EQ(gltf.BufferViews[0].ByteOffset, 0);
   EXPECT_EQ(gltf.BufferViews[0].ByteOffset, 0);

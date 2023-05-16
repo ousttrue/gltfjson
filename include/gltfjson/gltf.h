@@ -35,20 +35,7 @@ struct PropertyList
   T& operator[](size_t i) { return Values[i]; }
 };
 
-template<typename T>
-struct Id
-{
-  // PropertyList<T>& List;
-  uint32_t Index = -1;
-
-  Id(uint32_t i)
-    : Index(i)
-  {
-  }
-  Id() {}
-
-  bool operator==(const Id& id) const { return Index == id.Index; }
-};
+using Id = std::optional<uint32_t>;
 
 struct Buffer
 {};
@@ -62,7 +49,7 @@ enum class Targets
 
 struct BufferView : ChildOfRootProperty
 {
-  Id<Buffer> Buffer;
+  Id Buffer;
   uint32_t ByteOffset = 0;
   uint32_t ByteLength = 0;
   uint32_t ByteStride = 0;
@@ -94,7 +81,7 @@ struct Sparse
 
 struct Accessor : ChildOfRootProperty
 {
-  Id<BufferView> BufferView;
+  Id BufferView;
   uint32_t ByteOffset = 0;
   ComponentTypes ComponentType;
   bool Normalized = false;
@@ -143,8 +130,8 @@ enum class MeshPrimitiveTopology
 struct MeshPrimitive : Property
 {
   MeshPrimitiveAttributes Attributes;
-  std::optional<Id<Accessor>> Indices;
-  std::optional<Id<Material>> Material;
+  std::optional<Id> Indices;
+  std::optional<Id> Material;
   MeshPrimitiveTopology Mode = MeshPrimitiveTopology::TRIANGLES;
   std::vector<MeshPrimitiveMorphTarget> Targets;
 };
@@ -159,11 +146,11 @@ struct Mesh : ChildOfRootProperty
 // https://github.com/KhronosGroup/glTF/blob/main/specification/2.0/schema/node.schema.json
 struct Node : ChildOfRootProperty
 {
-  std::optional<Id<Camera>> Camera;
-  std::vector<Id<Node>> Children;
-  std::optional<Id<Skin>> Skin;
+  std::optional<Id> Camera;
+  std::vector<uint32_t> Children;
+  std::optional<Id> Skin;
   std::optional<std::array<float, 16>> Matrix;
-  std::optional<Id<Mesh>> Mesh;
+  std::optional<Id> Mesh;
   std::optional<std::array<float, 4>> Rotation;
   std::optional<std::array<float, 3>> Scale;
   std::optional<std::array<float, 3>> Translation;
@@ -197,7 +184,7 @@ struct Root
   PropertyList<Mesh> Meshes;
   PropertyList<Node> Nodes;
   PropertyList<Sampler> Samplers;
-  Id<::gltfjson::format::Scene> Scene;
+  Id Scene;
   PropertyList<::gltfjson::format::Scene> Scenes;
   PropertyList<Skin> Skins;
 };

@@ -31,7 +31,7 @@ inline void
 Deserialize(const Value& accessor, format::Accessor& dst)
 {
   if (auto prop = accessor.Get(u8"bufferView")) {
-    dst.BufferView.Index = *prop->Number<int>();
+    dst.BufferView = *prop->Number<int>();
   }
   if (auto prop = accessor.Get(u8"byteOffset")) {
     dst.ByteOffset = *prop->Number<uint32_t>();
@@ -80,7 +80,7 @@ inline void
 Deserialize(const Value& bufferView, format::BufferView& dst)
 {
   if (auto prop = bufferView.Get(u8"buffer")) {
-    dst.Buffer.Index = *prop->Number<uint32_t>();
+    dst.Buffer = *prop->Number<uint32_t>();
   }
   if (auto prop = bufferView.Get(u8"byteOffset")) {
     dst.ByteOffset = *prop->Number<uint32_t>();
