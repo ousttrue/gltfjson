@@ -18,6 +18,22 @@ DeserializeNumberArray(const Value& value, std::vector<T>& values)
 }
 
 inline void
+DeserializeString(const Value& value, std::u8string& dst)
+{
+  if (auto str = value.String()) {
+    dst = std::u8string(str->data(), str->data() + str->size());
+  }
+}
+
+inline void
+DeserializeProp(const Value& value, format::ChildOfRootProperty& dst)
+{
+  if (auto prop = value.Get("name")) {
+    DeserializeString(*prop, dst.Name);
+  }
+}
+
+inline void
 Deserialize(const Value* asset, format::Asset& dst)
 {
   if (!asset) {
@@ -32,11 +48,13 @@ Deserialize(const Value* asset, format::Asset& dst)
 inline void
 Deserialize(const Value& buffer, format::Buffer& dst)
 {
+  DeserializeProp(buffer, dst);
 }
 
 inline void
 Deserialize(const Value& bufferView, format::BufferView& dst)
 {
+  DeserializeProp(bufferView, dst);
   if (auto prop = bufferView.Get(u8"buffer")) {
     dst.Buffer = *prop->Number<uint32_t>();
   }
@@ -57,6 +75,7 @@ Deserialize(const Value& bufferView, format::BufferView& dst)
 inline void
 Deserialize(const Value& accessor, format::Accessor& dst)
 {
+  DeserializeProp(accessor, dst);
   if (auto prop = accessor.Get(u8"bufferView")) {
     dst.BufferView = *prop->Number<int>();
   }
@@ -107,26 +126,59 @@ Deserialize(const Value& accessor, format::Accessor& dst)
 inline void
 Deserialize(const Value& image, format::Image& dst)
 {
+  DeserializeProp(image, dst);
+  if (auto prop = image.Get(u8"uri")) {
+    DeserializeString(*prop, dst.Uri);
+  }
+  if (auto prop = image.Get(u8"mimetype")) {
+    DeserializeString(*prop, dst.MimeType);
+  }
+  if (auto prop = image.Get(u8"bufferView")) {
+    dst.BufferView = *prop->Number<uint32_t>();
+  }
 }
 inline void
 Deserialize(const Value& sampler, format::Sampler& dst)
 {
+  DeserializeProp(sampler, dst);
 }
 
 inline void
 Deserialize(const Value& texture, format::Texture& dst)
 {
+  DeserializeProp(texture, dst);
+  if (auto prop = texture.Get(u8"sampler")) {
+    dst.Sampler = *prop->Number<uint32_t>();
+  }
+  if (auto prop = texture.Get(u8"source")) {
+    dst.Source = *prop->Number<uint32_t>();
+  }
 }
 
 inline void
 Deserialize(const Value& material, format::Material& dst)
 {
+  DeserializeProp(material, dst);
 }
 
 // skin/mesh
 inline void
 Deserialize(const Value& skin, format::Skin& dst)
 {
+  DeserializeProp(skin, dst);
+  if (auto prop = skin.Get(u8"inverseBindMatrices")) {
+    dst.InverseBindMatrices = *prop->Number<uint32_t>();
+  }
+  if (auto prop = skin.Get(u8"skeleton")) {
+    dst.Skeleton = *prop->Number<uint32_t>();
+  }
+  if (auto prop = skin.Get(u8"joints")) {
+    if (auto array = prop->Array()) {
+      for (auto& item : *array) {
+        dst.Joints.push_back(*item.Number<uint32_t>());
+      }
+    }
+  }
 }
 
 inline void
@@ -146,6 +198,7 @@ Deserialize(const Value& primitive, format::MeshPrimitive& dst)
 inline void
 Deserialize(const Value& mesh, format::Mesh& dst)
 {
+  DeserializeProp(mesh, dst);
   if (auto prop = mesh.Get(u8"primitives")) {
     if (auto array = prop->Array()) {
       for (auto& item : *array) {
@@ -160,15 +213,17 @@ Deserialize(const Value& mesh, format::Mesh& dst)
 inline void
 Deserialize(const Value& node, format::Node& dst)
 {
+  DeserializeProp(node, dst);
   if (auto prop = node.Get(u8"mesh")) {
     dst.Mesh = *prop->Number<uint32_t>();
   }
 }
 
 inline void
-Deserialize(const Value& node, format::Scene& dst)
+Deserialize(const Value& scene, format::Scene& dst)
 {
-  if (auto prop = node.Get(u8"nodes")) {
+  DeserializeProp(scene, dst);
+  if (auto prop = scene.Get(u8"nodes")) {
     DeserializeNumberArray(*prop, dst.Nodes);
   }
 }
@@ -205,7 +260,7 @@ Deserialize(const Parser& parser, format::Root& dst)
   if (auto prop = root->Get(u8"images")) {
     DeserializeArray(*prop, dst.Images);
   }
-  if (auto prop = root->Get(u8"sampler")) {
+  if (auto prop = root->Get(u8"samplers")) {
     DeserializeArray(*prop, dst.Samplers);
   }
   if (auto prop = root->Get(u8"textures")) {

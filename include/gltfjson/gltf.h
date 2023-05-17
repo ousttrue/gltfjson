@@ -22,7 +22,7 @@ struct Property
 // https://github.com/KhronosGroup/glTF/blob/main/specification/2.0/schema/glTFChildOfRootProperty.schema.json
 struct ChildOfRootProperty : Property
 {
-  std::string Name;
+  std::u8string Name;
 };
 
 // https://github.com/KhronosGroup/glTF/blob/main/specification/2.0/schema/glTFid.schema.json
@@ -48,7 +48,7 @@ struct PropertyList
 // https://github.com/KhronosGroup/glTF/blob/main/specification/2.0/schema/buffer.schema.json
 struct Buffer : ChildOfRootProperty
 {
-  std::string Uri;
+  std::u8string Uri;
   uint32_t ByteLength = 0;
 };
 
@@ -107,8 +107,8 @@ struct Camera : ChildOfRootProperty
 // https://github.com/KhronosGroup/glTF/blob/main/specification/2.0/schema/image.schema.json
 struct Image : ChildOfRootProperty
 {
-  std::string Uri;
-  std::string MimeType;
+  std::u8string Uri;
+  std::u8string MimeType;
   Id BufferView;
 };
 
@@ -344,9 +344,13 @@ struct Scene : ChildOfRootProperty
   std::vector<uint32_t> Nodes;
 };
 
-struct Asset
+// https://github.com/KhronosGroup/glTF/blob/main/specification/2.0/schema/asset.schema.json
+struct Asset : Property
 {
+  std::u8string Copyright;
+  std::u8string Generator;
   std::u8string Version;
+  std::u8string MinVersion;
 };
 
 // https://github.com/KhronosGroup/glTF/blob/main/specification/2.0/schema/glTF.schema.json

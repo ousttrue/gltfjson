@@ -66,6 +66,13 @@ struct Directory
       return bytes;
     }
   }
+
+  std::expected<std::span<const uint8_t>, std::string> GetBuffer(
+    std::u8string_view uri)
+  {
+    return GetBuffer(std::string_view{ (const char*)uri.data(),
+                                       (const char*)uri.data() + uri.size() });
+  }
 };
 
 }
