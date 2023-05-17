@@ -65,7 +65,7 @@ struct Bin
 
   mutable std::vector<uint8_t> m_sparseBuffer;
   template<typename T>
-  std::expected<std::span<const T>, std::string> accessor(
+  std::expected<std::span<const T>, std::string> GetAccessorBytes(
     const Root& gltf,
     int accessor_index) const
   {
