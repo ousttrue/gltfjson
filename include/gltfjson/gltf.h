@@ -112,29 +112,6 @@ struct Image : ChildOfRootProperty
   Id BufferView;
 };
 
-enum class TextureMagFilter
-{
-  NEAREST = 9728,
-  LINEAR = 9729,
-};
-
-enum class TextureMinFilter
-{
-  NEAREST = 9728,
-  LINEAR = 9729,
-  NEAREST_MIPMAP_NEAREST = 9984,
-  LINEAR_MIPMAP_NEAREST = 9985,
-  NEAREST_MIPMAP_LINEAR = 9986,
-  LINEAR_MIPMAP_LINEAR = 9987,
-};
-
-enum class TextureWrap
-{
-  CLAMP_TO_EDGE = 33071,
-  MIRRORED_REPEAT = 33648,
-  REPEAT = 10497,
-};
-
 // https://github.com/KhronosGroup/glTF/blob/main/specification/2.0/schema/sampler.schema.json
 struct Sampler : ChildOfRootProperty
 {
@@ -149,13 +126,6 @@ struct Texture : ChildOfRootProperty
 {
   Id Sampler;
   Id Source;
-};
-
-enum class AlphaModes
-{
-  Opaque,
-  Mask,
-  Blend,
 };
 
 // https://github.com/KhronosGroup/glTF/blob/main/specification/2.0/schema/textureInfo.schema.json
@@ -253,17 +223,6 @@ struct MeshPrimitiveMorphTarget
   Id NORMAL;
 };
 
-enum class MeshPrimitiveTopology
-{
-  POINTS,
-  LINES,
-  LINE_LOOP,
-  LINE_STRIP,
-  TRIANGLES,
-  TRIANGLE_STRIP,
-  TRIANGLE_FAN,
-};
-
 // https://github.com/KhronosGroup/glTF/blob/main/specification/2.0/schema/mesh.primitive.schema.json
 struct MeshPrimitive : Property
 {
@@ -293,21 +252,6 @@ struct Node : ChildOfRootProperty
   std::optional<std::array<float, 3>> Scale;
   std::optional<std::array<float, 3>> Translation;
   std::vector<float> Weights;
-};
-
-enum class PathTypes
-{
-  Translation,
-  Rotation,
-  Scale,
-  Weights,
-};
-
-enum class InterpolationTypes
-{
-  LINEAR,
-  STEP,
-  CUBESPLINE,
 };
 
 // https://github.com/KhronosGroup/glTF/blob/main/specification/2.0/schema/animation.sampler.schema.json

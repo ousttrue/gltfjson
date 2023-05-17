@@ -148,19 +148,66 @@ type_str(Types type)
   }
 }
 
-// inline std::expected<size_t, std::string>
-// item_size(const nlohmann::json& accessor)
-// {
-//   if (auto cs = component_size(accessor["componentType"])) {
-//     if (auto count = type_count(accessor["type"])) {
-//       return *cs * *count;
-//     } else {
-//       return count;
-//     }
-//   } else {
-//     throw cs;
-//   }
-// }
+enum class TextureMagFilter
+{
+  NEAREST = 9728,
+  LINEAR = 9729,
+};
+
+enum class TextureMinFilter
+{
+  NEAREST = 9728,
+  LINEAR = 9729,
+  NEAREST_MIPMAP_NEAREST = 9984,
+  LINEAR_MIPMAP_NEAREST = 9985,
+  NEAREST_MIPMAP_LINEAR = 9986,
+  LINEAR_MIPMAP_LINEAR = 9987,
+};
+
+enum class TextureWrap
+{
+  CLAMP_TO_EDGE = 33071,
+  MIRRORED_REPEAT = 33648,
+  REPEAT = 10497,
+};
+
+enum class AlphaModes
+{
+  Opaque,
+  Mask,
+  Blend,
+};
+inline std::tuple<gltfjson::format::AlphaModes, const char*> AlphaModesCombo[] = {
+  { AlphaModes::Opaque, "OPAQUE" },
+  { AlphaModes::Mask, "MASK" },
+  { AlphaModes::Blend, "BLEND" },
+};
+
+enum class MeshPrimitiveTopology
+{
+  POINTS,
+  LINES,
+  LINE_LOOP,
+  LINE_STRIP,
+  TRIANGLES,
+  TRIANGLE_STRIP,
+  TRIANGLE_FAN,
+};
+
+enum class PathTypes
+{
+  Translation,
+  Rotation,
+  Scale,
+  Weights,
+};
+
+enum class InterpolationTypes
+{
+  LINEAR,
+  STEP,
+  CUBESPLINE,
+};
 
 }
 }
