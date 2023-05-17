@@ -96,15 +96,18 @@ struct Value
   std::u8string_view Range;
   ValueType Type = ValueType::Primitive;
   Parser* m_parser = nullptr;
+  size_t m_pos = -1;
   std::optional<uint32_t> m_parentIndex;
 
   Value(std::u8string_view range = {},
         ValueType type = ValueType::Primitive,
         Parser* parser = nullptr,
+        size_t pos = -1,
         std::optional<uint32_t> parentIndex = std::nullopt)
     : Range(range)
     , Type(type)
     , m_parser(parser)
+    , m_pos(pos)
     , m_parentIndex(parentIndex)
   {
   }
@@ -114,6 +117,7 @@ struct Value
     Range = rhs.Range;
     Type = rhs.Type;
     m_parser = rhs.m_parser;
+    m_pos = rhs.m_pos;
     m_parentIndex = rhs.m_parentIndex;
     return *this;
   }
@@ -278,6 +282,7 @@ struct Parser
         range,
         ValueType::Primitive,
         this,
+        Values.size(),
         Stack.top(),
       });
     } else {
@@ -285,6 +290,7 @@ struct Parser
         range,
         ValueType::Primitive,
         this,
+        Values.size(),
       });
     }
     Pos += size;
@@ -525,7 +531,9 @@ inline ArrayValue::Iterator
 ArrayValue::begin() const
 {
   auto parser = m_arrayValue->m_parser;
-  for (auto it = parser->Values.begin(); it != parser->Values.end(); ++it) {
+  for (auto it = parser->Values.begin() + m_arrayValue->m_pos;
+       it != parser->Values.end();
+       ++it) {
     if (it->Range.data() == m_arrayValue->Range.data()) {
       // found
       ++it;
@@ -608,7 +616,8 @@ inline ObjectValue::Iterator
 ObjectValue::begin() const
 {
   auto parser = m_objectValue->m_parser;
-  for (std::vector<Value>::const_iterator it = parser->Values.begin();
+  for (std::vector<Value>::const_iterator it =
+         parser->Values.begin() + m_objectValue->m_pos;
        it != parser->Values.end();
        ++it) {
     if (it->Range.data() == m_objectValue->Range.data()) {

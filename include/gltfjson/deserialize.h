@@ -204,11 +204,6 @@ Deserialize(const Value& value, format::PbrMetallicRoughness& dst)
     dst.MetallicRoughnessTexture = TextureInfo{};
     DeserializeTextureInfo(*prop, *dst.MetallicRoughnessTexture);
   }
-  // std::array<float, 4> BaseColorFactor = { 1, 1, 1, 1 };
-  // std::optional<TextureInfo> BaseColorTexture;
-  // float MetallicFactor = 1.0f;
-  // float RoughnessFactor = 1.0f;
-  // std::optional<TextureInfo> MetallicRoughnessTexture;
 }
 
 inline void
