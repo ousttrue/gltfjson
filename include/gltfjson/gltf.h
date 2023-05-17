@@ -1,4 +1,5 @@
 #pragma once
+#include "gltf_types.h"
 #include <array>
 #include <optional>
 #include <stdint.h>
@@ -51,13 +52,6 @@ struct Buffer : ChildOfRootProperty
   uint32_t ByteLength = 0;
 };
 
-enum class Targets
-{
-  NONE = 0,
-  ARRAY_BUFFER = 34962,
-  ELEMENT_ARRAY_BUFFER = 34963,
-};
-
 struct BufferView : ChildOfRootProperty
 {
   Id Buffer;
@@ -65,27 +59,6 @@ struct BufferView : ChildOfRootProperty
   uint32_t ByteLength = 0;
   uint32_t ByteStride = 0;
   Targets Target = Targets::NONE;
-};
-
-enum class ComponentTypes
-{
-  BYTE = 5120,
-  UNSIGNED_BYTE = 5121,
-  SHORT = 5122,
-  UNSIGNED_SHORT = 5123,
-  UNSIGNED_INT = 5125,
-  FLOAT = 5126,
-};
-
-enum class Types
-{
-  SCALAR,
-  VEC2,
-  VEC3,
-  VEC4,
-  MAT2,
-  MAT3,
-  MAT4,
 };
 
 // https://github.com/KhronosGroup/glTF/blob/main/specification/2.0/schema/accessor.sparse.indices.schema.json
