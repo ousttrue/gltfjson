@@ -5,16 +5,35 @@
 #include <optional>
 
 namespace gltfjson {
+namespace format {
 
 template<typename T>
 inline void
-DeserializeNumberArray(const Value& value, std::vector<T>& values)
+DeserializeNumberVector(const Value& value, std::vector<T>& dst)
 {
   if (auto array = value.Array()) {
     for (auto& item : *array) {
-      values.push_back(*item.Number<T>());
+      dst.push_back(*item.Number<T>());
     }
   }
+}
+
+template<typename T, size_t N>
+inline std::optional<std::array<T, N>>
+DeserializeNumberArray(const Value& value)
+{
+  if (auto array = value.Array()) {
+    if (array->Size() == N) {
+      int i = 0;
+      std::array<T, N> dst;
+      for (auto item : *array) {
+        dst[i++] = *item.Number<T>();
+      }
+      return dst;
+    }
+  }
+
+  return std::nullopt;
 }
 
 inline void
@@ -113,10 +132,10 @@ Deserialize(const Value& accessor, format::Accessor& dst)
     }
   }
   if (auto prop = accessor.Get(u8"max")) {
-    DeserializeNumberArray(*prop, dst.Max);
+    DeserializeNumberVector(*prop, dst.Max);
   }
   if (auto prop = accessor.Get(u8"min")) {
-    DeserializeNumberArray(*prop, dst.Min);
+    DeserializeNumberVector(*prop, dst.Min);
   }
   if (auto prop = accessor.Get(u8"sparse")) {
   }
@@ -156,9 +175,76 @@ Deserialize(const Value& texture, format::Texture& dst)
 }
 
 inline void
+DeserializeTextureInfo(const Value& textureInfo, format::TextureInfo& dst)
+{
+  if (auto index = textureInfo.Get("index")) {
+    dst.Index = index->Number<uint32_t>();
+  }
+}
+
+inline void
+Deserialize(const Value& value, format::PbrMetallicRoughness& dst)
+{
+  if (auto prop = value.Get(u8"")) {
+    if (auto factor = DeserializeNumberArray<float, 4>(*prop)) {
+      dst.BaseColorFactor = *factor;
+    }
+  }
+  if (auto prop = value.Get(u8"")) {
+    dst.BaseColorTexture = TextureInfo{};
+    DeserializeTextureInfo(*prop, *dst.BaseColorTexture);
+  }
+  if (auto prop = value.Get(u8"")) {
+    dst.MetallicFactor = *prop->Number<float>();
+  }
+  if (auto prop = value.Get(u8"")) {
+    dst.RoughnessFactor = *prop->Number<float>();
+  }
+  if (auto prop = value.Get(u8"")) {
+    dst.MetallicRoughnessTexture = TextureInfo{};
+    DeserializeTextureInfo(*prop, *dst.MetallicRoughnessTexture);
+  }
+  // std::array<float, 4> BaseColorFactor = { 1, 1, 1, 1 };
+  // std::optional<TextureInfo> BaseColorTexture;
+  // float MetallicFactor = 1.0f;
+  // float RoughnessFactor = 1.0f;
+  // std::optional<TextureInfo> MetallicRoughnessTexture;
+}
+
+inline void
 Deserialize(const Value& material, format::Material& dst)
 {
   DeserializeProp(material, dst);
+  if (auto prop = material.Get(u8"pbrMetallicRoughness")) {
+    dst.PbrMetallicRoughness = PbrMetallicRoughness{};
+    Deserialize(*prop, *dst.PbrMetallicRoughness);
+  }
+  if (auto prop = material.Get(u8"normalTexture")) {
+    dst.NormalTexture = NormalTextureInfo{};
+    DeserializeTextureInfo(*prop, *dst.NormalTexture);
+  }
+  if (auto prop = material.Get(u8"occlusionTexture")) {
+    dst.OcclusionTexture = OcclusionTextureInfo{};
+    DeserializeTextureInfo(*prop, *dst.OcclusionTexture);
+  }
+  if (auto prop = material.Get(u8"emissiveTexture")) {
+    dst.EmissiveTexture = TextureInfo{};
+    DeserializeTextureInfo(*prop, *dst.EmissiveTexture);
+  }
+  if (auto prop = material.Get(u8"emissiveFactor")) {
+    if (auto factor = DeserializeNumberArray<float, 3>(*prop)) {
+      dst.EmissiveFactor = *factor;
+    }
+  }
+  if (auto prop = material.Get(u8"alphaMode")) {
+    dst.AlphaMode = AlphaModesFromStr(*prop->String());
+  }
+  if (auto prop = material.Get(u8"alphaCutoff")) {
+    dst.AlphaCutoff = *prop->Number<float>();
+  }
+  if (auto prop = material.Get(u8"doubleSided")) {
+    dst.DoubleSided = prop->IsTrue();
+  }
 }
 
 // skin/mesh
@@ -173,11 +259,7 @@ Deserialize(const Value& skin, format::Skin& dst)
     dst.Skeleton = *prop->Number<uint32_t>();
   }
   if (auto prop = skin.Get(u8"joints")) {
-    if (auto array = prop->Array()) {
-      for (auto& item : *array) {
-        dst.Joints.push_back(*item.Number<uint32_t>());
-      }
-    }
+    DeserializeNumberVector(*prop, dst.Joints);
   }
 }
 
@@ -187,6 +269,18 @@ Deserialize(const Value& primitive, format::MeshPrimitive& dst)
   if (auto prop = primitive.Get(u8"attributes")) {
     if (auto POSITION = prop->Get(u8"POSITION")) {
       dst.Attributes.POSITION = *POSITION->Number<uint32_t>();
+    }
+    if (auto NORMAL = prop->Get(u8"NORMAL")) {
+      dst.Attributes.NORMAL = *NORMAL->Number<uint32_t>();
+    }
+    if (auto TEXCOORD_0 = prop->Get(u8"TEXCOORD_0")) {
+      dst.Attributes.TEXCOORD_0 = *TEXCOORD_0->Number<uint32_t>();
+    }
+    if (auto JOINTS_0 = prop->Get(u8"JOINTS_0")) {
+      dst.Attributes.JOINTS_0 = *JOINTS_0->Number<uint32_t>();
+    }
+    if (auto WEIGHTS_0 = prop->Get(u8"WEIGHTS_0")) {
+      dst.Attributes.WEIGHTS_0 = *WEIGHTS_0->Number<uint32_t>();
     }
   }
 
@@ -214,8 +308,33 @@ inline void
 Deserialize(const Value& node, format::Node& dst)
 {
   DeserializeProp(node, dst);
+
+  if (auto prop = node.Get(u8"camera")) {
+    dst.Camera = prop->Number<uint32_t>();
+  }
+  if (auto prop = node.Get(u8"children")) {
+    DeserializeNumberVector(*prop, dst.Children);
+  }
+  if (auto prop = node.Get(u8"skin")) {
+    dst.Skin = prop->Number<uint32_t>();
+  }
+  if (auto prop = node.Get(u8"matrix")) {
+    dst.Matrix = DeserializeNumberArray<float, 16>(*prop);
+  }
   if (auto prop = node.Get(u8"mesh")) {
     dst.Mesh = *prop->Number<uint32_t>();
+  }
+  if (auto prop = node.Get(u8"rotation")) {
+    dst.Rotation = DeserializeNumberArray<float, 4>(*prop);
+  }
+  if (auto prop = node.Get(u8"scale")) {
+    dst.Scale = DeserializeNumberArray<float, 3>(*prop);
+  }
+  if (auto prop = node.Get(u8"translation")) {
+    dst.Translation = DeserializeNumberArray<float, 3>(*prop);
+  }
+  if (auto prop = node.Get(u8"weights")) {
+    DeserializeNumberVector(*prop, dst.Weights);
   }
 }
 
@@ -224,14 +343,14 @@ Deserialize(const Value& scene, format::Scene& dst)
 {
   DeserializeProp(scene, dst);
   if (auto prop = scene.Get(u8"nodes")) {
-    DeserializeNumberArray(*prop, dst.Nodes);
+    DeserializeNumberVector(*prop, dst.Nodes);
   }
 }
 
 // array
 template<typename T>
 inline void
-DeserializeArray(const Value& values, format::PropertyList<T>& dst)
+DeserializeRootList(const Value& values, format::PropertyList<T>& dst)
 {
   if (auto array = values.Array()) {
     for (auto& item : *array) {
@@ -248,40 +367,40 @@ Deserialize(const Parser& parser, format::Root& dst)
 
   // buffer/buferView/accessor
   if (auto prop = root->Get(u8"buffers")) {
-    DeserializeArray(*prop, dst.Buffers);
+    DeserializeRootList(*prop, dst.Buffers);
   }
   if (auto prop = root->Get(u8"bufferViews")) {
-    DeserializeArray(*prop, dst.BufferViews);
+    DeserializeRootList(*prop, dst.BufferViews);
   }
   if (auto prop = root->Get(u8"accessors")) {
-    DeserializeArray(*prop, dst.Accessors);
+    DeserializeRootList(*prop, dst.Accessors);
   }
   // image/sampler/texture/material/mesh
   if (auto prop = root->Get(u8"images")) {
-    DeserializeArray(*prop, dst.Images);
+    DeserializeRootList(*prop, dst.Images);
   }
   if (auto prop = root->Get(u8"samplers")) {
-    DeserializeArray(*prop, dst.Samplers);
+    DeserializeRootList(*prop, dst.Samplers);
   }
   if (auto prop = root->Get(u8"textures")) {
-    DeserializeArray(*prop, dst.Textures);
+    DeserializeRootList(*prop, dst.Textures);
   }
   if (auto prop = root->Get(u8"materials")) {
-    DeserializeArray(*prop, dst.Materials);
+    DeserializeRootList(*prop, dst.Materials);
   }
   // skin/mesh
   if (auto prop = root->Get(u8"skins")) {
-    DeserializeArray(*prop, dst.Skins);
+    DeserializeRootList(*prop, dst.Skins);
   }
   if (auto prop = root->Get(u8"meshes")) {
-    DeserializeArray(*prop, dst.Meshes);
+    DeserializeRootList(*prop, dst.Meshes);
   }
   // node/scene
   if (auto prop = root->Get(u8"nodes")) {
-    DeserializeArray(*prop, dst.Nodes);
+    DeserializeRootList(*prop, dst.Nodes);
   }
   if (auto prop = root->Get(u8"scenes")) {
-    DeserializeArray(*prop, dst.Scenes);
+    DeserializeRootList(*prop, dst.Scenes);
   }
 
   if (auto prop = root->Get(u8"scene")) {
@@ -290,5 +409,7 @@ Deserialize(const Parser& parser, format::Root& dst)
   if (auto asset = root->Get(u8"asset")) {
     Deserialize(asset, dst.Asset);
   }
+}
+
 }
 }

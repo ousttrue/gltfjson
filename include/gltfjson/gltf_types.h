@@ -177,11 +177,22 @@ enum class AlphaModes
   Mask,
   Blend,
 };
-inline std::tuple<gltfjson::format::AlphaModes, const char*> AlphaModesCombo[] = {
-  { AlphaModes::Opaque, "OPAQUE" },
-  { AlphaModes::Mask, "MASK" },
-  { AlphaModes::Blend, "BLEND" },
-};
+inline std::tuple<gltfjson::format::AlphaModes, const char*>
+  AlphaModesCombo[] = {
+    { AlphaModes::Opaque, "OPAQUE" },
+    { AlphaModes::Mask, "MASK" },
+    { AlphaModes::Blend, "BLEND" },
+  };
+inline AlphaModes
+AlphaModesFromStr(std::u8string_view str)
+{
+  for (auto [mode, label] : AlphaModesCombo) {
+    if (str == (const char8_t*)label) {
+      return mode;
+    }
+  }
+  return {};
+}
 
 enum class MeshPrimitiveTopology
 {
