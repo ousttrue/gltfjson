@@ -185,22 +185,22 @@ DeserializeTextureInfo(const Value& textureInfo, format::TextureInfo& dst)
 inline void
 Deserialize(const Value& value, format::PbrMetallicRoughness& dst)
 {
-  if (auto prop = value.Get(u8"")) {
+  if (auto prop = value.Get(u8"baseColorFactor")) {
     if (auto factor = DeserializeNumberArray<float, 4>(*prop)) {
       dst.BaseColorFactor = *factor;
     }
   }
-  if (auto prop = value.Get(u8"")) {
+  if (auto prop = value.Get(u8"baseColorTexture")) {
     dst.BaseColorTexture = TextureInfo{};
     DeserializeTextureInfo(*prop, *dst.BaseColorTexture);
   }
-  if (auto prop = value.Get(u8"")) {
+  if (auto prop = value.Get(u8"metallicFactor")) {
     dst.MetallicFactor = *prop->Number<float>();
   }
-  if (auto prop = value.Get(u8"")) {
+  if (auto prop = value.Get(u8"roughnessFactor")) {
     dst.RoughnessFactor = *prop->Number<float>();
   }
-  if (auto prop = value.Get(u8"")) {
+  if (auto prop = value.Get(u8"metallicRoughnessTexture")) {
     dst.MetallicRoughnessTexture = TextureInfo{};
     DeserializeTextureInfo(*prop, *dst.MetallicRoughnessTexture);
   }
