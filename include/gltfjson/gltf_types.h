@@ -5,6 +5,12 @@
 namespace gltfjson {
 namespace format {
 
+const auto VERTEX_JOINT = "JOINTS_0";
+const auto VERTEX_WEIGHT = "WEIGHTS_0";
+const auto VERTEX_POSITION = "POSITION";
+const auto VERTEX_NORMAL = "NORMAL";
+const auto VERTEX_UV = "TEXCOORD_0";
+
 enum class Targets
 {
   NONE = 0,
