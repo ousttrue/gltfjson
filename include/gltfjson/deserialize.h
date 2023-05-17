@@ -28,6 +28,32 @@ Deserialize(const Value* asset, format::Asset& dst)
   }
 }
 
+// buffer/bufferview/accessor
+inline void
+Deserialize(const Value& buffer, format::Buffer& dst)
+{
+}
+
+inline void
+Deserialize(const Value& bufferView, format::BufferView& dst)
+{
+  if (auto prop = bufferView.Get(u8"buffer")) {
+    dst.Buffer = *prop->Number<uint32_t>();
+  }
+  if (auto prop = bufferView.Get(u8"byteOffset")) {
+    dst.ByteOffset = *prop->Number<uint32_t>();
+  }
+  if (auto prop = bufferView.Get(u8"byteLength")) {
+    dst.ByteLength = *prop->Number<uint32_t>();
+  }
+  if (auto prop = bufferView.Get(u8"byteStride")) {
+    dst.ByteStride = *prop->Number<uint32_t>();
+  }
+  if (auto prop = bufferView.Get(u8"target")) {
+    dst.Target = static_cast<format::Targets>(*prop->Number<int>());
+  }
+}
+
 inline void
 Deserialize(const Value& accessor, format::Accessor& dst)
 {
@@ -77,24 +103,30 @@ Deserialize(const Value& accessor, format::Accessor& dst)
   }
 }
 
+// image/sampler/texture/material
 inline void
-Deserialize(const Value& bufferView, format::BufferView& dst)
+Deserialize(const Value& image, format::Image& dst)
 {
-  if (auto prop = bufferView.Get(u8"buffer")) {
-    dst.Buffer = *prop->Number<uint32_t>();
-  }
-  if (auto prop = bufferView.Get(u8"byteOffset")) {
-    dst.ByteOffset = *prop->Number<uint32_t>();
-  }
-  if (auto prop = bufferView.Get(u8"byteLength")) {
-    dst.ByteLength = *prop->Number<uint32_t>();
-  }
-  if (auto prop = bufferView.Get(u8"byteStride")) {
-    dst.ByteStride = *prop->Number<uint32_t>();
-  }
-  if (auto prop = bufferView.Get(u8"target")) {
-    dst.Target = static_cast<format::Targets>(*prop->Number<int>());
-  }
+}
+inline void
+Deserialize(const Value& sampler, format::Sampler& dst)
+{
+}
+
+inline void
+Deserialize(const Value& texture, format::Texture& dst)
+{
+}
+
+inline void
+Deserialize(const Value& material, format::Material& dst)
+{
+}
+
+// skin/mesh
+inline void
+Deserialize(const Value& skin, format::Skin& dst)
+{
 }
 
 inline void
@@ -124,6 +156,7 @@ Deserialize(const Value& mesh, format::Mesh& dst)
   }
 }
 
+// node/scene
 inline void
 Deserialize(const Value& node, format::Node& dst)
 {
@@ -140,6 +173,7 @@ Deserialize(const Value& node, format::Scene& dst)
   }
 }
 
+// array
 template<typename T>
 inline void
 DeserializeArray(const Value& values, format::PropertyList<T>& dst)
@@ -156,15 +190,38 @@ inline void
 Deserialize(const Parser& parser, format::Root& dst)
 {
   auto root = parser.Values[0].Object();
-  if (auto prop = root->Get(u8"accessors")) {
-    DeserializeArray(*prop, dst.Accessors);
+
+  // buffer/buferView/accessor
+  if (auto prop = root->Get(u8"buffers")) {
+    DeserializeArray(*prop, dst.Buffers);
   }
   if (auto prop = root->Get(u8"bufferViews")) {
     DeserializeArray(*prop, dst.BufferViews);
   }
+  if (auto prop = root->Get(u8"accessors")) {
+    DeserializeArray(*prop, dst.Accessors);
+  }
+  // image/sampler/texture/material/mesh
+  if (auto prop = root->Get(u8"images")) {
+    DeserializeArray(*prop, dst.Images);
+  }
+  if (auto prop = root->Get(u8"sampler")) {
+    DeserializeArray(*prop, dst.Samplers);
+  }
+  if (auto prop = root->Get(u8"textures")) {
+    DeserializeArray(*prop, dst.Textures);
+  }
+  if (auto prop = root->Get(u8"materials")) {
+    DeserializeArray(*prop, dst.Materials);
+  }
+  // skin/mesh
+  if (auto prop = root->Get(u8"skins")) {
+    DeserializeArray(*prop, dst.Skins);
+  }
   if (auto prop = root->Get(u8"meshes")) {
     DeserializeArray(*prop, dst.Meshes);
   }
+  // node/scene
   if (auto prop = root->Get(u8"nodes")) {
     DeserializeArray(*prop, dst.Nodes);
   }
