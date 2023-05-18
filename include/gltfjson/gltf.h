@@ -36,6 +36,17 @@ struct PropertyList
     return Values.back();
   }
   size_t Size() const { return Values.size(); }
+  std::optional<uint32_t> GetIndex(const T& t) const
+  {
+    int i = 0;
+    for (auto& value : Values) {
+      if (&value == &t) {
+        return i;
+      }
+      ++i;
+    }
+    return std::nullopt;
+  }
 
   auto begin() { return Values.begin(); }
   auto end() { return Values.end(); }
