@@ -477,21 +477,16 @@ ArrayValue::Iterator::operator++()
 {
   if (m_current) {
     auto parser = m_arrayValue->m_parser;
-    for (std::vector<Value>::const_iterator it = parser->Values.begin();
-         it != parser->Values.end();
-         ++it) {
-      if (it->Range.data() == m_current->Range.data()) {
-        // found
-        it += it->m_stride;
-        if (it != parser->Values.end() && m_arrayValue->Contains(*it)) {
-          m_current = &*it;
-        } else {
-          m_current = nullptr;
-        }
-        break;
-      }
+    std::vector<Value>::const_iterator it =
+      parser->Values.begin() + m_current->m_pos;
+    it += it->m_stride;
+    if (it != parser->Values.end() && m_arrayValue->Contains(*it)) {
+      m_current = &*it;
+      return *this;
     }
   }
+
+  m_current = {};
   return *this;
 }
 
@@ -499,17 +494,11 @@ inline ArrayValue::Iterator
 ArrayValue::begin() const
 {
   auto parser = m_arrayValue->m_parser;
-  for (auto it = parser->Values.begin() + m_arrayValue->m_pos;
-       it != parser->Values.end();
-       ++it) {
-    if (it->Range.data() == m_arrayValue->Range.data()) {
-      // found
-      ++it;
-      if (it != parser->Values.end()) {
-        return { m_arrayValue, &*it };
-      }
-      break;
-    }
+  auto it = parser->Values.begin() + m_arrayValue->m_pos;
+  // child
+  ++it;
+  if (it != parser->Values.end()) {
+    return { m_arrayValue, &*it };
   }
 
   return {};
@@ -555,28 +544,22 @@ ObjectValue::Iterator::operator++()
 {
   if (m_current.Key) {
     auto parser = m_objectValue->m_parser;
-    for (std::vector<Value>::const_iterator it = parser->Values.begin();
-         it != parser->Values.end();
-         ++it) {
-      if (it->Range.data() == m_current.Key->Range.data()) {
-        // found
-        m_current = {};
-        ++it;
-        auto key = it + it->m_stride;
-        if (key != parser->Values.end() && m_objectValue->Contains(*key)) {
-          auto value = key + key->m_stride;
-          if (value != parser->Values.end() &&
-              m_objectValue->Contains(*value)) {
-            m_current = {
-              .Key = &*key,
-              .Value = &*value,
-            };
-          }
-        }
-        break;
+    std::vector<Value>::const_iterator it =
+      parser->Values.begin() + m_current.Value->m_pos;
+    auto key = it + it->m_stride;
+    if (key != parser->Values.end() && m_objectValue->Contains(*key)) {
+      auto value = key + key->m_stride;
+      if (value != parser->Values.end() && m_objectValue->Contains(*value)) {
+        m_current = {
+          .Key = &*key,
+          .Value = &*value,
+        };
+        return *this;
       }
     }
   }
+
+  m_current = {};
   return *this;
 }
 
@@ -584,22 +567,16 @@ inline ObjectValue::Iterator
 ObjectValue::begin() const
 {
   auto parser = m_objectValue->m_parser;
-  for (std::vector<Value>::const_iterator it =
-         parser->Values.begin() + m_objectValue->m_pos;
-       it != parser->Values.end();
-       ++it) {
-    if (it->Range.data() == m_objectValue->Range.data()) {
-      // found
-      ++it;
-      if (it != parser->Values.end()) {
-        KeyValue kv{ &*it };
-        ++it;
-        if (it != parser->Values.end()) {
-          kv.Value = &*it;
-          return { m_objectValue, kv };
-        }
-      }
-      break;
+  std::vector<Value>::const_iterator it =
+    parser->Values.begin() + m_objectValue->m_pos;
+  // child
+  ++it;
+  if (it != parser->Values.end()) {
+    KeyValue kv{ &*it };
+    ++it;
+    if (it != parser->Values.end()) {
+      kv.Value = &*it;
+      return { m_objectValue, kv };
     }
   }
 
@@ -642,5 +619,4 @@ ObjectValue::Get(std::u8string_view target) const
 
   return {};
 }
-
 }
