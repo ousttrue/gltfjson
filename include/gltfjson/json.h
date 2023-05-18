@@ -96,7 +96,8 @@ struct Value
   std::u8string_view Range;
   ValueType Type = ValueType::Primitive;
   Parser* m_parser = nullptr;
-  uint32_t m_pos = -1;
+  uint32_t m_pos = (uint32_t)-1;
+  uint32_t m_stride = 1;
   std::optional<uint32_t> m_parentIndex;
 
   bool operator==(const Value& rhs) const { return Range == rhs.Range; }
@@ -395,7 +396,9 @@ struct Parser
       if (Src[Pos] == ']') {
         // closed
         ++Pos;
-        Values[arrayIndex].Range = Src.substr(beginPos, Pos - beginPos);
+        auto& array = Values[arrayIndex];
+        array.Range = Src.substr(beginPos, Pos - beginPos);
+        array.m_stride = static_cast<uint32_t>(Values.size()) - array.m_pos;
         Stack.pop();
         return Values[arrayIndex];
       }
@@ -432,6 +435,7 @@ struct Parser
         ++Pos;
         auto& object = Values[objectIndex];
         object.Range = Src.substr(beginPos, Pos - beginPos);
+        object.m_stride = static_cast<uint32_t>(Values.size()) - object.m_pos;
         Stack.pop();
         return object;
       }
@@ -466,19 +470,6 @@ struct Parser
 
     return std::unexpected{ u8"Unclosed array" };
   }
-
-  std::vector<Value>::const_iterator NextSibling(
-    std::vector<Value>::const_iterator it) const
-  {
-    auto r = it->Range;
-    auto p = r.data() + r.size();
-    for (; it != Values.end(); ++it) {
-      if (it->Range.data() > p) {
-        break;
-      }
-    }
-    return it;
-  }
 };
 
 inline ArrayValue::Iterator&
@@ -491,7 +482,7 @@ ArrayValue::Iterator::operator++()
          ++it) {
       if (it->Range.data() == m_current->Range.data()) {
         // found
-        it = parser->NextSibling(it);
+        it += it->m_stride;
         if (it != parser->Values.end() && m_arrayValue->Contains(*it)) {
           m_current = &*it;
         } else {
@@ -571,9 +562,9 @@ ObjectValue::Iterator::operator++()
         // found
         m_current = {};
         ++it;
-        auto key = parser->NextSibling(it);
+        auto key = it + it->m_stride;
         if (key != parser->Values.end() && m_objectValue->Contains(*key)) {
-          auto value = parser->NextSibling(key);
+          auto value = key + key->m_stride;
           if (value != parser->Values.end() &&
               m_objectValue->Contains(*value)) {
             m_current = {
