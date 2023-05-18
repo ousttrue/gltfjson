@@ -85,7 +85,7 @@ TEST(GltfTest, Parse)
   EXPECT_EQ(*version, gltfjson::Value(u8"\"2.0\""));
 
   gltfjson::format::Root gltf;
-  gltfjson::Deserialize(parser, gltf);
+  gltfjson::format::Deserialize(parser, gltf);
 
   EXPECT_EQ(gltf.Scene, 0);
 
