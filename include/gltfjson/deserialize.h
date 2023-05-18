@@ -128,7 +128,7 @@ Deserialize(const Value& accessor, format::Accessor& dst)
     } else if (type == u8"MAT4") {
       dst.Type = format::Types::MAT4;
     } else {
-      std::cout << "unknown type: " << type << std::endl;
+      // std::cout << "unknown type: " << type << std::endl;
     }
   }
   if (auto prop = accessor.Get(u8"max")) {

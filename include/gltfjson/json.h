@@ -96,31 +96,8 @@ struct Value
   std::u8string_view Range;
   ValueType Type = ValueType::Primitive;
   Parser* m_parser = nullptr;
-  size_t m_pos = -1;
+  uint32_t m_pos = -1;
   std::optional<uint32_t> m_parentIndex;
-
-  Value(std::u8string_view range = {},
-        ValueType type = ValueType::Primitive,
-        Parser* parser = nullptr,
-        size_t pos = -1,
-        std::optional<uint32_t> parentIndex = std::nullopt)
-    : Range(range)
-    , Type(type)
-    , m_parser(parser)
-    , m_pos(pos)
-    , m_parentIndex(parentIndex)
-  {
-  }
-  Value(const Value& rhs) { *this = rhs; }
-  Value& operator=(const Value& rhs)
-  {
-    Range = rhs.Range;
-    Type = rhs.Type;
-    m_parser = rhs.m_parser;
-    m_pos = rhs.m_pos;
-    m_parentIndex = rhs.m_parentIndex;
-    return *this;
-  }
 
   bool operator==(const Value& rhs) const { return Range == rhs.Range; }
 
@@ -279,18 +256,18 @@ struct Parser
     auto range = Src.substr(Pos, size);
     if (Stack.size()) {
       Values.push_back({
-        range,
-        ValueType::Primitive,
-        this,
-        Values.size(),
-        Stack.top(),
+        .Range = range,
+        .Type = ValueType::Primitive,
+        .m_parser = this,
+        .m_pos = static_cast<uint32_t>(Values.size()),
+        .m_parentIndex = Stack.top(),
       });
     } else {
       Values.push_back({
-        range,
-        ValueType::Primitive,
-        this,
-        Values.size(),
+        .Range = range,
+        .Type = ValueType::Primitive,
+        .m_parser = this,
+        .m_pos = static_cast<uint32_t>(Values.size()),
       });
     }
     Pos += size;
