@@ -259,28 +259,58 @@ Deserialize(const Value& skin, format::Skin& dst)
 }
 
 inline void
+DeserializeAttribute(const Value& attributes, MeshPrimitiveAttributes& dst)
+{
+  if (auto POSITION = attributes.Get(u8"POSITION")) {
+    dst.POSITION = *POSITION->Number<uint32_t>();
+  }
+  if (auto NORMAL = attributes.Get(u8"NORMAL")) {
+    dst.NORMAL = *NORMAL->Number<uint32_t>();
+  }
+  if (auto TEXCOORD_0 = attributes.Get(u8"TEXCOORD_0")) {
+    dst.TEXCOORD_0 = *TEXCOORD_0->Number<uint32_t>();
+  }
+  if (auto JOINTS_0 = attributes.Get(u8"JOINTS_0")) {
+    dst.JOINTS_0 = *JOINTS_0->Number<uint32_t>();
+  }
+  if (auto WEIGHTS_0 = attributes.Get(u8"WEIGHTS_0")) {
+    dst.WEIGHTS_0 = *WEIGHTS_0->Number<uint32_t>();
+  }
+}
+inline void
+DeserializeAttribute(const Value& attributes, MeshPrimitiveMorphTarget& dst)
+{
+  if (auto POSITION = attributes.Get(u8"POSITION")) {
+    dst.POSITION = *POSITION->Number<uint32_t>();
+  }
+  if (auto NORMAL = attributes.Get(u8"NORMAL")) {
+    dst.NORMAL = *NORMAL->Number<uint32_t>();
+  }
+}
+inline void
 Deserialize(const Value& primitive, format::MeshPrimitive& dst)
 {
   if (auto prop = primitive.Get(u8"attributes")) {
-    if (auto POSITION = prop->Get(u8"POSITION")) {
-      dst.Attributes.POSITION = *POSITION->Number<uint32_t>();
-    }
-    if (auto NORMAL = prop->Get(u8"NORMAL")) {
-      dst.Attributes.NORMAL = *NORMAL->Number<uint32_t>();
-    }
-    if (auto TEXCOORD_0 = prop->Get(u8"TEXCOORD_0")) {
-      dst.Attributes.TEXCOORD_0 = *TEXCOORD_0->Number<uint32_t>();
-    }
-    if (auto JOINTS_0 = prop->Get(u8"JOINTS_0")) {
-      dst.Attributes.JOINTS_0 = *JOINTS_0->Number<uint32_t>();
-    }
-    if (auto WEIGHTS_0 = prop->Get(u8"WEIGHTS_0")) {
-      dst.Attributes.WEIGHTS_0 = *WEIGHTS_0->Number<uint32_t>();
-    }
+    DeserializeAttribute(*prop, dst.Attributes);
   }
 
   if (auto prop = primitive.Get(u8"indices")) {
     dst.Indices = *prop->Number<uint32_t>();
+  }
+
+  if (auto prop = primitive.Get(u8"material")) {
+    dst.Material = *prop->Number<uint32_t>();
+  }
+  if (auto prop = primitive.Get(u8"mode")) {
+    dst.Mode = static_cast<MeshPrimitiveTopology>(*prop->Number<int>());
+  }
+  if (auto prop = primitive.Get(u8"targets")) {
+    if (auto targets = prop->Array()) {
+      for (auto& target : *targets) {
+        dst.Targets.push_back({});
+        DeserializeAttribute(target, dst.Targets.back());
+      }
+    }
   }
 }
 
