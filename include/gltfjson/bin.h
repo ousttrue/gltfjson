@@ -67,9 +67,8 @@ struct Bin
   template<typename T>
   std::expected<std::span<const T>, std::string> GetAccessorBytes(
     const Root& gltf,
-    int accessor_index) const
+    const Accessor& accessor) const
   {
-    auto accessor = gltf.Accessors[accessor_index];
     // std::cout << accessor << std::endl;
     // assert(*item_size(accessor) == sizeof(T));
     int count = accessor.Count;
@@ -148,6 +147,14 @@ struct Bin
     } else {
       return std::unexpected{ "sparse nor bufferView" };
     }
+  }
+
+  template<typename T>
+  std::expected<std::span<const T>, std::string> GetAccessorBytes(
+    const Root& gltf,
+    int accessor_index) const
+  {
+    return GetAccessorBytes<T>(gltf, gltf.Accessors[accessor_index]);
   }
 };
 

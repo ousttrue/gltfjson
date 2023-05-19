@@ -1,4 +1,5 @@
 #pragma once
 
-#include "gltfjson/json.h"
+#include "gltfjson/bin.h"
 #include "gltfjson/gltf.h"
+#include "gltfjson/json.h"

@@ -29,11 +29,19 @@ struct ChildOfRootProperty : Property
 template<typename T>
 struct PropertyList
 {
+  std::string Name;
   std::vector<T> Values;
   T& Push(const T& t)
   {
     Values.push_back(t);
     return Values.back();
+  }
+  void RemoveAt(uint32_t index)
+  {
+    if (index < Values.size()) {
+      auto it = Values.begin() + index;
+      Values.erasae(it);
+    }
   }
   size_t Size() const { return Values.size(); }
   std::optional<uint32_t> GetIndex(const T& t) const
@@ -313,21 +321,21 @@ struct Root
 {
   std::vector<std::u8string> ExtensionsUsed;
   std::vector<std::u8string> ExtensionsRequired;
-  PropertyList<Accessor> Accessors;
-  PropertyList<Animation> Animations;
+  PropertyList<Accessor> Accessors{ "Accessors" };
+  PropertyList<Animation> Animations{ "Animations" };
   Asset Asset;
-  PropertyList<Buffer> Buffers;
-  PropertyList<BufferView> BufferViews;
-  PropertyList<Camera> Cameras;
-  PropertyList<Image> Images;
-  PropertyList<Texture> Textures;
-  PropertyList<Material> Materials;
-  PropertyList<Mesh> Meshes;
-  PropertyList<Node> Nodes;
-  PropertyList<Sampler> Samplers;
+  PropertyList<Buffer> Buffers{ "Buffers" };
+  PropertyList<BufferView> BufferViews{ "BufferViews" };
+  PropertyList<Camera> Cameras{ "Cameras" };
+  PropertyList<Image> Images{ "Images" };
+  PropertyList<Texture> Textures{ "Textures" };
+  PropertyList<Material> Materials{ "Materials" };
+  PropertyList<Mesh> Meshes{ "Meshes" };
+  PropertyList<Node> Nodes{ "Nodes" };
+  PropertyList<Sampler> Samplers{ "Samplers" };
   Id Scene;
-  PropertyList<::gltfjson::format::Scene> Scenes;
-  PropertyList<Skin> Skins;
+  PropertyList<::gltfjson::format::Scene> Scenes{ "Scenes" };
+  PropertyList<Skin> Skins{ "Skins" };
 };
 
 }

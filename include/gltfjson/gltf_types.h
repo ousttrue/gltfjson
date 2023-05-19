@@ -17,6 +17,11 @@ enum class Targets
   ARRAY_BUFFER = 34962,
   ELEMENT_ARRAY_BUFFER = 34963,
 };
+inline std::tuple<gltfjson::format::Targets, const char*> TargetsCombo[] = {
+  { Targets::NONE, "NONE" },
+  { Targets::ARRAY_BUFFER, "ARRAY_BUFFER" },
+  { Targets::ELEMENT_ARRAY_BUFFER, "ELEMENT_ARRAY_BUFFER" },
+};
 
 enum class ComponentTypes
 {
@@ -27,6 +32,15 @@ enum class ComponentTypes
   UNSIGNED_INT = 5125,
   FLOAT = 5126,
 };
+inline std::tuple<gltfjson::format::ComponentTypes, const char*>
+  ComponentTypesCombo[] = {
+    { ComponentTypes::BYTE, "BYTE" },
+    { ComponentTypes::UNSIGNED_BYTE, "UNSIGNED_BYTE" },
+    { ComponentTypes::SHORT, "SHORT" },
+    { ComponentTypes::UNSIGNED_SHORT, "UNSIGNED_SHORT" },
+    { ComponentTypes::UNSIGNED_INT, "UNSIGNED_INT" },
+    { ComponentTypes::FLOAT, "FLOAT" },
+  };
 
 enum class Types
 {
@@ -37,6 +51,11 @@ enum class Types
   MAT2,
   MAT3,
   MAT4,
+};
+inline std::tuple<gltfjson::format::Types, const char*> TypesCombo[] = {
+  { Types::SCALAR, "SCALAR" }, { Types::VEC2, "VEC2" }, { Types::VEC3, "VEC3" },
+  { Types::VEC4, "VEC4" },     { Types::MAT2, "MAT2" }, { Types::MAT3, "MAT3" },
+  { Types::MAT4, "MAT4" },
 };
 
 inline std::optional<size_t>
@@ -224,6 +243,16 @@ enum class MeshPrimitiveTopology
   TRIANGLE_STRIP,
   TRIANGLE_FAN,
 };
+inline std::tuple<gltfjson::format::MeshPrimitiveTopology, const char*>
+  MeshPrimitiveTopologyCombo[] = {
+    { MeshPrimitiveTopology::POINTS, "POINTS" },
+    { MeshPrimitiveTopology::LINES, "LINES" },
+    { MeshPrimitiveTopology::LINE_LOOP, "LINE_LOOP" },
+    { MeshPrimitiveTopology::LINE_STRIP, "LINE_STRIP" },
+    { MeshPrimitiveTopology::TRIANGLES, "TRIANGLES" },
+    { MeshPrimitiveTopology::TRIANGLE_STRIP, "TRIANGLE_STRIP" },
+    { MeshPrimitiveTopology::TRIANGLE_FAN, "TRIANGLE_FAN" },
+  };
 
 enum class PathTypes
 {
