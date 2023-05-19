@@ -39,7 +39,7 @@ DeserializeNumberArray(const Value& value)
 inline void
 DeserializeString(const Value& value, std::u8string& dst)
 {
-  if (auto str = value.String()) {
+  if (auto str = value.U8String()) {
     dst = std::u8string(str->data(), str->data() + str->size());
   }
 }
@@ -59,7 +59,7 @@ Deserialize(const Value* asset, format::Asset& dst)
     return;
   }
   if (auto value = asset->Get("version")) {
-    dst.Version = *value->String();
+    dst.Version = *value->U8String();
   }
 }
 
@@ -68,6 +68,12 @@ inline void
 Deserialize(const Value& buffer, format::Buffer& dst)
 {
   DeserializeProp(buffer, dst);
+  if (auto prop = buffer.Get(u8"uri")) {
+    dst.Uri = *prop->U8String();
+  }
+  if (auto prop = buffer.Get(u8"byteLength")) {
+    dst.ByteLength = *prop->Number<uint32_t>();
+  }
 }
 
 inline void
@@ -112,7 +118,7 @@ Deserialize(const Value& accessor, format::Accessor& dst)
     dst.Count = *prop->Number<uint32_t>();
   }
   if (auto prop = accessor.Get(u8"type")) {
-    auto type = *prop->String();
+    auto type = *prop->U8String();
     if (type == u8"SCALAR") {
       dst.Type = format::Types::SCALAR;
     } else if (type == u8"VEC2") {
@@ -232,7 +238,7 @@ Deserialize(const Value& material, format::Material& dst)
     }
   }
   if (auto prop = material.Get(u8"alphaMode")) {
-    dst.AlphaMode = AlphaModesFromStr(*prop->String());
+    dst.AlphaMode = AlphaModesFromStr(*prop->U8String());
   }
   if (auto prop = material.Get(u8"alphaCutoff")) {
     dst.AlphaCutoff = *prop->Number<float>();

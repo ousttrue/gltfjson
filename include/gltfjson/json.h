@@ -116,7 +116,7 @@ struct Value
   bool IsTrue() const { return Range == u8"true"; }
 
   // get unquoted string
-  std::optional<std::u8string_view> String() const
+  std::optional<std::u8string_view> U8String() const
   {
     if (Range.size() >= 2 && Range.front() == '"' && Range.back() == '"') {
       return Range.substr(1, Range.size() - 2);
@@ -612,7 +612,7 @@ ObjectValue::Get(std::u8string_view target) const
   }
 
   for (auto [key, value] : *this) {
-    if (key->String() == target) {
+    if (key->U8String() == target) {
       return value;
     }
   }
