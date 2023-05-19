@@ -153,6 +153,11 @@ enum class TextureMagFilter
   NEAREST = 9728,
   LINEAR = 9729,
 };
+inline std::tuple<gltfjson::format::TextureMagFilter, const char*>
+  TextureMagFilterCombo[] = {
+    { TextureMagFilter::NEAREST, "NEAREST" },
+    { TextureMagFilter::LINEAR, "LINEAR" },
+  };
 
 enum class TextureMinFilter
 {
@@ -163,6 +168,15 @@ enum class TextureMinFilter
   NEAREST_MIPMAP_LINEAR = 9986,
   LINEAR_MIPMAP_LINEAR = 9987,
 };
+inline std::tuple<gltfjson::format::TextureMinFilter, const char*>
+  TextureMinFilterCombo[] = {
+    { TextureMinFilter::NEAREST, "NEAREST" },
+    { TextureMinFilter::LINEAR, "LINEAR" },
+    { TextureMinFilter::NEAREST_MIPMAP_NEAREST, "NEAREST_MIPMAP_NEAREST" },
+    { TextureMinFilter::LINEAR_MIPMAP_NEAREST, "LINEAR_MIPMAP_NEAREST" },
+    { TextureMinFilter::NEAREST_MIPMAP_LINEAR, "NEAREST_MIPMAP_LINEAR" },
+    { TextureMinFilter::LINEAR_MIPMAP_LINEAR, "LINEAR_MIPMAP_LINEAR" },
+  };
 
 enum class TextureWrap
 {
@@ -170,6 +184,12 @@ enum class TextureWrap
   MIRRORED_REPEAT = 33648,
   REPEAT = 10497,
 };
+inline std::tuple<gltfjson::format::TextureWrap, const char*>
+  TextureWrapCombo[] = {
+    { TextureWrap::CLAMP_TO_EDGE, "CLAMP_TO_EDGE" },
+    { TextureWrap::MIRRORED_REPEAT, "MIRRORED_REPEAT" },
+    { TextureWrap::REPEAT, "REPEAT" },
+  };
 
 enum class AlphaModes
 {
