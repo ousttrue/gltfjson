@@ -1,6 +1,6 @@
 #pragma once
 #include "gltf.h"
-#include "json.h"
+#include "json_parser.h"
 #include <iostream>
 #include <optional>
 
