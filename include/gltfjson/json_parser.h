@@ -497,7 +497,7 @@ ArrayValue::begin() const
   auto it = parser->Values.begin() + m_arrayValue->m_pos;
   // child
   ++it;
-  if (it != parser->Values.end()) {
+  if (m_arrayValue->Contains(*it)) {
     return { m_arrayValue, &*it };
   }
 
@@ -571,10 +571,10 @@ ObjectValue::begin() const
     parser->Values.begin() + m_objectValue->m_pos;
   // child
   ++it;
-  if (it != parser->Values.end()) {
+  if (m_objectValue->Contains(*it)) {
     KeyValue kv{ &*it };
     ++it;
-    if (it != parser->Values.end()) {
+    if (m_objectValue->Contains(*it)) {
       kv.Value = &*it;
       return { m_objectValue, kv };
     }
