@@ -41,6 +41,10 @@ struct ArrayValue
   {
     const Value* m_arrayValue = nullptr;
     const Value* m_current = nullptr;
+    bool operator==(const Iterator& rhs) const
+    {
+      return m_current == rhs.m_current;
+    }
     bool operator!=(const Iterator& rhs) const
     {
       return m_current != rhs.m_current;
@@ -69,6 +73,10 @@ struct ObjectValue
   {
     const Value* m_objectValue = nullptr;
     KeyValue m_current;
+    bool operator==(const Iterator& rhs) const
+    {
+      return m_current.Key == (*rhs).Key && m_current.Value == (*rhs).Value;
+    }
     bool operator!=(const Iterator& rhs) const
     {
       return m_current.Key != (*rhs).Key || m_current.Value != (*rhs).Value;

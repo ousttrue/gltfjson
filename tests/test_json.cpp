@@ -1,4 +1,4 @@
-#include <gltfjson/json.h>
+#include <gltfjson/json_parser.h>
 #include <gtest/gtest.h>
 
 TEST(TestJson, ParsePrimitive)
@@ -90,6 +90,21 @@ TEST(TestJson, ParseString)
 TEST(TestJson, ParseArray)
 {
   {
+    auto SRC = u8"[]";
+    gltfjson::Parser parser(SRC);
+    auto result = parser.Parse();
+    EXPECT_TRUE(result);
+    EXPECT_EQ(parser.Values.size(), 1);
+    if (result) {
+      EXPECT_EQ(result->Size(), 0);
+    }
+
+    if (auto array = result->Array()) {
+      auto it = array->begin();
+      EXPECT_EQ(it, array->end());
+    }
+  }
+  {
     auto SRC = u8"[ ]";
     gltfjson::Parser parser(SRC);
     auto result = parser.Parse();
@@ -125,6 +140,21 @@ TEST(TestJson, ParseArray)
 
 TEST(TestJson, ParseObject)
 {
+  {
+    auto SRC = u8"{}";
+    gltfjson::Parser parser(SRC);
+    auto result = parser.Parse();
+    EXPECT_TRUE(result);
+    EXPECT_EQ(parser.Values.size(), 1);
+    if (result) {
+      EXPECT_EQ(result->Size(), 0);
+    }
+
+    if (auto object = result->Object()) {
+      auto it = object->begin();
+      EXPECT_EQ(it, object->end());
+    }
+  }
   {
     auto SRC = u8"{ }";
     gltfjson::Parser parser(SRC);
