@@ -349,6 +349,9 @@ struct Root
   Id Scene;
   PropertyList<::gltfjson::format::Scene> Scenes{ "Scenes" };
   PropertyList<Skin> Skins{ "Skins" };
+
+  std::list<Extension> Extensions;
+  std::list<Extra> Extras;
 };
 
 }

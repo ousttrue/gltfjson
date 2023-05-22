@@ -45,29 +45,41 @@ DeserializeString(const Value& value, std::u8string& dst)
 }
 
 inline void
+Deserialize(const Value& value, std::list<Extension>& dst)
+{
+  if (auto obj = value.Object()) {
+    for (auto kv : *obj) {
+      auto key = kv.Key->U8String();
+      dst.push_back({
+        .Name = { key->data(), key->size() },
+        .Value = { kv.Value->Range.data(), kv.Value->Range.size() },
+      });
+    }
+  }
+}
+
+inline void
+Deserialize(const Value& value, std::list<Extra>& dst)
+{
+  if (auto obj = value.Object()) {
+    for (auto kv : *obj) {
+      auto key = kv.Key->U8String();
+      dst.push_back({
+        .Name = { key->data(), key->size() },
+        .Value = { kv.Value->Range.data(), kv.Value->Range.size() },
+      });
+    }
+  }
+}
+
+inline void
 DeserializeProp(const Value& value, Property& dst)
 {
   if (auto prop = value.Get("extensions")) {
-    if (auto obj = prop->Object()) {
-      for (auto kv : *obj) {
-        auto key = kv.Key->U8String();
-        dst.Extensions.push_back({
-          .Name = { key->data(), key->size() },
-          .Value = { kv.Value->Range.data(), kv.Value->Range.size() },
-        });
-      }
-    }
+    Deserialize(*prop, dst.Extensions);
   }
   if (auto prop = value.Get("extras")) {
-    if (auto obj = prop->Object()) {
-      for (auto kv : *obj) {
-        auto key = kv.Key->U8String();
-        dst.Extras.push_back({
-          .Name = { key->data(), key->size() },
-          .Value = { kv.Value->Range.data(), kv.Value->Range.size() },
-        });
-      }
-    }
+    Deserialize(*prop, dst.Extras);
   }
 }
 
@@ -81,13 +93,19 @@ DeserializeChildOfRootProp(const Value& value, ChildOfRootProperty& dst)
 }
 
 inline void
-Deserialize(const Value* asset, Asset& dst)
+Deserialize(const Value& value, Asset& dst)
 {
-  if (!asset) {
-    return;
+  if (auto prop = value.Get("copyright")) {
+    dst.Copyright = *prop->U8String();
   }
-  if (auto value = asset->Get("version")) {
-    dst.Version = *value->U8String();
+  if (auto prop = value.Get("generator")) {
+    dst.Generator = *prop->U8String();
+  }
+  if (auto prop = value.Get("version")) {
+    dst.Version = *prop->U8String();
+  }
+  if (auto prop = value.Get("minVersion")) {
+    dst.MinVersion = *prop->U8String();
   }
 }
 
@@ -506,8 +524,16 @@ Deserialize(const Parser& parser, Root& dst)
   if (auto prop = root->Get(u8"scene")) {
     dst.Scene = *prop->Number<uint32_t>();
   }
-  if (auto asset = root->Get(u8"asset")) {
-    Deserialize(asset, dst.Asset);
+  if (auto prop = root->Get(u8"asset")) {
+    Deserialize(*prop, dst.Asset);
+  }
+
+  // extensions
+  if (auto prop = root->Get(u8"extensions")) {
+    Deserialize(*prop, dst.Extensions);
+  }
+  if (auto prop = root->Get(u8"extras")) {
+    Deserialize(*prop, dst.Extras);
   }
 }
 
