@@ -1,6 +1,7 @@
 #pragma once
 #include "gltf_types.h"
 #include <array>
+#include <list>
 #include <optional>
 #include <stdint.h>
 #include <string>
@@ -11,12 +12,23 @@ namespace format {
 
 using Id = std::optional<uint32_t>;
 
+struct Extension
+{
+  std::u8string Name;
+  std::u8string Value;
+};
+
+struct Extra
+{
+  std::u8string Name;
+  std::u8string Value;
+};
+
 // https://github.com/KhronosGroup/glTF/blob/main/specification/2.0/schema/glTFProperty.schema.json
 struct Property
 {
-  // Value Extensions;
-  // Value Extras;
-  int Extensions;
+  std::list<Extension> Extensions;
+  std::list<Extra> Extras;
 };
 
 // https://github.com/KhronosGroup/glTF/blob/main/specification/2.0/schema/glTFChildOfRootProperty.schema.json
@@ -71,6 +83,7 @@ struct Buffer : ChildOfRootProperty
   uint32_t ByteLength = 0;
 };
 
+// https://github.com/KhronosGroup/glTF/blob/main/specification/2.0/schema/bufferView.schema.json
 struct BufferView : ChildOfRootProperty
 {
   Id Buffer;
