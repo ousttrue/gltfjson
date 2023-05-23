@@ -99,6 +99,32 @@ struct Node
   }
   const ArrayValue* Array() const { return Ptr<ArrayValue>(); }
   ArrayValue* Array() { return Ptr<ArrayValue>(); }
+  const ObjectValue* Object() const { return Ptr<ObjectValue>(); }
+  ObjectValue* Object() { return Ptr<ObjectValue>(); }
+  NodePtr Get(std::u8string_view target) const
+  {
+    if (auto object = Object()) {
+      for (auto it = object->Values.begin(); it != object->Values.end(); ++it) {
+        auto key = it;
+        ++it;
+        auto value = it;
+        if (*(*key)->Get<std::u8string>() == target) {
+          return *value;
+        }
+      }
+    }
+    return nullptr;
+  }
+  size_t Size() const
+  {
+    if (auto array = Ptr<ArrayValue>()) {
+      return array->Values.size();
+    } else if (auto object = Ptr<ObjectValue>()) {
+      return object->Values.size() / 2;
+    } else {
+      return 0;
+    }
+  }
 };
 
 struct Parser
@@ -128,8 +154,12 @@ struct Parser
     node->Var = value;
     Pos += size;
     if (Stack.size()) {
-      if (auto array = Stack.top()->Ptr<ArrayValue>()) {
+      if (auto array = Stack.top()->Array()) {
         array->Values.push_back(node);
+      } else if (auto object = Stack.top()->Object()) {
+        object->Values.push_back(node);
+      } else {
+        assert(false);
       }
     }
     return node;

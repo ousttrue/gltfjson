@@ -110,8 +110,6 @@ TEST(TestJsonTree, ParseArray)
     auto SRC = u8"[1, 2, 3]";
     gltfjson::tree::Parser parser(SRC);
     auto result = parser.Parse();
-    // EXPECT_EQ(parser.Values.size(), 4);
-    // EXPECT_TRUE(result);
     if (auto array = result->Array()) {
       EXPECT_EQ(array->Values.size(), 3);
       EXPECT_EQ(array->Values[0]->Number<int>(), 1);
@@ -124,6 +122,49 @@ TEST(TestJsonTree, ParseArray)
     if (auto array = result->Array()) {
       auto inner = array->Values[1]->Array();
       EXPECT_EQ(inner->Values[1]->Number<int>(), 3);
+    }
+  }
+}
+
+TEST(TestJsonTree, ParseObject)
+{
+  {
+    auto SRC = u8"{}";
+    gltfjson::tree::Parser parser(SRC);
+    auto result = parser.Parse();
+    EXPECT_TRUE(result);
+    if (result) {
+      EXPECT_EQ(result->Size(), 0);
+    }
+
+    if (auto object = result->Object()) {
+      EXPECT_TRUE(object->Values.empty());
+    }
+  }
+  {
+    auto SRC = u8"{ }";
+    gltfjson::tree::Parser parser(SRC);
+    auto result = parser.Parse();
+    if (result) {
+      EXPECT_EQ(result->Size(), 0);
+    }
+  }
+  {
+    auto SRC = u8"{\"key\": 1}";
+    gltfjson::tree::Parser parser(SRC);
+    auto result = parser.Parse();
+    if (result) {
+      EXPECT_EQ(result->Size(), 1);
+      EXPECT_EQ(result->Get(u8"key")->Number<int>(), 1);
+    }
+  }
+  {
+    auto SRC = u8"{\"key\": {\"key2\": 2}}";
+    gltfjson::tree::Parser parser(SRC);
+    auto result = parser.Parse();
+    if (result) {
+      auto inner = result->Get(u8"key");
+      EXPECT_EQ(inner->Get(u8"key2")->Number<int>(), 2);
     }
   }
 }
