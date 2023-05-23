@@ -9,7 +9,7 @@ TEST(TestJsonTree, Parse)
     auto result = parser.Parse();
     EXPECT_TRUE(result);
     if (result) {
-      EXPECT_TRUE(result->IsTrue());
+      EXPECT_EQ(result->Get<bool>(), true);
     }
   }
   {
@@ -18,7 +18,7 @@ TEST(TestJsonTree, Parse)
     auto result = parser.Parse();
     EXPECT_TRUE(result);
     if (result) {
-      EXPECT_TRUE(result->IsFalse());
+      EXPECT_EQ(result->Get<bool>(), false);
     }
   }
   {
@@ -28,6 +28,48 @@ TEST(TestJsonTree, Parse)
     EXPECT_TRUE(result);
     if (result) {
       EXPECT_TRUE(result->IsNull());
+    }
+  }
+}
+
+TEST(TestJsonTree, ParseNumber)
+{
+  {
+    auto SRC = u8"1";
+    gltfjson::tree::Parser parser(SRC);
+    auto result = parser.Parse();
+    EXPECT_TRUE(result);
+    if (result) {
+      EXPECT_EQ(result->Number<int>(), 1);
+    }
+  }
+  {
+    auto SRC = u8"-1";
+    gltfjson::tree::Parser parser(SRC);
+    auto result = parser.Parse();
+    EXPECT_TRUE(result);
+    if (result) {
+      EXPECT_EQ(result->Number<int>(), -1);
+    }
+  }
+  {
+    auto SRC = u8"1e-5";
+    gltfjson::tree::Parser parser(SRC);
+    auto result = parser.Parse();
+    EXPECT_TRUE(result);
+    if (result) {
+      EXPECT_EQ(result->Number<double>(), 1e-5);
+      EXPECT_EQ(result->Number<float>(), 1e-5f);
+    }
+  }
+  {
+    auto SRC = u8"1.1";
+    gltfjson::tree::Parser parser(SRC);
+    auto result = parser.Parse();
+    EXPECT_TRUE(result);
+    if (result) {
+      EXPECT_EQ(result->Number<double>(), 1.1);
+      EXPECT_EQ(result->Number<float>(), 1.1f);
     }
   }
 }
