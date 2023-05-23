@@ -8,11 +8,13 @@
 #include <stack>
 #include <string>
 #include <variant>
+#include <vector>
 
 namespace gltfjson {
 namespace tree {
 
 struct Node;
+using NodePtr = std::shared_ptr<Node>;
 struct NullValue
 {};
 struct NumberValue
@@ -26,11 +28,11 @@ struct NumberValue
 };
 struct ArrayValue
 {
-  std::list<Node> Values;
+  std::vector<NodePtr> Values;
 };
 struct ObjectValue
 {
-  std::list<Node> Values;
+  std::vector<NodePtr> Values;
 };
 struct Node
 {
@@ -103,7 +105,7 @@ struct Parser
 {
   std::u8string_view Src;
   uint32_t Pos = 0;
-  std::stack<Node> Stack;
+  std::stack<NodePtr> Stack;
 
   Parser(std::u8string_view src)
     : Src(src)
@@ -120,13 +122,13 @@ struct Parser
     return Src.substr(Pos, size);
   }
   template<typename T>
-  Node Push(uint32_t size, const T& value)
+  NodePtr Push(uint32_t size, const T& value)
   {
-    Node node;
-    node.Var = value;
+    auto node = std::make_shared<Node>();
+    node->Var = value;
     Pos += size;
     if (Stack.size()) {
-      if (auto array = Stack.top().Ptr<ArrayValue>()) {
+      if (auto array = Stack.top()->Ptr<ArrayValue>()) {
         array->Values.push_back(node);
       }
     }
@@ -154,7 +156,7 @@ struct Parser
     }
   }
 
-  std::expected<Node, std::u8string> Parse()
+  std::expected<NodePtr, std::u8string> ParseExpected()
   {
     SkipSpace();
     if (IsEnd()) {
@@ -162,10 +164,9 @@ struct Parser
     }
 
     auto ch = Src[Pos];
-    // if (ch == 0x7b) {
-    //   return ParseObject();
-    // } else
-    if (ch == '[') {
+    if (ch == 0x7b) {
+      return ParseObject();
+    } else if (ch == '[') {
       return ParseArray();
     } else {
       // primitive
@@ -204,7 +205,16 @@ struct Parser
     return std::unexpected{ u8"invalid" };
   }
 
-  std::expected<Node, std::u8string> ParseSymbol(std::u8string_view target)
+  NodePtr Parse()
+  {
+    if (auto result = ParseExpected()) {
+      return *result;
+    } else {
+      return nullptr;
+    }
+  }
+
+  std::expected<NodePtr, std::u8string> ParseSymbol(std::u8string_view target)
   {
     if (auto src = Peek(target.size())) {
       if (src->starts_with(target)) {
@@ -227,7 +237,7 @@ struct Parser
     }
   }
 
-  std::expected<Node, std::u8string> ParseNumber()
+  std::expected<NodePtr, std::u8string> ParseNumber()
   {
     auto src = Remain();
 #ifdef _MSC_VER
@@ -249,7 +259,7 @@ struct Parser
 #endif
   }
 
-  std::expected<Node, std::u8string> ParseString()
+  std::expected<NodePtr, std::u8string> ParseString()
   {
     assert(Src[Pos] == '"');
 
@@ -270,21 +280,50 @@ struct Parser
                 std::u8string{ Src.begin() + (Pos + 1), Src.begin() + close });
   }
 
-  std::expected<Node, std::u8string> ParseArray()
+  std::expected<NodePtr, std::u8string> ParseArray()
   {
     assert(Src[Pos] == '[');
 
     auto beginPos = Pos;
-    // auto arrayIndex = Values.size();
-    {
-      auto node = Push(1, ArrayValue());
-      // Values.back().Type = ValueType::Array;
-      Stack.push(node);
-    }
+    Stack.push(Push(1, ArrayValue()));
+    auto node = Stack.top();
 
     for (int i = 0; !IsEnd(); ++i) {
       SkipSpace();
       if (Src[Pos] == ']') {
+        // closed
+        ++Pos;
+        // auto node = Stack.top();
+        assert(node == Stack.top());
+        Stack.pop();
+        return node;
+      }
+
+      if (i) {
+        // must comma
+        if (Src[Pos] != ',') {
+          return std::unexpected{ u8"comma required" };
+        }
+        ++Pos;
+        SkipSpace();
+      }
+
+      Parse();
+    }
+
+    return std::unexpected{ u8"Unclosed array" };
+  }
+
+  std::expected<NodePtr, std::u8string> ParseObject()
+  {
+    assert(Src[Pos] == '{');
+
+    auto beginPos = Pos;
+    Stack.push(Push(1, ObjectValue{}));
+
+    for (int i = 0; !IsEnd(); ++i) {
+      SkipSpace();
+      if (Src[Pos] == '}') {
         // closed
         ++Pos;
         auto node = Stack.top();
@@ -301,6 +340,22 @@ struct Parser
         SkipSpace();
       }
 
+      // key
+      Parse();
+      // assert(Values.back().Type == ValueType::Primitive);
+      // assert(Values.back().Range.front() == '"');
+
+      {
+        SkipSpace();
+        // must colon
+        if (Src[Pos] != ':') {
+          return std::unexpected{ u8"colon required" };
+        }
+        ++Pos;
+        SkipSpace();
+      }
+
+      // value
       Parse();
     }
 

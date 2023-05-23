@@ -114,18 +114,16 @@ TEST(TestJsonTree, ParseArray)
     // EXPECT_TRUE(result);
     if (auto array = result->Array()) {
       EXPECT_EQ(array->Values.size(), 3);
-      EXPECT_EQ(array->Values.front().Number<int>(), 1);
+      EXPECT_EQ(array->Values[0]->Number<int>(), 1);
     }
   }
-  // {
-  //   auto SRC = u8"[1, [2, 3]]";
-  //   gltfjson::Parser parser(SRC);
-  //   auto result = parser.Parse();
-  //   EXPECT_EQ(parser.Values.size(), 5);
-  //   EXPECT_TRUE(result);
-  //   if (result) {
-  //     auto inner = result->Get(1);
-  //     EXPECT_EQ(*inner->Get(1), gltfjson::Value(u8"3"));
-  //   }
-  // }
+  {
+    auto SRC = u8"[1, [2, 3]]";
+    gltfjson::tree::Parser parser(SRC);
+    auto result = parser.Parse();
+    if (auto array = result->Array()) {
+      auto inner = array->Values[1]->Array();
+      EXPECT_EQ(inner->Values[1]->Number<int>(), 3);
+    }
+  }
 }
