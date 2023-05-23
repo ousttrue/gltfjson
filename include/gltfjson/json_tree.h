@@ -5,6 +5,7 @@
 #include <list>
 #include <memory>
 #include <optional>
+#include <stack>
 #include <string>
 #include <variant>
 
@@ -75,29 +76,13 @@ struct Node
       return std::nullopt;
     }
   }
-  static std::expected<Node, std::u8string> FromSymbol(std::u8string_view src)
-  {
-    Node node;
-    if (src == u8"null") {
-      node.Var = NullValue{};
-      return node;
-    } else if (src == u8"true") {
-      node.Var = true;
-      return node;
-    } else if (src == u8"false") {
-      node.Var = false;
-      return node;
-    } else {
-      return std::unexpected{ std::u8string(u8"unknown symbol: ") +
-                              std::u8string{ src.begin(), src.end() } };
-    }
-  }
 };
 
 struct Parser
 {
   std::u8string_view Src;
   uint32_t Pos = 0;
+  std::stack<Node> Stack;
 
   Parser(std::u8string_view src)
     : Src(src)
@@ -112,6 +97,23 @@ struct Parser
       return std::nullopt;
     }
     return Src.substr(Pos, size);
+  }
+  template<typename T>
+  std::expected<Node, std::u8string> Push(uint32_t size, const T& value)
+  {
+    if (Pos + size > Src.size()) {
+      return std::unexpected{ u8"Not enough size" };
+      ;
+    }
+
+    if (Stack.size()) {
+      assert(false);
+    } else {
+      Node node;
+      node.Var = value;
+      Pos += size;
+      return node;
+    }
   }
 
   bool IsSpace(char8_t ch)
@@ -147,8 +149,7 @@ struct Parser
     //   return ParseObject();
     // } else if (ch == '[') {
     //   return ParseArray();
-    // }
-    // else
+    // } else
     {
       // primitive
 
@@ -190,10 +191,18 @@ struct Parser
   {
     if (auto src = Peek(target.size())) {
       if (src->starts_with(target)) {
-        Pos += src->size();
-        return Node::FromSymbol(target);
+        if (*src == u8"null") {
+          return Push(src->size(), NullValue{});
+        } else if (*src == u8"true") {
+          return Push(src->size(), true);
+        } else if (*src == u8"false") {
+          return Push(src->size(), false);
+        } else {
+          return std::unexpected{ std::u8string(u8"unknown symbol: ") +
+                                  std::u8string{ src->begin(), src->end() } };
+        }
       } else {
-        return std::unexpected{ std::u8string(u8"Not match: ") +
+        return std::unexpected{ std::u8string(u8"unknown symbol: ") +
                                 std::u8string{ src->begin(), src->end() } };
       }
     } else {
@@ -210,10 +219,7 @@ struct Parser
           (const char*)src.data(), (const char*)src.data() + src.size(), value);
         ec == std::errc{}) {
       auto size = ptr - (const char*)src.data();
-      Node node;
-      node.Var = NumberValue::Create(src.substr(0, size));
-      Pos += size;
-      return node;
+      return Push(size, NumberValue::Create(src.substr(0, size)));
     } else {
       return std::unexpected{ u8"Invaild number" };
     }
@@ -222,10 +228,7 @@ struct Parser
                     (const char*)src.data() + src.size());
     size_t i;
     std::stod(str, &i);
-    Node node;
-    node.Var = NumberValue::Create(src.substr(0, i));
-    Pos += i;
-    return node;
+    return Push(i, NumberValue::Create(src.substr(0, i)));
 #endif
   }
 
@@ -246,12 +249,9 @@ struct Parser
       return std::unexpected{ u8"Unclosed string" };
     }
 
-    Node node;
-    node.Var = std::u8string{ Src.begin() + (Pos + 1), Src.begin() + close };
-    Pos = close + 1;
-    return node;
+    return Push(close - Pos + 1,
+                std::u8string{ Src.begin() + (Pos + 1), Src.begin() + close });
   }
 };
-
 }
 }
