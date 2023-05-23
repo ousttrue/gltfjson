@@ -139,6 +139,11 @@ struct Parser
   {
   }
 
+  Parser(std::span<const uint8_t> src)
+    : Src((const char8_t*)src.data(), (const char8_t*)src.data() + src.size())
+  {
+  }
+
   bool IsEnd() const { return Pos >= Src.size(); }
   std::u8string_view Remain() const { return Src.substr(Pos); }
   std::optional<std::u8string_view> Peek(uint32_t size) const
