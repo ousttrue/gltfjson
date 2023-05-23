@@ -4,4 +4,4 @@
 // #include "gltfjson/deserialize.h"
 // #include "gltfjson/gltf.h"
 // #include "gltfjson/json_parser.h"
-#include "gltfjson/gltf_annotation.h"
+#include "gltfjson/gltf_annotation_bin.h"

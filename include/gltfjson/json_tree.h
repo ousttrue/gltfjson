@@ -399,7 +399,7 @@ struct Parser
   }
 };
 
-void
+inline void
 ObjectValue::Push(const NodePtr& node)
 {
   if (m_lastKey) {

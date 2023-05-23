@@ -1,5 +1,4 @@
 #pragma once
-#include "directory.h"
 #include "gltf_types.h"
 #include "json_tree.h"
 #include <optional>
@@ -13,8 +12,9 @@ template<typename T>
 struct Key
 {
   std::u8string m_key;
-  std::optional<T> operator()() const;
-  void operator()(const T& t);
+  tree::NodePtr m_parent;
+  std::optional<T> operator()() const { return std::nullopt; }
+  // void operator()(const T& t);
 };
 
 using Id = uint32_t;
@@ -32,17 +32,17 @@ template<typename T>
 struct Array
 {
   std::u8string m_key;
+  tree::NodePtr m_parent;
   struct Iterator
   {
-    T& operator*();
-    Iterator& operator++();
-    bool operator!=(const Iterator& rhs) const;
+    T operator*() { return {}; }
+    Iterator& operator++() { return *this; }
+    bool operator!=(const Iterator& rhs) const { return true; }
   };
-  uint32_t Size() const;
-  T& operator[](size_t index);
-  const T& operator[](size_t index) const;
-  Iterator begin() const;
-  Iterator end() const;
+  uint32_t Size() const { return 0; }
+  T operator[](size_t index) const { return {}; }
+  Iterator begin() const { return {}; }
+  Iterator end() const { return {}; }
 };
 
 //
@@ -279,6 +279,8 @@ struct Asset
 
 struct Root
 {
+  tree::NodePtr m_json;
+
   Array<Accessor> Accessors{ u8"accessors" };
   Array<Animation> Animations{ u8"animations" };
   Key<Asset> Asset{ u8"asset" };
@@ -294,158 +296,25 @@ struct Root
   Key<Id> Scene{ u8"scene" };
   Array<annotation::Scene> Scenes{ u8"scenes" };
   Array<Skin> Skins{ u8"skins" };
-};
 
-struct Bin
-{
-  std::shared_ptr<Directory> Dir;
-  std::span<const uint8_t> Bytes;
-
-  std::expected<std::span<const uint8_t>, std::string> GetBufferViewBytes(
-    const Root& gltf,
-    int buffer_view_index) const
+  void Initialize(const tree::NodePtr& json)
   {
-    if (buffer_view_index < 0 || buffer_view_index >= gltf.BufferViews.Size()) {
-      return std::unexpected{ "buffer_view_index is out of range" };
-    }
-
-    auto buffer_view = gltf.BufferViews[buffer_view_index];
-    // std::cout << buffer_view << std::endl;
-
-    int buffer_index = *buffer_view.Buffer();
-    auto buffer = gltf.Buffers[buffer_index];
-    auto uri = buffer.Uri().value_or(u8"");
-    if (uri.size()) {
-      // external file
-      if (auto bytes = Dir->GetBuffer(uri)) {
-        return bytes->subspan(buffer_view.ByteOffset().value_or(0),
-                              *buffer_view.ByteLength());
-      } else {
-        return bytes;
-      }
-    } else {
-      // glb
-      return Bytes.subspan(buffer_view.ByteOffset().value_or(0),
-                           *buffer_view.ByteLength());
-    }
-  }
-
-  template<typename S, typename T>
-  std::expected<bool, std::string> GetSparseValue(const Root& gltf,
-                                                  std::span<const S> indices,
-                                                  uint32_t buffer_view_index,
-                                                  std::span<T> dst) const
-  {
-    if (auto span = GetBufferViewBytes(gltf, buffer_view_index)) {
-      assert(indices.size() == span->size() / sizeof(T));
-      auto p = (const T*)span->data();
-      for (int i = 0; i < indices.size(); ++i) {
-        dst[i] = p[indices[i]];
-      }
-      return true;
-    } else {
-      return std::unexpected{ span.error() };
-    }
-  }
-
-  mutable std::vector<uint8_t> m_sparseBuffer;
-  template<typename T>
-  std::expected<std::span<const T>, std::string> GetAccessorBytes(
-    const Root& gltf,
-    const Accessor& accessor) const
-  {
-    // std::cout << accessor << std::endl;
-    // assert(*item_size(accessor) == sizeof(T));
-    int count = *accessor.Count();
-    if (auto sparse = accessor.Sparse()) {
-      m_sparseBuffer.resize(count * sizeof(T));
-      auto begin = (T*)m_sparseBuffer.data();
-      auto sparse_span = std::span<T>(begin, begin + count);
-      if (accessor.BufferView()) {
-        // non zero sparse
-        return std::unexpected{ "non zero sparse not implemented" };
-      } else {
-        // zero fill
-        T zero = {};
-        std::fill(sparse_span.begin(), sparse_span.end(), zero);
-      }
-      int sparse_count = *sparse->Count();
-      auto sparse_indices = *sparse->Indices();
-      auto sparse_values = *sparse->Values();
-      switch (*sparse_indices.ComponentType()) {
-        case gltfjson::format::ComponentTypes::UNSIGNED_BYTE:
-          if (auto sparse_indices_bytes =
-                GetBufferViewBytes(gltf, *sparse_indices.BufferView())) {
-            auto begin = (const uint8_t*)sparse_indices_bytes->data();
-            auto indices_span = std::span(begin, begin + sparse_count);
-            if (auto result = GetSparseValue(gltf,
-                                             indices_span,
-                                             *sparse_values.BufferView(),
-                                             sparse_span)) {
-              return sparse_span;
-            } else {
-              return std::unexpected{ result.error() };
-            }
-          } else {
-            return std::unexpected{ sparse_indices_bytes.error() };
-          }
-
-        case gltfjson::format::ComponentTypes::UNSIGNED_SHORT:
-          if (auto sparse_indices_bytes =
-                GetBufferViewBytes(gltf, *sparse_indices.BufferView())) {
-            auto begin = (const uint16_t*)sparse_indices_bytes->data();
-            auto indices_span = std::span(begin, begin + sparse_count);
-            if (auto result = GetSparseValue(gltf,
-                                             indices_span,
-                                             *sparse_values.BufferView(),
-                                             sparse_span)) {
-
-              return sparse_span;
-            } else {
-              return std::unexpected{ result.error() };
-            }
-          } else {
-            return std::unexpected{ sparse_indices_bytes.error() };
-          }
-        case gltfjson::format::ComponentTypes::UNSIGNED_INT:
-          if (auto sparse_indices_bytes =
-                GetBufferViewBytes(gltf, *sparse_indices.BufferView())) {
-            auto begin = (const uint32_t*)sparse_indices_bytes->data();
-            auto indices_span = std::span(begin, begin + sparse_count);
-            if (auto result = GetSparseValue(gltf,
-                                             indices_span,
-                                             *sparse_values.BufferView(),
-                                             sparse_span)) {
-              return sparse_span;
-            } else {
-              return std::unexpected{ result.error() };
-            }
-          } else {
-            return std::unexpected{ sparse_indices_bytes.error() };
-          }
-        default:
-          return std::unexpected{ "sparse.indices: unknown" };
-      }
-      throw std::runtime_error("not implemented");
-    } else if (auto bufferView = accessor.BufferView()) {
-      if (auto span = GetBufferViewBytes(gltf, *bufferView)) {
-        int offset = accessor.ByteOffset().value_or(0);
-        return std::span<const T>((const T*)(span->data() + offset), count);
-
-      } else {
-        return std::unexpected{ "invalid bufferView" };
-      }
-    } else {
-      return std::unexpected{ "sparse nor bufferView" };
-    }
-  }
-
-  template<typename T>
-  std::expected<std::span<const T>, std::string> GetAccessorBytes(
-    const Root& gltf,
-    int accessor_index) const
-  {
-    return GetAccessorBytes<T>(gltf, gltf.Accessors[accessor_index]);
+    m_json = json;
+    Accessors.m_parent = m_json;
+    Animations.m_parent = m_json;
+    Asset.m_parent = m_json;
+    Buffers.m_parent = m_json;
+    BufferViews.m_parent = m_json;
+    Cameras.m_parent = m_json;
+    Images.m_parent = m_json;
+    Textures.m_parent = m_json;
+    Materials.m_parent = m_json;
+    Meshes.m_parent = m_json;
+    Nodes.m_parent = m_json;
+    Samplers.m_parent = m_json;
+    Scene.m_parent = m_json;
+    Scenes.m_parent = m_json;
+    Skins.m_parent = m_json;
   }
 };
 
