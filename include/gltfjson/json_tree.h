@@ -30,7 +30,7 @@ struct ArrayValue
 };
 struct ObjectValue
 {
-  std::list<std::tuple<std::u8string, Node>> KeyValues;
+  std::list<Node> Values;
 };
 struct Node
 {
@@ -41,6 +41,25 @@ struct Node
                ArrayValue,
                ObjectValue>
     Var;
+
+  template<typename T>
+  const T* Ptr() const
+  {
+    if (std::holds_alternative<T>(Var)) {
+      return &std::get<T>(Var);
+    } else {
+      return nullptr;
+    }
+  }
+  template<typename T>
+  T* Ptr()
+  {
+    if (std::holds_alternative<T>(Var)) {
+      return &std::get<T>(Var);
+    } else {
+      return nullptr;
+    }
+  }
   template<typename T>
   std::optional<T> Get() const
   {
@@ -76,6 +95,8 @@ struct Node
       return std::nullopt;
     }
   }
+  const ArrayValue* Array() const { return Ptr<ArrayValue>(); }
+  ArrayValue* Array() { return Ptr<ArrayValue>(); }
 };
 
 struct Parser
@@ -99,21 +120,17 @@ struct Parser
     return Src.substr(Pos, size);
   }
   template<typename T>
-  std::expected<Node, std::u8string> Push(uint32_t size, const T& value)
+  Node Push(uint32_t size, const T& value)
   {
-    if (Pos + size > Src.size()) {
-      return std::unexpected{ u8"Not enough size" };
-      ;
-    }
-
+    Node node;
+    node.Var = value;
+    Pos += size;
     if (Stack.size()) {
-      assert(false);
-    } else {
-      Node node;
-      node.Var = value;
-      Pos += size;
-      return node;
+      if (auto array = Stack.top().Ptr<ArrayValue>()) {
+        array->Values.push_back(node);
+      }
     }
+    return node;
   }
 
   bool IsSpace(char8_t ch)
@@ -147,10 +164,10 @@ struct Parser
     auto ch = Src[Pos];
     // if (ch == 0x7b) {
     //   return ParseObject();
-    // } else if (ch == '[') {
-    //   return ParseArray();
     // } else
-    {
+    if (ch == '[') {
+      return ParseArray();
+    } else {
       // primitive
 
       switch (ch) {
@@ -251,6 +268,43 @@ struct Parser
 
     return Push(close - Pos + 1,
                 std::u8string{ Src.begin() + (Pos + 1), Src.begin() + close });
+  }
+
+  std::expected<Node, std::u8string> ParseArray()
+  {
+    assert(Src[Pos] == '[');
+
+    auto beginPos = Pos;
+    // auto arrayIndex = Values.size();
+    {
+      auto node = Push(1, ArrayValue());
+      // Values.back().Type = ValueType::Array;
+      Stack.push(node);
+    }
+
+    for (int i = 0; !IsEnd(); ++i) {
+      SkipSpace();
+      if (Src[Pos] == ']') {
+        // closed
+        ++Pos;
+        auto node = Stack.top();
+        Stack.pop();
+        return node;
+      }
+
+      if (i) {
+        // must comma
+        if (Src[Pos] != ',') {
+          return std::unexpected{ u8"comma required" };
+        }
+        ++Pos;
+        SkipSpace();
+      }
+
+      Parse();
+    }
+
+    return std::unexpected{ u8"Unclosed array" };
   }
 };
 }

@@ -88,3 +88,44 @@ TEST(TestJsonTree, ParseString)
     }
   }
 }
+
+TEST(TestJsonTree, ParseArray)
+{
+  {
+    auto SRC = u8"[]";
+    gltfjson::tree::Parser parser(SRC);
+    auto result = parser.Parse();
+    EXPECT_TRUE(result);
+    if (auto array = result->Array()) {
+      EXPECT_TRUE(array->Values.empty());
+    }
+  }
+  {
+    auto SRC = u8"[ ]";
+    gltfjson::tree::Parser parser(SRC);
+    auto result = parser.Parse();
+    EXPECT_TRUE(result);
+  }
+  {
+    auto SRC = u8"[1, 2, 3]";
+    gltfjson::tree::Parser parser(SRC);
+    auto result = parser.Parse();
+    // EXPECT_EQ(parser.Values.size(), 4);
+    // EXPECT_TRUE(result);
+    if (auto array = result->Array()) {
+      EXPECT_EQ(array->Values.size(), 3);
+      EXPECT_EQ(array->Values.front().Number<int>(), 1);
+    }
+  }
+  // {
+  //   auto SRC = u8"[1, [2, 3]]";
+  //   gltfjson::Parser parser(SRC);
+  //   auto result = parser.Parse();
+  //   EXPECT_EQ(parser.Values.size(), 5);
+  //   EXPECT_TRUE(result);
+  //   if (result) {
+  //     auto inner = result->Get(1);
+  //     EXPECT_EQ(*inner->Get(1), gltfjson::Value(u8"3"));
+  //   }
+  // }
+}
