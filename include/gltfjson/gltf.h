@@ -35,6 +35,7 @@ struct Property
 struct ChildOfRootProperty : Property
 {
   std::u8string Name;
+  std::u8string _JsonText;
 };
 
 // https://github.com/KhronosGroup/glTF/blob/main/specification/2.0/schema/glTFid.schema.json

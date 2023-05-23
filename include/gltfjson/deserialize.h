@@ -86,6 +86,7 @@ DeserializeProp(const Value& value, Property& dst)
 inline void
 DeserializeChildOfRootProp(const Value& value, ChildOfRootProperty& dst)
 {
+  dst._JsonText = value.Range;
   if (auto prop = value.Get("name")) {
     DeserializeString(*prop, dst.Name);
   }
@@ -383,6 +384,8 @@ DeserializeAttribute(const Value& attributes, MeshPrimitiveMorphTarget& dst)
 inline void
 Deserialize(const Value& primitive, MeshPrimitive& dst)
 {
+  DeserializeProp(primitive, dst);
+
   if (auto prop = primitive.Get(u8"attributes")) {
     DeserializeAttribute(*prop, dst.Attributes);
   }
