@@ -7,6 +7,7 @@
 #include <optional>
 #include <stack>
 #include <string>
+#include <unordered_map>
 #include <variant>
 #include <vector>
 
@@ -28,11 +29,14 @@ struct NumberValue
 };
 struct ArrayValue
 {
-  std::vector<NodePtr> Values;
+  std::vector<NodePtr> m_values;
+  void Push(const NodePtr& node) { m_values.push_back(node); }
 };
 struct ObjectValue
 {
-  std::vector<NodePtr> Values;
+  std::unordered_map<std::u8string, NodePtr> m_values;
+  NodePtr m_lastKey;
+  void Push(const NodePtr& node);
 };
 struct Node
 {
@@ -104,23 +108,20 @@ struct Node
   NodePtr Get(std::u8string_view target) const
   {
     if (auto object = Object()) {
-      for (auto it = object->Values.begin(); it != object->Values.end(); ++it) {
-        auto key = it;
-        ++it;
-        auto value = it;
-        if (*(*key)->Get<std::u8string>() == target) {
-          return *value;
-        }
+      auto found = object->m_values.find({ target.begin(), target.end() });
+      if (found != object->m_values.end()) {
+        return found->second;
       }
     }
+
     return nullptr;
   }
   size_t Size() const
   {
     if (auto array = Ptr<ArrayValue>()) {
-      return array->Values.size();
+      return array->m_values.size();
     } else if (auto object = Ptr<ObjectValue>()) {
-      return object->Values.size() / 2;
+      return object->m_values.size();
     } else {
       return 0;
     }
@@ -155,9 +156,9 @@ struct Parser
     Pos += size;
     if (Stack.size()) {
       if (auto array = Stack.top()->Array()) {
-        array->Values.push_back(node);
+        array->Push(node);
       } else if (auto object = Stack.top()->Object()) {
-        object->Values.push_back(node);
+        object->Push(node);
       } else {
         assert(false);
       }
@@ -392,5 +393,18 @@ struct Parser
     return std::unexpected{ u8"Unclosed array" };
   }
 };
+
+void
+ObjectValue::Push(const NodePtr& node)
+{
+  if (m_lastKey) {
+    auto key = *m_lastKey->Get<std::u8string>();
+    m_values.insert({ key, node });
+    m_lastKey = {};
+  } else {
+    m_lastKey = node;
+  }
+}
+
 }
 }
