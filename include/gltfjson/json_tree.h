@@ -1,4 +1,5 @@
 #pragma once
+#include <assert.h>
 #include <charconv>
 #include <expected>
 #include <list>
@@ -152,8 +153,8 @@ struct Parser
       // primitive
 
       switch (ch) {
-          //     case u8'"':
-          //       return ParseString();
+        case u8'"':
+          return ParseString();
 
         case u8'-':
         case u8'0':
@@ -226,6 +227,29 @@ struct Parser
     Pos += i;
     return node;
 #endif
+  }
+
+  std::expected<Node, std::u8string> ParseString()
+  {
+    assert(Src[Pos] == '"');
+
+    auto close = Pos + 1;
+    for (; close < Src.size(); ++close) {
+      // TODO: escape
+      // TODO: utf-8 multibyte
+      if (Src[close] == '"') {
+        break;
+      }
+    }
+
+    if (Src[close] != '"') {
+      return std::unexpected{ u8"Unclosed string" };
+    }
+
+    Node node;
+    node.Var = std::u8string{ Src.begin() + (Pos + 1), Src.begin() + close };
+    Pos = close + 1;
+    return node;
   }
 };
 

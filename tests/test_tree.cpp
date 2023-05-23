@@ -73,3 +73,18 @@ TEST(TestJsonTree, ParseNumber)
     }
   }
 }
+
+TEST(TestJsonTree, ParseString)
+{
+  {
+    auto SRC = u8R"(
+"abc"
+)";
+    gltfjson::tree::Parser parser(SRC);
+    auto result = parser.Parse();
+    EXPECT_TRUE(result);
+    if (result) {
+      EXPECT_EQ(result->Get<std::u8string>(), u8"abc");
+    }
+  }
+}
