@@ -9,7 +9,7 @@ TEST(TestJsonTree, Parse)
     auto result = parser.Parse();
     EXPECT_TRUE(result);
     if (result) {
-      EXPECT_EQ(result->Get<bool>(), true);
+      EXPECT_EQ(result->Value<bool>(), true);
     }
   }
   {
@@ -18,7 +18,7 @@ TEST(TestJsonTree, Parse)
     auto result = parser.Parse();
     EXPECT_TRUE(result);
     if (result) {
-      EXPECT_EQ(result->Get<bool>(), false);
+      EXPECT_EQ(result->Value<bool>(), false);
     }
   }
   {
@@ -84,7 +84,7 @@ TEST(TestJsonTree, ParseString)
     auto result = parser.Parse();
     EXPECT_TRUE(result);
     if (result) {
-      EXPECT_EQ(result->Get<std::u8string>(), u8"abc");
+      EXPECT_EQ(result->Value<std::u8string>(), u8"abc");
     }
   }
 }

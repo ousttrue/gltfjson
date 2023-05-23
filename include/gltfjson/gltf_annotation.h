@@ -8,6 +8,36 @@
 namespace gltfjson {
 namespace annotation {
 
+template<size_t N>
+struct StringLiteral
+{
+  constexpr StringLiteral(const char8_t (&str)[N])
+  {
+    std::copy_n(str, N, value);
+  }
+  char8_t value[N];
+};
+
+struct JsonObject
+{
+  tree::NodePtr m_json;
+
+  template<StringLiteral lit>
+  tree::NodePtr m_node() const
+  {
+    return m_json->Get(lit.value);
+  }
+
+  template<typename T, StringLiteral lit>
+  std::optional<T> m_number() const
+  {
+    if (auto node = m_node<lit>()) {
+      return node->template Number<T>();
+    }
+    return std::nullopt;
+  }
+};
+
 template<typename T>
 struct Key
 {
@@ -277,10 +307,8 @@ struct Asset
   Key<std::u8string> MinVersion{ u8"minVersion" };
 };
 
-struct Root
+struct Root : JsonObject
 {
-  tree::NodePtr m_json;
-
   Array<Accessor> Accessors{ u8"accessors" };
   Array<Animation> Animations{ u8"animations" };
   Key<Asset> Asset{ u8"asset" };
@@ -293,30 +321,11 @@ struct Root
   Array<Mesh> Meshes{ u8"meshes" };
   Array<Node> Nodes{ u8"nodes" };
   Array<Sampler> Samplers{ u8"samplers" };
-  Key<Id> Scene{ u8"scene" };
+
+  auto Scene() const { return m_number<uint32_t, u8"scene">(); }
+
   Array<annotation::Scene> Scenes{ u8"scenes" };
   Array<Skin> Skins{ u8"skins" };
-
-  void Initialize(const tree::NodePtr& json)
-  {
-    m_json = json;
-    Accessors.m_parent = m_json;
-    Animations.m_parent = m_json;
-    Asset.m_parent = m_json;
-    Buffers.m_parent = m_json;
-    BufferViews.m_parent = m_json;
-    Cameras.m_parent = m_json;
-    Images.m_parent = m_json;
-    Textures.m_parent = m_json;
-    Materials.m_parent = m_json;
-    Meshes.m_parent = m_json;
-    Nodes.m_parent = m_json;
-    Samplers.m_parent = m_json;
-    Scene.m_parent = m_json;
-    Scenes.m_parent = m_json;
-    Skins.m_parent = m_json;
-  }
 };
-
 }
 }

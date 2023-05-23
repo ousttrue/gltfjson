@@ -67,7 +67,7 @@ struct Node
     }
   }
   template<typename T>
-  std::optional<T> Get() const
+  std::optional<T> Value() const
   {
     if (std::holds_alternative<T>(Var)) {
       return std::get<T>(Var);
@@ -79,7 +79,7 @@ struct Node
   template<typename T>
   std::optional<T> Number() const
   {
-    if (auto n = Get<NumberValue>()) {
+    if (auto n = Value<NumberValue>()) {
 #ifdef _MSC_VER
       T value;
       if (auto [ptr, ec] =
@@ -103,7 +103,7 @@ struct Node
   }
   std::u8string U8String() const
   {
-    if (auto str = Get<std::u8string>()) {
+    if (auto str = Value<std::u8string>()) {
       return *str;
     } else {
       return u8"";
@@ -411,7 +411,7 @@ inline void
 ObjectValue::Push(const NodePtr& node)
 {
   if (m_lastKey) {
-    auto key = *m_lastKey->Get<std::u8string>();
+    auto key = *m_lastKey->Value<std::u8string>();
     m_values.insert({ key, node });
     m_lastKey = {};
   } else {

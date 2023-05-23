@@ -85,7 +85,7 @@ TEST(GltfTestTree, Parse)
   EXPECT_EQ(version->U8String(), u8"2.0");
 
   gltfjson::annotation::Root gltf;
-  gltf.Initialize(result);
+  gltf.m_json = result;
 
   EXPECT_EQ(*gltf.Scene(), 0);
 
