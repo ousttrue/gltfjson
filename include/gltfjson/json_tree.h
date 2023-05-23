@@ -101,6 +101,14 @@ struct Node
       return std::nullopt;
     }
   }
+  std::u8string U8String() const
+  {
+    if (auto str = Get<std::u8string>()) {
+      return *str;
+    } else {
+      return u8"";
+    }
+  }
   const ArrayValue* Array() const { return Ptr<ArrayValue>(); }
   ArrayValue* Array() { return Ptr<ArrayValue>(); }
   const ObjectValue* Object() const { return Ptr<ObjectValue>(); }

@@ -2,7 +2,7 @@
 #include <gtest/gtest.h>
 
 // https://github.com/KhronosGroup/glTF-Tutorials/blob/master/gltfTutorial/gltfTutorial_003_MinimalGltfFile.md
-auto MINIMUM = u8R"(
+static auto MINIMUM = u8R"(
 {
   "scene": 0,
   "scenes" : [
