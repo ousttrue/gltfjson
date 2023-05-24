@@ -3,7 +3,7 @@
 #include "directory.h"
 
 namespace gltfjson {
-namespace annotation {
+namespace typing {
 
 struct Bin
 {

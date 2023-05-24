@@ -81,7 +81,7 @@ TEST(GltfTestTree, Parse)
   auto result = parser.Parse();
   EXPECT_TRUE(result);
 
-  gltfjson::annotation::Root gltf(result);
+  gltfjson::typing::Root gltf(result);
 
   // asset
   EXPECT_EQ(gltf.Asset()->Version(), u8"2.0");

@@ -6,7 +6,7 @@
 #include <string_view>
 
 namespace gltfjson {
-namespace annotation {
+namespace typing {
 
 struct Float3
 {
@@ -324,7 +324,7 @@ struct Accessor : JsonObject
   auto Type() const { return m_string<u8"type">(); }
   NumberArray<float, u8"max"> Max;
   NumberArray<float, u8"min"> Min;
-  auto Sparse() const { return m_object<annotation::Sparse, u8"sparse">(); }
+  auto Sparse() const { return m_object<typing::Sparse, u8"sparse">(); }
 };
 
 struct Camera : JsonObject
@@ -413,8 +413,7 @@ struct Material : JsonObject
   using JsonObject::JsonObject;
   auto PbrMetallicRoughness() const
   {
-    return m_object<annotation::PbrMetallicRoughness,
-                    u8"pbrMetallicRoughness">();
+    return m_object<typing::PbrMetallicRoughness, u8"pbrMetallicRoughness">();
   }
   auto NormalTexture() const
   {
@@ -611,7 +610,7 @@ struct Root : JsonObject
 
   JsonArray<Accessor, u8"accessors"> Accessors;
   JsonArray<Animation, u8"animations"> Animations;
-  auto Asset() const { return m_object<annotation::Asset, u8"asset">(); }
+  auto Asset() const { return m_object<typing::Asset, u8"asset">(); }
   JsonArray<Buffer, u8"buffers"> Buffers;
   JsonArray<BufferView, u8"bufferViews"> BufferViews;
   JsonArray<Camera, u8"cameras"> Cameras;
@@ -622,7 +621,7 @@ struct Root : JsonObject
   JsonArray<Node, u8"nodes"> Nodes;
   JsonArray<Sampler, u8"samplers"> Samplers;
   auto Scene() const { return m_number<uint32_t, u8"scene">(); }
-  JsonArray<annotation::Scene, u8"scenes"> Scenes;
+  JsonArray<typing::Scene, u8"scenes"> Scenes;
   JsonArray<Skin, u8"skins"> Skins;
 };
 
