@@ -43,19 +43,19 @@ struct Node
       return nullptr;
     }
   }
-  template<typename T>
-  std::optional<T> Value() const
-  {
-    if (std::holds_alternative<T>(Var)) {
-      return std::get<T>(Var);
-    } else {
-      return std::nullopt;
-    }
-  }
+  // template<typename T>
+  // std::optional<T> Value() const
+  // {
+  //   if (std::holds_alternative<T>(Var)) {
+  //     return std::get<T>(Var);
+  //   } else {
+  //     return std::nullopt;
+  //   }
+  // }
   bool IsNull() const { return std::holds_alternative<NullValue>(Var); }
   std::u8string U8String() const
   {
-    if (auto str = Value<std::u8string>()) {
+    if (auto str = Ptr<std::u8string>()) {
       return *str;
     } else {
       return u8"";

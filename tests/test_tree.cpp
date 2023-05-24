@@ -9,7 +9,7 @@ TEST(TestJsonTree, Parse)
     auto result = parser.Parse();
     EXPECT_TRUE(result);
     if (result) {
-      EXPECT_EQ(result->Value<bool>(), true);
+      EXPECT_EQ(*result->Ptr<bool>(), true);
     }
   }
   {
@@ -18,7 +18,7 @@ TEST(TestJsonTree, Parse)
     auto result = parser.Parse();
     EXPECT_TRUE(result);
     if (result) {
-      EXPECT_EQ(result->Value<bool>(), false);
+      EXPECT_EQ(*result->Ptr<bool>(), false);
     }
   }
   {
@@ -40,7 +40,7 @@ TEST(TestJsonTree, ParseNumber)
     auto result = parser.Parse();
     EXPECT_TRUE(result);
     if (result) {
-      EXPECT_EQ(*result->Value<float>(), 1);
+      EXPECT_EQ(*result->Ptr<float>(), 1);
     }
   }
   {
@@ -49,7 +49,7 @@ TEST(TestJsonTree, ParseNumber)
     auto result = parser.Parse();
     EXPECT_TRUE(result);
     if (result) {
-      EXPECT_EQ(*result->Value<float>(), -1);
+      EXPECT_EQ(*result->Ptr<float>(), -1);
     }
   }
   {
@@ -58,7 +58,7 @@ TEST(TestJsonTree, ParseNumber)
     auto result = parser.Parse();
     EXPECT_TRUE(result);
     if (result) {
-      EXPECT_EQ(*result->Value<float>(), 1e-5f);
+      EXPECT_EQ(*result->Ptr<float>(), 1e-5f);
     }
   }
   {
@@ -67,7 +67,7 @@ TEST(TestJsonTree, ParseNumber)
     auto result = parser.Parse();
     EXPECT_TRUE(result);
     if (result) {
-      EXPECT_EQ(*result->Value<float>(), 1.1f);
+      EXPECT_EQ(*result->Ptr<float>(), 1.1f);
     }
   }
 }
@@ -82,7 +82,7 @@ TEST(TestJsonTree, ParseString)
     auto result = parser.Parse();
     EXPECT_TRUE(result);
     if (result) {
-      EXPECT_EQ(result->Value<std::u8string>(), u8"abc");
+      EXPECT_EQ(result->U8String(), u8"abc");
     }
   }
 }
@@ -110,7 +110,7 @@ TEST(TestJsonTree, ParseArray)
     auto result = parser.Parse();
     if (auto array = result->Array()) {
       EXPECT_EQ(array->size(), 3);
-      EXPECT_EQ(*(*array)[0]->Value<float>(), 1);
+      EXPECT_EQ(*(*array)[0]->Ptr<float>(), 1);
     }
   }
   {
@@ -119,7 +119,7 @@ TEST(TestJsonTree, ParseArray)
     auto result = parser.Parse();
     if (auto array = result->Array()) {
       auto inner = (*array)[1]->Array();
-      EXPECT_EQ(*(*inner)[1]->Value<float>(), 3);
+      EXPECT_EQ(*(*inner)[1]->Ptr<float>(), 3);
     }
   }
 }
@@ -153,7 +153,7 @@ TEST(TestJsonTree, ParseObject)
     auto result = parser.Parse();
     if (result) {
       EXPECT_EQ(result->Size(), 1);
-      EXPECT_EQ(*result->Get(u8"key")->Value<float>(), 1);
+      EXPECT_EQ(*result->Get(u8"key")->Ptr<float>(), 1);
     }
   }
   {
@@ -162,7 +162,7 @@ TEST(TestJsonTree, ParseObject)
     auto result = parser.Parse();
     if (result) {
       auto inner = result->Get(u8"key");
-      EXPECT_EQ(*inner->Get(u8"key2")->Value<float>(), 2);
+      EXPECT_EQ(*inner->Get(u8"key2")->Ptr<float>(), 2);
     }
   }
 }

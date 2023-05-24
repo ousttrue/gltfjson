@@ -104,14 +104,15 @@ TEST(GltfTestTree, Parse)
   EXPECT_EQ(*gltf.BufferViews[0].ByteOffset(), 0);
   EXPECT_EQ(*gltf.BufferViews[0].ByteOffset(), 0);
   EXPECT_EQ(*gltf.BufferViews[0].ByteLength(), 6);
-  EXPECT_EQ(*gltf.BufferViews[0].Target(),
+  EXPECT_EQ((gltfjson::format::Targets)*gltf.BufferViews[0].Target(),
             gltfjson::format::Targets::ELEMENT_ARRAY_BUFFER);
 
   // accessors.0
   EXPECT_EQ(*gltf.Accessors[0].BufferView(), 0);
   EXPECT_EQ(*gltf.Accessors[0].ByteOffset(), 0);
-  EXPECT_EQ(*gltf.Accessors[0].ComponentType(),
-            gltfjson::format::ComponentTypes::UNSIGNED_SHORT);
+  EXPECT_EQ(
+    (gltfjson::format::ComponentTypes)*gltf.Accessors[0].ComponentType(),
+    gltfjson::format::ComponentTypes::UNSIGNED_SHORT);
   EXPECT_EQ(*gltf.Accessors[0].Count(), 3);
   EXPECT_EQ(gltf.Accessors[0].Type(), u8"SCALAR");
   EXPECT_EQ(gltf.Accessors[0].Max.size(), 1);
@@ -124,5 +125,4 @@ TEST(GltfTestTree, Parse)
   EXPECT_EQ(gltf.Accessors[1].Min[0], 0);
   EXPECT_EQ(gltf.Accessors[1].Min[1], 0);
   EXPECT_EQ(gltf.Accessors[1].Min[2], 0);
-
 }

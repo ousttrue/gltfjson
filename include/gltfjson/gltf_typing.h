@@ -73,7 +73,7 @@ struct NumberArray
   uint32_t size() const { return m_json->Size(); }
   T operator[](size_t index) const
   {
-    return (T)*m_json->Get(index)->Value<float>();
+    return (T)*m_json->Get(index)->Ptr<float>();
   }
   Iterator begin() const { return {}; }
   Iterator end() const { return {}; }
@@ -95,31 +95,20 @@ struct JsonObject
     return m_json->Get(lit.value);
   }
 
-  template<StringLiteral lit>
-  bool m_bool() const
-  {
-    if (auto node = m_node<lit>()) {
-      if (auto value = node->Value<bool>()) {
-        return *value;
-      }
-    }
-    return false;
-  }
-
   template<typename T, StringLiteral lit>
-  std::optional<T> m_number() const
+  T* m_ptr() const
   {
     if (auto node = m_node<lit>()) {
-      return (T)*node->Value<float>();
+      return node->Ptr<T>();
     }
-    return std::nullopt;
+    return nullptr;
   }
 
   template<StringLiteral lit>
   std::optional<Id> m_id() const
   {
     if (auto node = m_node<lit>()) {
-      return (Id)*node->Value<float>();
+      return (Id)*node->Ptr<float>();
     }
     return std::nullopt;
   }
@@ -128,9 +117,7 @@ struct JsonObject
   std::u8string m_string() const
   {
     if (auto node = m_node<lit>()) {
-      if (auto str = node->Value<std::u8string>()) {
-        return *str;
-      }
+      return node->U8String();
     }
     return u8"";
   }
@@ -142,9 +129,9 @@ struct JsonObject
       if (auto array = node->Array()) {
         if (array->size() == 3) {
           Float3 value;
-          value.x = *(*array)[0]->Value<float>();
-          value.y = *(*array)[1]->Value<float>();
-          value.z = *(*array)[2]->Value<float>();
+          value.x = *(*array)[0]->Ptr<float>();
+          value.y = *(*array)[1]->Ptr<float>();
+          value.z = *(*array)[2]->Ptr<float>();
           return value;
         }
       }
@@ -158,10 +145,10 @@ struct JsonObject
       if (auto array = node->Array()) {
         if (array->size() == 4) {
           Float4 value;
-          value.x = *(*array)[0]->Value<float>();
-          value.y = *(*array)[1]->Value<float>();
-          value.z = *(*array)[2]->Value<float>();
-          value.w = *(*array)[3]->Value<float>();
+          value.x = *(*array)[0]->Ptr<float>();
+          value.y = *(*array)[1]->Ptr<float>();
+          value.z = *(*array)[2]->Ptr<float>();
+          value.w = *(*array)[3]->Ptr<float>();
           return value;
         }
       }
@@ -175,22 +162,22 @@ struct JsonObject
       if (auto array = node->Array()) {
         if (array->size() == 16) {
           Float16 value;
-          value._11 = *(*array)[0]->Value<float>();
-          value._12 = *(*array)[1]->Value<float>();
-          value._13 = *(*array)[2]->Value<float>();
-          value._14 = *(*array)[3]->Value<float>();
-          value._21 = *(*array)[4]->Value<float>();
-          value._22 = *(*array)[5]->Value<float>();
-          value._23 = *(*array)[6]->Value<float>();
-          value._24 = *(*array)[7]->Value<float>();
-          value._31 = *(*array)[8]->Value<float>();
-          value._32 = *(*array)[9]->Value<float>();
-          value._33 = *(*array)[10]->Value<float>();
-          value._34 = *(*array)[11]->Value<float>();
-          value._41 = *(*array)[12]->Value<float>();
-          value._42 = *(*array)[13]->Value<float>();
-          value._43 = *(*array)[14]->Value<float>();
-          value._44 = *(*array)[15]->Value<float>();
+          value._11 = *(*array)[0]->Ptr<float>();
+          value._12 = *(*array)[1]->Ptr<float>();
+          value._13 = *(*array)[2]->Ptr<float>();
+          value._14 = *(*array)[3]->Ptr<float>();
+          value._21 = *(*array)[4]->Ptr<float>();
+          value._22 = *(*array)[5]->Ptr<float>();
+          value._23 = *(*array)[6]->Ptr<float>();
+          value._24 = *(*array)[7]->Ptr<float>();
+          value._31 = *(*array)[8]->Ptr<float>();
+          value._32 = *(*array)[9]->Ptr<float>();
+          value._33 = *(*array)[10]->Ptr<float>();
+          value._34 = *(*array)[11]->Ptr<float>();
+          value._41 = *(*array)[12]->Ptr<float>();
+          value._42 = *(*array)[13]->Ptr<float>();
+          value._43 = *(*array)[14]->Ptr<float>();
+          value._44 = *(*array)[15]->Ptr<float>();
           return value;
         }
       }
@@ -218,40 +205,10 @@ struct JsonObject
   }
 };
 
-// template<typename T>
-// struct Array
-// {
-//   std::u8string m_key;
-//   tree::NodePtr m_json;
-//   struct Iterator
-//   {
-//     T operator*() { return {}; }
-//     Iterator& operator++() { return *this; }
-//     bool operator!=(const Iterator& rhs) const { return true; }
-//   };
-//   uint32_t size() const { return 0; }
-//   T operator[](size_t index) const { return {}; }
-//   Iterator begin() const { return {}; }
-//   Iterator end() const { return {}; }
-// };
-//
-// template<typename T>
-// struct Key
-// {
-//   std::u8string m_key;
-//   tree::NodePtr m_parent;
-//   std::optional<T> operator()() const { return std::nullopt; }
-//   // void operator()(const T& t);
-// };
-//
 // struct ChildOfRootProperty
 // {
 //   Key<std::u8string> Name{ u8"name" };
 // };
-//
-// template<typename T, size_t N>
-// struct FixedArray : Key<std::array<T, N>>
-// {};
 
 //
 // gltf
@@ -262,7 +219,7 @@ struct Buffer : JsonObject
 {
   using JsonObject::JsonObject;
   auto Uri() const { return m_string<u8"uri">(); };
-  auto ByteLength() const { return m_number<uint32_t, u8"byteLength">(); };
+  auto ByteLength() const { return m_ptr<float, u8"byteLength">(); };
 };
 
 // https://github.com/KhronosGroup/glTF/blob/main/specification/2.0/schema/bufferView.schema.json
@@ -270,10 +227,10 @@ struct BufferView : JsonObject
 {
   using JsonObject::JsonObject;
   auto Buffer() const { return m_id<u8"buffer">(); };
-  auto ByteOffset() const { return m_number<uint32_t, u8"byteOffset">(); };
-  auto ByteLength() const { return m_number<uint32_t, u8"byteLength">(); };
-  auto ByteStride() const { return m_number<uint32_t, u8"byteStride">(); };
-  auto Target() const { return m_number<format::Targets, u8"target">(); };
+  auto ByteOffset() const { return m_ptr<float, u8"byteOffset">(); };
+  auto ByteLength() const { return m_ptr<float, u8"byteLength">(); };
+  auto ByteStride() const { return m_ptr<float, u8"byteStride">(); };
+  auto Target() const { return m_ptr<float, u8"target">(); };
 };
 
 // https://github.com/KhronosGroup/glTF/blob/main/specification/2.0/schema/accessor.sparse.indices.schema.json
@@ -281,11 +238,8 @@ struct SparseIndices : JsonObject
 {
   using JsonObject::JsonObject;
   auto BufferView() const { return m_id<u8"bufferView">(); };
-  auto ByteOffset() const { return m_number<uint32_t, u8"byteOffset">(); }
-  auto ComponentType() const
-  {
-    return m_number<format::ComponentTypes, u8"componentType">();
-  }
+  auto ByteOffset() const { return m_ptr<float, u8"byteOffset">(); }
+  auto ComponentType() const { return m_ptr<float, u8"componentType">(); }
 };
 
 // https://github.com/KhronosGroup/glTF/blob/main/specification/2.0/schema/accessor.sparse.values.schema.json
@@ -293,14 +247,14 @@ struct SparseValues : JsonObject
 {
   using JsonObject::JsonObject;
   auto BufferView() const { return m_id<u8"bufferView">(); }
-  auto ByteOffset() const { return m_number<uint32_t, u8"byteOffset">(); }
+  auto ByteOffset() const { return m_ptr<float, u8"byteOffset">(); }
 };
 
 // https://github.com/KhronosGroup/glTF/blob/main/specification/2.0/schema/accessor.sparse.schema.json
 struct Sparse : JsonObject
 {
   using JsonObject::JsonObject;
-  auto Count() const { return m_number<uint32_t, u8"count">(); }
+  auto Count() const { return m_ptr<float, u8"count">(); }
   auto Indices() const { return m_object<SparseIndices, u8"indices">(); }
   auto Values() const { return m_object<SparseValues, u8"values">(); }
 };
@@ -314,13 +268,10 @@ struct Accessor : JsonObject
   {
   }
   auto BufferView() const { return m_id<u8"bufferView">(); }
-  auto ByteOffset() const { return m_number<uint32_t, u8"byteOffset">(); }
-  auto ComponentType() const
-  {
-    return m_number<format::ComponentTypes, u8"componentType">();
-  }
-  auto Normalized() const { return m_bool<u8"normalized">(); }
-  auto Count() const { return m_number<uint32_t, u8"count">(); }
+  auto ByteOffset() const { return m_ptr<float, u8"byteOffset">(); }
+  auto ComponentType() const { return m_ptr<float, u8"componentType">(); }
+  auto Normalized() const { return m_ptr<bool, u8"normalized">(); }
+  auto Count() const { return m_ptr<float, u8"count">(); }
   auto Type() const { return m_string<u8"type">(); }
   NumberArray<float, u8"max"> Max;
   NumberArray<float, u8"min"> Min;
@@ -345,16 +296,10 @@ struct Image : JsonObject
 struct Sampler : JsonObject
 {
   using JsonObject::JsonObject;
-  auto MagFilter() const
-  {
-    return m_number<format::TextureMagFilter, u8"magFilter">();
-  };
-  auto MinFilter() const
-  {
-    return m_number<format::TextureMinFilter, u8"minFilter">();
-  };
-  auto WrapS() const { return m_number<format::TextureWrap, u8"wrapS">(); }
-  auto WrapT() const { return m_number<format::TextureWrap, u8"wrapT">(); }
+  auto MagFilter() const { return m_ptr<float, u8"magFilter">(); };
+  auto MinFilter() const { return m_ptr<float, u8"minFilter">(); };
+  auto WrapS() const { return m_ptr<float, u8"wrapS">(); }
+  auto WrapT() const { return m_ptr<float, u8"wrapT">(); }
 };
 
 // https://github.com/KhronosGroup/glTF/blob/main/specification/2.0/schema/texture.schema.json
@@ -370,21 +315,21 @@ struct TextureInfo : JsonObject
 {
   using JsonObject::JsonObject;
   auto Index() const { return m_id<u8"index">(); }
-  auto TexCoord() const { return m_number<uint32_t, u8"texCoord">(); }
+  auto TexCoord() const { return m_ptr<float, u8"texCoord">(); }
 };
 
 // https://github.com/KhronosGroup/glTF/blob/main/specification/2.0/schema/material.normalTextureInfo.schema.json
 struct NormalTextureInfo : TextureInfo
 {
   using TextureInfo::TextureInfo;
-  auto Scale() const { return m_number<float, u8"scale">(); }
+  auto Scale() const { return m_ptr<float, u8"scale">(); }
 };
 
 // https://github.com/KhronosGroup/glTF/blob/main/specification/2.0/schema/material.occlusionTextureInfo.schema.json
 struct OcclusionTextureInfo : TextureInfo
 {
   using TextureInfo::TextureInfo;
-  auto Strength() const { return m_number<float, u8"strength">(); };
+  auto Strength() const { return m_ptr<float, u8"strength">(); };
 };
 
 // https://github.com/KhronosGroup/glTF/blob/main/specification/2.0/schema/material.pbrMetallicRoughness.schema.json
@@ -396,11 +341,8 @@ struct PbrMetallicRoughness : JsonObject
   {
     return m_object<TextureInfo, u8"baseColorTexture">();
   }
-  auto MetallicFactor() const { return m_number<float, u8"metallicFactor">(); };
-  auto RoughnessFactor() const
-  {
-    return m_number<float, u8"roughnessFactor">();
-  };
+  auto MetallicFactor() const { return m_ptr<float, u8"metallicFactor">(); };
+  auto RoughnessFactor() const { return m_ptr<float, u8"roughnessFactor">(); };
   auto MetallicRoughnessTexture() const
   {
     return m_object<TextureInfo, u8"metallicRoughnessTexture">();
@@ -428,12 +370,9 @@ struct Material : JsonObject
     return m_object<TextureInfo, u8"emissiveTexture">();
   }
   auto EmissiveFactor() const { return m_float3<u8"emissiveFactor">(); }
-  auto AlphaMode() const
-  {
-    return m_number<format::AlphaModes, u8"alphaMode">();
-  }
-  auto AlphaCutoff() const { return m_number<float, u8"alphaCutoff">(); };
-  auto DoubleSided() const { return m_number<bool, u8"doubleSided">(); };
+  auto AlphaMode() const { return m_ptr<float, u8"alphaMode">(); }
+  auto AlphaCutoff() const { return m_ptr<float, u8"alphaCutoff">(); };
+  auto DoubleSided() const { return m_ptr<bool, u8"doubleSided">(); };
 };
 
 // https://github.com/KhronosGroup/glTF/blob/main/specification/2.0/schema/skin.schema.json
@@ -485,10 +424,7 @@ struct MeshPrimitive : JsonObject
   }
   auto Indices() const { return m_id<u8"indices">(); }
   auto Material() const { return m_id<u8"material">(); }
-  auto Mode() const
-  {
-    return m_number<format::MeshPrimitiveTopology, u8"mode">();
-  };
+  auto Mode() const { return m_ptr<float, u8"mode">(); };
   JsonArray<MeshPrimitiveMorphTarget, u8"targets"> Targets;
 };
 
@@ -530,10 +466,7 @@ struct AnimationSampler : JsonObject
 {
   using JsonObject::JsonObject;
   auto Input() const { return m_id<u8"input">(); }
-  auto Interpolation() const
-  {
-    return m_number<format::InterpolationTypes, u8"interpolation">();
-  }
+  auto Interpolation() const { return m_ptr<float, u8"interpolation">(); }
   auto Output() const { return m_id<u8"output">(); };
 };
 
@@ -542,7 +475,7 @@ struct AnimationTarget : JsonObject
 {
   using JsonObject::JsonObject;
   auto Node() const { return m_id<u8"node">(); }
-  auto Path() const { return m_number<format::PathTypes, u8"path">(); }
+  auto Path() const { return m_ptr<float, u8"path">(); }
 };
 
 // https://github.com/KhronosGroup/glTF/blob/main/specification/2.0/schema/animation.channel.schema.json
@@ -620,7 +553,7 @@ struct Root : JsonObject
   JsonArray<Mesh, u8"meshes"> Meshes;
   JsonArray<Node, u8"nodes"> Nodes;
   JsonArray<Sampler, u8"samplers"> Samplers;
-  auto Scene() const { return m_number<uint32_t, u8"scene">(); }
+  auto Scene() const { return m_ptr<float, u8"scene">(); }
   JsonArray<typing::Scene, u8"scenes"> Scenes;
   JsonArray<Skin, u8"skins"> Skins;
 };
