@@ -66,6 +66,11 @@ struct JsonObject
 {
   tree::NodePtr m_json;
 
+  JsonObject(const tree::NodePtr& json)
+    : m_json(json)
+  {
+  }
+
   template<StringLiteral lit>
   tree::NodePtr m_node() const
   {
@@ -79,6 +84,17 @@ struct JsonObject
       return (T)*node->Value<double>();
     }
     return std::nullopt;
+  }
+
+  template<StringLiteral lit>
+  std::u8string m_string() const
+  {
+    if (auto node = m_node<lit>()) {
+      if (auto str = node->Value<std::u8string>()) {
+        return *str;
+      }
+    }
+    return u8"";
   }
 
   template<typename T, StringLiteral lit>
@@ -350,32 +366,36 @@ struct Animation : ChildOfRootProperty
 struct Scene : JsonObject
 {
   Scene(const tree::NodePtr& json)
-    : Nodes(json)
+    : JsonObject(json)
+    , Nodes(json)
   {
   }
   NumberArray<uint32_t, u8"nodes"> Nodes;
 };
 
 // https://github.com/KhronosGroup/glTF/blob/main/specification/2.0/schema/asset.schema.json
-struct Asset
+struct Asset : JsonObject
 {
-  Key<std::u8string> Copyright{ u8"copyright" };
-  Key<std::u8string> Generator{ u8"generator" };
-  Key<std::u8string> Version{ u8"version" };
-  Key<std::u8string> MinVersion{ u8"minVersion" };
+  using JsonObject::JsonObject;
+
+  auto Copyright() const { return m_string<u8"copyright">(); };
+  auto Generator() const { return m_string<u8"generator">(); };
+  auto Version() const { return m_string<u8"version">(); };
+  auto MinVersion() const { return m_string<u8"minVersion">(); };
 };
 
 struct Root : JsonObject
 {
-  Root(tree::NodePtr json)
-    : Scenes(json)
+  Root(const tree::NodePtr& json)
+    : JsonObject(json)
+    , Scenes(json)
   {
     m_json = json;
   }
 
   Array<Accessor> Accessors{ u8"accessors" };
   Array<Animation> Animations{ u8"animations" };
-  Key<Asset> Asset{ u8"asset" };
+  auto Asset() const { return annotation::Asset{ m_node<u8"asset">() }; };
   Array<Buffer> Buffers{ u8"buffers" };
   Array<BufferView> BufferViews{ u8"bufferViews" };
   Array<Camera> Cameras{ u8"cameras" };
