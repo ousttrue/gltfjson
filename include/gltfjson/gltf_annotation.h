@@ -55,7 +55,10 @@ struct NumberArray
     bool operator!=(const Iterator& rhs) const { return true; }
   };
   uint32_t size() const { return m_json->Size(); }
-  T operator[](size_t index) const { return *m_json->Get(index)->Number<T>(); }
+  T operator[](size_t index) const
+  {
+    return (T)*m_json->Get(index)->Value<double>();
+  }
   Iterator begin() const { return {}; }
   Iterator end() const { return {}; }
 };
@@ -73,7 +76,7 @@ struct JsonObject
   std::optional<T> m_number() const
   {
     if (auto node = m_node<lit>()) {
-      return node->template Number<T>();
+      return (T)*node->Value<double>();
     }
     return std::nullopt;
   }

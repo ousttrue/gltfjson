@@ -18,15 +18,6 @@ struct Node;
 using NodePtr = std::shared_ptr<Node>;
 struct NullValue
 {};
-struct NumberValue
-{
-  std::u8string Value;
-
-  static NumberValue Create(std::u8string_view src)
-  {
-    return NumberValue{ .Value = { src.begin(), src.end() } };
-  }
-};
 struct ArrayValue
 {
   std::vector<NodePtr> m_values;
@@ -40,12 +31,7 @@ struct ObjectValue
 };
 struct Node
 {
-  std::variant<NullValue,
-               bool,
-               NumberValue,
-               std::u8string,
-               ArrayValue,
-               ObjectValue>
+  std::variant<NullValue, bool, double, std::u8string, ArrayValue, ObjectValue>
     Var;
 
   template<typename T>
@@ -76,31 +62,6 @@ struct Node
     }
   }
   bool IsNull() const { return std::holds_alternative<NullValue>(Var); }
-  template<typename T>
-  std::optional<T> Number() const
-  {
-    if (auto n = Value<NumberValue>()) {
-#ifdef _MSC_VER
-      T value;
-      if (auto [ptr, ec] =
-            std::from_chars((const char*)n->Value.data(),
-                            (const char*)n->Value.data() + n->Value.size(),
-                            value);
-          ec == std::errc{}) {
-        return value;
-      } else {
-        return std::nullopt;
-      }
-#else
-      std::string str((const char*)Range.data(),
-                      (const char*)Range.data() + Range.size());
-      return std::stod(str, &i);
-#endif
-
-    } else {
-      return std::nullopt;
-    }
-  }
   std::u8string U8String() const
   {
     if (auto str = Value<std::u8string>()) {
@@ -298,7 +259,7 @@ struct Parser
           (const char*)src.data(), (const char*)src.data() + src.size(), value);
         ec == std::errc{}) {
       auto size = ptr - (const char*)src.data();
-      return Push(size, NumberValue::Create(src.substr(0, size)));
+      return Push(size, value);
     } else {
       return std::unexpected{ u8"Invaild number" };
     }
@@ -307,7 +268,7 @@ struct Parser
                     (const char*)src.data() + src.size());
     size_t i;
     std::stod(str, &i);
-    return Push(i, NumberValue::Create(src.substr(0, i)));
+    return Push(i, i);
 #endif
   }
 

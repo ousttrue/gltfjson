@@ -40,7 +40,7 @@ TEST(TestJsonTree, ParseNumber)
     auto result = parser.Parse();
     EXPECT_TRUE(result);
     if (result) {
-      EXPECT_EQ(result->Number<int>(), 1);
+      EXPECT_EQ(*result->Value<double>(), 1);
     }
   }
   {
@@ -49,7 +49,7 @@ TEST(TestJsonTree, ParseNumber)
     auto result = parser.Parse();
     EXPECT_TRUE(result);
     if (result) {
-      EXPECT_EQ(result->Number<int>(), -1);
+      EXPECT_EQ(*result->Value<double>(), -1);
     }
   }
   {
@@ -58,8 +58,7 @@ TEST(TestJsonTree, ParseNumber)
     auto result = parser.Parse();
     EXPECT_TRUE(result);
     if (result) {
-      EXPECT_EQ(result->Number<double>(), 1e-5);
-      EXPECT_EQ(result->Number<float>(), 1e-5f);
+      EXPECT_EQ(*result->Value<double>(), 1e-5);
     }
   }
   {
@@ -68,8 +67,7 @@ TEST(TestJsonTree, ParseNumber)
     auto result = parser.Parse();
     EXPECT_TRUE(result);
     if (result) {
-      EXPECT_EQ(result->Number<double>(), 1.1);
-      EXPECT_EQ(result->Number<float>(), 1.1f);
+      EXPECT_EQ(*result->Value<double>(), 1.1);
     }
   }
 }
@@ -112,7 +110,7 @@ TEST(TestJsonTree, ParseArray)
     auto result = parser.Parse();
     if (auto array = result->Array()) {
       EXPECT_EQ(array->m_values.size(), 3);
-      EXPECT_EQ(array->m_values[0]->Number<int>(), 1);
+      EXPECT_EQ(*array->m_values[0]->Value<double>(), 1);
     }
   }
   {
@@ -121,7 +119,7 @@ TEST(TestJsonTree, ParseArray)
     auto result = parser.Parse();
     if (auto array = result->Array()) {
       auto inner = array->m_values[1]->Array();
-      EXPECT_EQ(inner->m_values[1]->Number<int>(), 3);
+      EXPECT_EQ(*inner->m_values[1]->Value<double>(), 3);
     }
   }
 }
@@ -155,7 +153,7 @@ TEST(TestJsonTree, ParseObject)
     auto result = parser.Parse();
     if (result) {
       EXPECT_EQ(result->Size(), 1);
-      EXPECT_EQ(result->Get(u8"key")->Number<int>(), 1);
+      EXPECT_EQ(*result->Get(u8"key")->Value<double>(), 1);
     }
   }
   {
@@ -164,7 +162,7 @@ TEST(TestJsonTree, ParseObject)
     auto result = parser.Parse();
     if (result) {
       auto inner = result->Get(u8"key");
-      EXPECT_EQ(inner->Get(u8"key2")->Number<int>(), 2);
+      EXPECT_EQ(*inner->Get(u8"key2")->Value<double>(), 2);
     }
   }
 }
