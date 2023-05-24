@@ -95,10 +95,10 @@ TEST(GltfTestTree, Parse)
   // nodes.0
   EXPECT_EQ(*gltf.Nodes[0].Mesh(), 0);
 
-  // // meshes.0.primitives.0
-  // EXPECT_EQ(gltf.Meshes[0].Primitives[0].Attributes.POSITION, 1);
-  // EXPECT_EQ(gltf.Meshes[0].Primitives[0].Indices, 0);
-  //
+  // meshes.0.primitives.0
+  EXPECT_EQ(*gltf.Meshes[0].Primitives[0].Attributes().POSITION(), 1);
+  EXPECT_EQ(*gltf.Meshes[0].Primitives[0].Indices(), 0);
+
   // // bufferViews.0
   // EXPECT_EQ(gltf.BufferViews[0].Buffer, 0);
   // EXPECT_EQ(gltf.BufferViews[0].ByteOffset, 0);

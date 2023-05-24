@@ -371,18 +371,19 @@ struct Skin : ChildOfRootProperty
   Array<uint32_t> Joints{ u8"joints" };
 };
 
-struct MeshPrimitiveAttributes
+struct MeshPrimitiveAttributes : JsonObject
 {
-  Key<Id> COLOR_0{ u8"COLOR_0" };
-  Key<Id> JOINTS_0{ u8"JOINTS_0" };
-  Key<Id> NORMAL{ u8"NORMAL" };
-  Key<Id> POSITION{ u8"POSITION" };
-  Key<Id> TANGENT{ u8"TANGENT" };
-  Key<Id> TEXCOORD_0{ u8"TEXCOORD_0" };
-  Key<Id> TEXCOORD_1{ u8"TEXCOORD_1" };
-  Key<Id> TEXCOORD_2{ u8"TEXCOORD_2" };
-  Key<Id> TEXCOORD_3{ u8"TEXCOORD_3" };
-  Key<Id> WEIGHTS_0{ u8"WEIGHTS_0" };
+  using JsonObject::JsonObject;
+  auto COLOR_0() const { return m_id<u8"COLOR_0">(); };
+  auto JOINTS_0() const { return m_id<u8"JOINTS_0">(); };
+  auto NORMAL() const { return m_id<u8"NORMAL">(); };
+  auto POSITION() const { return m_id<u8"POSITION">(); };
+  auto TANGENT() const { return m_id<u8"TANGENT">(); };
+  auto TEXCOORD_0() const { return m_id<u8"TEXCOORD_0">(); };
+  auto TEXCOORD_1() const { return m_id<u8"TEXCOORD_1">(); };
+  auto TEXCOORD_2() const { return m_id<u8"TEXCOORD_2">(); };
+  auto TEXCOORD_3() const { return m_id<u8"TEXCOORD_3">(); };
+  auto WEIGHTS_0() const { return m_id<u8"WEIGHTS_0">(); };
 };
 
 struct MeshPrimitiveMorphTarget
@@ -392,20 +393,37 @@ struct MeshPrimitiveMorphTarget
 };
 
 // https://github.com/KhronosGroup/glTF/blob/main/specification/2.0/schema/mesh.primitive.schema.json
-struct MeshPrimitive
+struct MeshPrimitive : JsonObject
 {
-  Key<MeshPrimitiveAttributes> Attributes{ u8"attributes" };
-  Key<Id> Indices{ u8"indices" };
-  Key<Id> Material{ u8"material" };
-  Key<format::MeshPrimitiveTopology> Mode{ u8"mode" };
-  Array<MeshPrimitiveMorphTarget> Targets{ u8"targets" };
+  MeshPrimitive(const tree::NodePtr& json)
+    : JsonObject(json)
+    , Targets(json)
+  {
+  }
+  auto Attributes() const
+  {
+    return MeshPrimitiveAttributes{ m_node<u8"attributes">() };
+  };
+  auto Indices() const { return m_id<u8"indices">(); }
+  auto Material() const { return m_id<u8"material">(); }
+  auto Mode() const
+  {
+    return m_number<format::MeshPrimitiveTopology, u8"mode">();
+  };
+  JsonArray<MeshPrimitiveMorphTarget, u8"targets"> Targets;
 };
 
 // https://github.com/KhronosGroup/glTF/blob/main/specification/2.0/schema/mesh.schema.json
-struct Mesh : ChildOfRootProperty
+struct Mesh : JsonObject
 {
-  Array<MeshPrimitive> Primitives{ u8"primitives" };
-  Array<float> Weights{ u8"weights" };
+  Mesh(const tree::NodePtr& json)
+    : JsonObject(json)
+    , Primitives(json)
+    , Weights(json)
+  {
+  }
+  JsonArray<MeshPrimitive, u8"primitives"> Primitives;
+  NumberArray<float, u8"weights"> Weights;
 };
 
 // https://github.com/KhronosGroup/glTF/blob/main/specification/2.0/schema/node.schema.json
@@ -483,6 +501,7 @@ struct Root : JsonObject
   Root(const tree::NodePtr& json)
     : JsonObject(json)
     , Scenes(json)
+    , Meshes(json)
     , Nodes(json)
   {
     m_json = json;
@@ -497,7 +516,7 @@ struct Root : JsonObject
   Array<Image> Images{ u8"images" };
   Array<Texture> Textures{ u8"textures" };
   Array<Material> Materials{ u8"materials" };
-  Array<Mesh> Meshes{ u8"meshes" };
+  JsonArray<Mesh, u8"meshes"> Meshes;
   JsonArray<Node, u8"nodes"> Nodes;
   Array<Sampler> Samplers{ u8"samplers" };
 
