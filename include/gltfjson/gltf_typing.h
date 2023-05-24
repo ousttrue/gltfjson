@@ -4,25 +4,21 @@
 #include <optional>
 #include <string>
 #include <string_view>
+#include <vector>
 
 namespace gltfjson {
 namespace typing {
 
-struct Float3
+template<typename T>
+inline T
+value_or(const float* p, T default_value = {})
 {
-  float x, y, z;
-};
-struct Float4
-{
-  float x, y, z, w;
-};
-struct Float16
-{
-  float _11, _12, _13, _14;
-  float _21, _22, _23, _24;
-  float _31, _32, _33, _34;
-  float _41, _42, _43, _44;
-};
+  if (p) {
+    return (T)*p;
+  } else {
+    return default_value;
+  }
+}
 
 template<size_t N>
 struct StringLiteral
@@ -34,49 +30,85 @@ struct StringLiteral
   char8_t value[N];
 };
 
-template<typename T, StringLiteral lit>
-struct JsonArray
+template<typename T>
+struct JsonArrayBase
 {
-  tree::NodePtr m_json;
-  JsonArray(tree::NodePtr parent)
-    : m_json(parent->Get(lit.value))
-  {
-  }
-
   struct Iterator
   {
-    T operator*() { return {}; }
-    Iterator& operator++() { return *this; }
-    bool operator!=(const Iterator& rhs) const { return true; }
+    std::vector<tree::NodePtr>::iterator m_it;
+    T operator*() { return T{ *m_it }; }
+    Iterator& operator++()
+    {
+      ++m_it;
+      return *this;
+    }
+    bool operator!=(const Iterator& rhs) const { return rhs.m_it != m_it; }
   };
-  uint32_t size() const { return m_json->Size(); }
+
+  tree::NodePtr m_json;
+  JsonArrayBase(const tree::NodePtr& json)
+    : m_json(json)
+  {
+    // assert(m_json);
+  }
+  uint32_t size() const { return m_json ? m_json->Size() : 0; }
   T operator[](size_t index) const { return T{ m_json->Get(index) }; }
-  Iterator begin() const { return {}; }
-  Iterator end() const { return {}; }
+  Iterator begin() const
+  {
+    return m_json ? Iterator{ m_json->Array()->begin() } : Iterator{};
+  }
+  Iterator end() const
+  {
+    return m_json ? Iterator{ m_json->Array()->end() } : Iterator{};
+  }
+};
+
+template<typename T, StringLiteral lit>
+struct JsonArray : JsonArrayBase<T>
+{
+  JsonArray(tree::NodePtr parent)
+    : JsonArrayBase<T>(parent->Get(lit.value))
+  {
+  }
 };
 
 template<typename T, StringLiteral lit>
 struct NumberArray
 {
+  struct Iterator
+  {
+    std::vector<tree::NodePtr>::iterator m_it;
+    T operator*()
+    {
+      auto p = (*m_it)->Ptr<float>();
+      return (T)*p;
+    }
+    Iterator& operator++()
+    {
+      ++m_it;
+      return *this;
+    }
+    bool operator!=(const Iterator& rhs) const { return rhs.m_it != m_it; }
+  };
+
   tree::NodePtr m_json;
   NumberArray(tree::NodePtr parent)
     : m_json(parent->Get(lit.value))
   {
   }
-
-  struct Iterator
-  {
-    T operator*() { return {}; }
-    Iterator& operator++() { return *this; }
-    bool operator!=(const Iterator& rhs) const { return true; }
-  };
-  uint32_t size() const { return m_json->Size(); }
+  uint32_t size() const { return m_json ? m_json->Size() : 0; }
   T operator[](size_t index) const
   {
     return (T)*m_json->Get(index)->Ptr<float>();
   }
-  Iterator begin() const { return {}; }
-  Iterator end() const { return {}; }
+  Iterator begin() const
+  {
+    return m_json ? Iterator{ m_json->Array()->begin() } : Iterator{};
+  }
+  Iterator end() const
+  {
+    return m_json ? Iterator{ m_json->Array()->end() } : Iterator{};
+  }
 };
 
 using Id = uint32_t;
@@ -122,69 +154,6 @@ struct JsonObject
     return u8"";
   }
 
-  template<StringLiteral lit>
-  std::optional<Float3> m_float3() const
-  {
-    if (auto node = m_node<lit>()) {
-      if (auto array = node->Array()) {
-        if (array->size() == 3) {
-          Float3 value;
-          value.x = *(*array)[0]->Ptr<float>();
-          value.y = *(*array)[1]->Ptr<float>();
-          value.z = *(*array)[2]->Ptr<float>();
-          return value;
-        }
-      }
-    }
-    return std::nullopt;
-  }
-  template<StringLiteral lit>
-  std::optional<Float4> m_float4() const
-  {
-    if (auto node = m_node<lit>()) {
-      if (auto array = node->Array()) {
-        if (array->size() == 4) {
-          Float4 value;
-          value.x = *(*array)[0]->Ptr<float>();
-          value.y = *(*array)[1]->Ptr<float>();
-          value.z = *(*array)[2]->Ptr<float>();
-          value.w = *(*array)[3]->Ptr<float>();
-          return value;
-        }
-      }
-    }
-    return std::nullopt;
-  }
-  template<StringLiteral lit>
-  std::optional<Float16> m_float16() const
-  {
-    if (auto node = m_node<lit>()) {
-      if (auto array = node->Array()) {
-        if (array->size() == 16) {
-          Float16 value;
-          value._11 = *(*array)[0]->Ptr<float>();
-          value._12 = *(*array)[1]->Ptr<float>();
-          value._13 = *(*array)[2]->Ptr<float>();
-          value._14 = *(*array)[3]->Ptr<float>();
-          value._21 = *(*array)[4]->Ptr<float>();
-          value._22 = *(*array)[5]->Ptr<float>();
-          value._23 = *(*array)[6]->Ptr<float>();
-          value._24 = *(*array)[7]->Ptr<float>();
-          value._31 = *(*array)[8]->Ptr<float>();
-          value._32 = *(*array)[9]->Ptr<float>();
-          value._33 = *(*array)[10]->Ptr<float>();
-          value._34 = *(*array)[11]->Ptr<float>();
-          value._41 = *(*array)[12]->Ptr<float>();
-          value._42 = *(*array)[13]->Ptr<float>();
-          value._43 = *(*array)[14]->Ptr<float>();
-          value._44 = *(*array)[15]->Ptr<float>();
-          return value;
-        }
-      }
-    }
-    return std::nullopt;
-  }
-
   template<typename T, StringLiteral lit>
   JsonArray<T, lit> m_array() const
   {
@@ -205,27 +174,44 @@ struct JsonObject
   }
 };
 
-// struct ChildOfRootProperty
-// {
-//   Key<std::u8string> Name{ u8"name" };
-// };
-
 //
 // gltf
 //
-
-// https://github.com/KhronosGroup/glTF/blob/main/specification/2.0/schema/buffer.schema.json
-struct Buffer : JsonObject
+struct Extensions : JsonObject
 {
   using JsonObject::JsonObject;
+};
+
+struct Extras : JsonObject
+{
+  using JsonObject::JsonObject;
+};
+
+struct GltfProperty : JsonObject
+{
+  using JsonObject::JsonObject;
+  // auto Extensions() const { return m_object<Extensions, u8"extensions">(); }
+  // auto Extras() const { return m_object<Extras, u8"extras">(); }
+};
+
+struct ChildOfRootProperty : GltfProperty
+{
+  using GltfProperty::GltfProperty;
+  auto Name() const { return m_string<u8"name">(); }
+};
+
+// https://github.com/KhronosGroup/glTF/blob/main/specification/2.0/schema/buffer.schema.json
+struct Buffer : ChildOfRootProperty
+{
+  using ChildOfRootProperty::ChildOfRootProperty;
   auto Uri() const { return m_string<u8"uri">(); };
   auto ByteLength() const { return m_ptr<float, u8"byteLength">(); };
 };
 
 // https://github.com/KhronosGroup/glTF/blob/main/specification/2.0/schema/bufferView.schema.json
-struct BufferView : JsonObject
+struct BufferView : ChildOfRootProperty
 {
-  using JsonObject::JsonObject;
+  using ChildOfRootProperty::ChildOfRootProperty;
   auto Buffer() const { return m_id<u8"buffer">(); };
   auto ByteOffset() const { return m_ptr<float, u8"byteOffset">(); };
   auto ByteLength() const { return m_ptr<float, u8"byteLength">(); };
@@ -259,10 +245,10 @@ struct Sparse : JsonObject
   auto Values() const { return m_object<SparseValues, u8"values">(); }
 };
 
-struct Accessor : JsonObject
+struct Accessor : ChildOfRootProperty
 {
   Accessor(const tree::NodePtr& json)
-    : JsonObject(json)
+    : ChildOfRootProperty(json)
     , Max(json)
     , Min(json)
   {
@@ -276,26 +262,32 @@ struct Accessor : JsonObject
   NumberArray<float, u8"max"> Max;
   NumberArray<float, u8"min"> Min;
   auto Sparse() const { return m_object<typing::Sparse, u8"sparse">(); }
+
+  uint32_t Stride() const
+  {
+    return *format::component_size((format::ComponentTypes)*ComponentType()) *
+           *format::type_count(Type());
+  }
 };
 
-struct Camera : JsonObject
+struct Camera : ChildOfRootProperty
 {
-  using JsonObject::JsonObject;
+  using ChildOfRootProperty::ChildOfRootProperty;
 };
 
 // https://github.com/KhronosGroup/glTF/blob/main/specification/2.0/schema/image.schema.json
-struct Image : JsonObject
+struct Image : ChildOfRootProperty
 {
-  using JsonObject::JsonObject;
+  using ChildOfRootProperty::ChildOfRootProperty;
   auto Uri() const { return m_string<u8"uri">(); }
   auto MimeTypel() const { return m_string<u8"mimeType">(); }
   auto BufferView() const { return m_id<u8"bufferView">(); }
 };
 
 // https://github.com/KhronosGroup/glTF/blob/main/specification/2.0/schema/sampler.schema.json
-struct Sampler : JsonObject
+struct Sampler : ChildOfRootProperty
 {
-  using JsonObject::JsonObject;
+  using ChildOfRootProperty::ChildOfRootProperty;
   auto MagFilter() const { return m_ptr<float, u8"magFilter">(); };
   auto MinFilter() const { return m_ptr<float, u8"minFilter">(); };
   auto WrapS() const { return m_ptr<float, u8"wrapS">(); }
@@ -303,9 +295,9 @@ struct Sampler : JsonObject
 };
 
 // https://github.com/KhronosGroup/glTF/blob/main/specification/2.0/schema/texture.schema.json
-struct Texture : JsonObject
+struct Texture : ChildOfRootProperty
 {
-  using JsonObject::JsonObject;
+  using ChildOfRootProperty::ChildOfRootProperty;
   auto Sampler() const { return m_id<u8"sampler">(); }
   auto Source() const { return m_id<u8"source">(); }
 };
@@ -335,8 +327,12 @@ struct OcclusionTextureInfo : TextureInfo
 // https://github.com/KhronosGroup/glTF/blob/main/specification/2.0/schema/material.pbrMetallicRoughness.schema.json
 struct PbrMetallicRoughness : JsonObject
 {
-  using JsonObject::JsonObject;
-  auto BaseColorFactor() const { return m_float4<u8"baseColorFactor">(); }
+  PbrMetallicRoughness(const tree::NodePtr& json)
+    : JsonObject(json)
+    , BaseColorFactor(json)
+  {
+  }
+  NumberArray<float, u8"baseColorFactor"> BaseColorFactor;
   auto BaseColorTexture() const
   {
     return m_object<TextureInfo, u8"baseColorTexture">();
@@ -350,9 +346,13 @@ struct PbrMetallicRoughness : JsonObject
 };
 
 // https://github.com/KhronosGroup/glTF/blob/main/specification/2.0/schema/material.schema.json
-struct Material : JsonObject
+struct Material : ChildOfRootProperty
 {
-  using JsonObject::JsonObject;
+  Material(const tree::NodePtr& json)
+    : ChildOfRootProperty(json)
+    , EmissiveFactor(json)
+  {
+  }
   auto PbrMetallicRoughness() const
   {
     return m_object<typing::PbrMetallicRoughness, u8"pbrMetallicRoughness">();
@@ -369,17 +369,17 @@ struct Material : JsonObject
   {
     return m_object<TextureInfo, u8"emissiveTexture">();
   }
-  auto EmissiveFactor() const { return m_float3<u8"emissiveFactor">(); }
+  NumberArray<float, u8"emissiveFactor"> EmissiveFactor;
   auto AlphaMode() const { return m_ptr<float, u8"alphaMode">(); }
   auto AlphaCutoff() const { return m_ptr<float, u8"alphaCutoff">(); };
   auto DoubleSided() const { return m_ptr<bool, u8"doubleSided">(); };
 };
 
 // https://github.com/KhronosGroup/glTF/blob/main/specification/2.0/schema/skin.schema.json
-struct Skin : JsonObject
+struct Skin : ChildOfRootProperty
 {
   Skin(const tree::NodePtr& json)
-    : JsonObject(json)
+    : ChildOfRootProperty(json)
     , Joints(json)
   {
   }
@@ -401,6 +401,16 @@ struct MeshPrimitiveAttributes : JsonObject
   auto TEXCOORD_2() const { return m_id<u8"TEXCOORD_2">(); }
   auto TEXCOORD_3() const { return m_id<u8"TEXCOORD_3">(); }
   auto WEIGHTS_0() const { return m_id<u8"WEIGHTS_0">(); }
+
+  bool operator==(const MeshPrimitiveAttributes& rhs) const
+  {
+    return COLOR_0() == rhs.COLOR_0() && JOINTS_0() == rhs.JOINTS_0() &&
+           NORMAL() == rhs.NORMAL() && POSITION() == rhs.POSITION() &&
+           TANGENT() == rhs.TANGENT() && TEXCOORD_0() == rhs.TEXCOORD_0() &&
+           TEXCOORD_1() == rhs.TEXCOORD_1() &&
+           TEXCOORD_2() == rhs.TEXCOORD_2() &&
+           TEXCOORD_3() == rhs.TEXCOORD_3() && WEIGHTS_0() == rhs.WEIGHTS_0();
+  }
 };
 
 struct MeshPrimitiveMorphTarget : JsonObject
@@ -429,10 +439,10 @@ struct MeshPrimitive : JsonObject
 };
 
 // https://github.com/KhronosGroup/glTF/blob/main/specification/2.0/schema/mesh.schema.json
-struct Mesh : JsonObject
+struct Mesh : ChildOfRootProperty
 {
   Mesh(const tree::NodePtr& json)
-    : JsonObject(json)
+    : ChildOfRootProperty(json)
     , Primitives(json)
     , Weights(json)
   {
@@ -442,22 +452,26 @@ struct Mesh : JsonObject
 };
 
 // https://github.com/KhronosGroup/glTF/blob/main/specification/2.0/schema/node.schema.json
-struct Node : JsonObject
+struct Node : ChildOfRootProperty
 {
   Node(const tree::NodePtr& json)
-    : JsonObject(json)
+    : ChildOfRootProperty(json)
     , Children(json)
     , Weights(json)
+    , Matrix(json)
+    , Scale(json)
+    , Rotation(json)
+    , Translation(json)
   {
   }
   auto Camera() const { return m_id<u8"camera">(); }
   NumberArray<uint32_t, u8"children"> Children;
   auto Skin() const { return m_id<u8"skin">(); }
-  auto FixedArray() const { return m_float16<u8"matrix">(); }
+  NumberArray<float, u8"matrix"> Matrix;
   auto Mesh() const { return m_id<u8"mesh">(); }
-  auto Rotation() const { return m_float4<u8"rotation">(); }
-  auto Scale() const { return m_float3<u8"scale">(); }
-  auto Translation() const { m_float3<u8"translation">(); }
+  NumberArray<float, u8"rotation"> Rotation;
+  NumberArray<float, u8"scale"> Scale;
+  NumberArray<float, u8"translation"> Translation;
   NumberArray<float, u8"weights"> Weights;
 };
 
@@ -487,10 +501,10 @@ struct AnimationChannel : JsonObject
 };
 
 // https://github.com/KhronosGroup/glTF/blob/main/specification/2.0/schema/animation.schema.json
-struct Animation : JsonObject
+struct Animation : ChildOfRootProperty
 {
   Animation(const tree::NodePtr& json)
-    : JsonObject(json)
+    : ChildOfRootProperty(json)
     , Channels(json)
     , Samplers(json)
   {
@@ -499,10 +513,10 @@ struct Animation : JsonObject
   JsonArray<AnimationSampler, u8"samplers"> Samplers;
 };
 
-struct Scene : JsonObject
+struct Scene : ChildOfRootProperty
 {
   Scene(const tree::NodePtr& json)
-    : JsonObject(json)
+    : ChildOfRootProperty(json)
     , Nodes(json)
   {
   }
@@ -520,10 +534,10 @@ struct Asset : JsonObject
   auto MinVersion() const { return m_string<u8"minVersion">(); };
 };
 
-struct Root : JsonObject
+struct Root : GltfProperty
 {
   Root(const tree::NodePtr& json)
-    : JsonObject(json)
+    : GltfProperty(json)
     , Accessors(json)
     , Animations(json)
     , Buffers(json)

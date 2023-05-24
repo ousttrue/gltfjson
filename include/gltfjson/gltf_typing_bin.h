@@ -1,6 +1,6 @@
 #pragma once
-#include "gltf_annotation.h"
 #include "directory.h"
+#include "gltf_typing.h"
 
 namespace gltfjson {
 namespace typing {
@@ -27,14 +27,14 @@ struct Bin
     if (uri.size()) {
       // external file
       if (auto bytes = Dir->GetBuffer(uri)) {
-        return bytes->subspan(buffer_view.ByteOffset().value_or(0),
+        return bytes->subspan(value_or<uint32_t>(buffer_view.ByteOffset(), 0),
                               *buffer_view.ByteLength());
       } else {
         return bytes;
       }
     } else {
       // glb
-      return Bytes.subspan(buffer_view.ByteOffset().value_or(0),
+      return Bytes.subspan(value_or<uint32_t>(buffer_view.ByteOffset(), 0),
                            *buffer_view.ByteLength());
     }
   }
@@ -81,7 +81,8 @@ struct Bin
       int sparse_count = *sparse->Count();
       auto sparse_indices = *sparse->Indices();
       auto sparse_values = *sparse->Values();
-      switch (*sparse_indices.ComponentType()) {
+      switch (
+        (gltfjson::format::ComponentTypes)*sparse_indices.ComponentType()) {
         case gltfjson::format::ComponentTypes::UNSIGNED_BYTE:
           if (auto sparse_indices_bytes =
                 GetBufferViewBytes(gltf, *sparse_indices.BufferView())) {
@@ -138,7 +139,7 @@ struct Bin
       throw std::runtime_error("not implemented");
     } else if (auto bufferView = accessor.BufferView()) {
       if (auto span = GetBufferViewBytes(gltf, *bufferView)) {
-        int offset = accessor.ByteOffset().value_or(0);
+        int offset = value_or<uint32_t>(accessor.ByteOffset());
         return std::span<const T>((const T*)(span->data() + offset), count);
 
       } else {

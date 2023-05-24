@@ -57,7 +57,17 @@ inline std::tuple<gltfjson::format::Types, const char*> TypesCombo[] = {
   { Types::VEC4, "VEC4" },     { Types::MAT2, "MAT2" }, { Types::MAT3, "MAT3" },
   { Types::MAT4, "MAT4" },
 };
-
+inline std::optional<Types>
+types_from_str(std::u8string_view u8)
+{
+  std::string src{ (const char*)src.c_str() };
+  for (auto [t, str] : TypesCombo) {
+    if (str == src) {
+      return t;
+    }
+  }
+  return std::nullopt;
+}
 inline std::optional<size_t>
 component_size(ComponentTypes component_type)
 {
@@ -124,21 +134,21 @@ component_type_name(ComponentTypes component_type, std::string_view type)
 }
 
 inline std::optional<size_t>
-type_count(std::string_view type)
+type_count(std::u8string_view type)
 {
-  if (type == "SCALAR") {
+  if (type == u8"SCALAR") {
     return 1;
-  } else if (type == "VEC2") {
+  } else if (type == u8"VEC2") {
     return 2;
-  } else if (type == "VEC3") {
+  } else if (type == u8"VEC3") {
     return 3;
-  } else if (type == "VEC4") {
+  } else if (type == u8"VEC4") {
     return 4;
-  } else if (type == "MAT2") {
+  } else if (type == u8"MAT2") {
     return 4;
-  } else if (type == "MAT3") {
+  } else if (type == u8"MAT3") {
     return 9;
-  } else if (type == "MAT4") {
+  } else if (type == u8"MAT4") {
     return 16;
   } else {
     return std::nullopt;
