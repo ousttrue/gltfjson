@@ -150,6 +150,7 @@ struct Value
 #else
     std::string str((const char*)Range.data(),
                     (const char*)Range.data() + Range.size());
+    size_t i;
     return std::stod(str, &i);
 #endif
   }

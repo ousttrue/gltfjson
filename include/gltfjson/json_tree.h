@@ -10,6 +10,7 @@
 #include <unordered_map>
 #include <variant>
 #include <vector>
+#include <span>
 
 namespace gltfjson {
 namespace tree {
@@ -264,8 +265,8 @@ struct Parser
     std::string str((const char*)src.data(),
                     (const char*)src.data() + src.size());
     size_t i;
-    std::stof(str, &i);
-    return Push(i, i);
+    float value = std::stof(str, &i);
+    return Push(i, value);
 #endif
   }
 
@@ -294,7 +295,6 @@ struct Parser
   {
     assert(Src[Pos] == '[');
 
-    auto beginPos = Pos;
     Stack.push(Push(1, ArrayValue()));
     auto node = Stack.top();
 
@@ -327,8 +327,6 @@ struct Parser
   std::expected<NodePtr, std::u8string> ParseObject()
   {
     assert(Src[Pos] == '{');
-
-    auto beginPos = Pos;
     Stack.push(Push(1, ObjectValue{}));
 
     for (int i = 0; !IsEnd(); ++i) {

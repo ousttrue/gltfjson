@@ -60,7 +60,7 @@ inline std::tuple<gltfjson::format::Types, const char*> TypesCombo[] = {
 inline std::optional<Types>
 types_from_str(std::u8string_view u8)
 {
-  std::string src{ (const char*)src.c_str() };
+  std::string src{ (const char*)u8.data() };
   for (auto [t, str] : TypesCombo) {
     if (str == src) {
       return t;

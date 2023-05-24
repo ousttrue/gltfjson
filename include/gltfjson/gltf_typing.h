@@ -131,7 +131,7 @@ struct JsonObject
   T* m_ptr() const
   {
     if (auto node = m_node<lit>()) {
-      return node->Ptr<T>();
+      return node->template Ptr<T>();
     }
     return nullptr;
   }
@@ -140,7 +140,7 @@ struct JsonObject
   std::optional<Id> m_id() const
   {
     if (auto node = m_node<lit>()) {
-      return (Id)*node->Ptr<float>();
+      return (Id)*node->template Ptr<float>();
     }
     return std::nullopt;
   }
@@ -457,11 +457,11 @@ struct Node : ChildOfRootProperty
   Node(const tree::NodePtr& json)
     : ChildOfRootProperty(json)
     , Children(json)
-    , Weights(json)
     , Matrix(json)
-    , Scale(json)
     , Rotation(json)
+    , Scale(json)
     , Translation(json)
+    , Weights(json)
   {
   }
   auto Camera() const { return m_id<u8"camera">(); }
