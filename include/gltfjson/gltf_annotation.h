@@ -8,6 +8,22 @@
 namespace gltfjson {
 namespace annotation {
 
+struct Float3
+{
+  float x, y, z;
+};
+struct Float4
+{
+  float x, y, z, w;
+};
+struct Float16
+{
+  float _11, _12, _13, _14;
+  float _21, _22, _23, _24;
+  float _31, _32, _33, _34;
+  float _41, _42, _43, _44;
+};
+
 template<size_t N>
 struct StringLiteral
 {
@@ -62,6 +78,8 @@ struct NumberArray
   Iterator begin() const { return {}; }
   Iterator end() const { return {}; }
 };
+
+using Id = uint32_t;
 struct JsonObject
 {
   tree::NodePtr m_json;
@@ -87,6 +105,15 @@ struct JsonObject
   }
 
   template<StringLiteral lit>
+  std::optional<Id> m_id() const
+  {
+    if (auto node = m_node<lit>()) {
+      return (Id)*node->Value<double>();
+    }
+    return std::nullopt;
+  }
+
+  template<StringLiteral lit>
   std::u8string m_string() const
   {
     if (auto node = m_node<lit>()) {
@@ -95,6 +122,69 @@ struct JsonObject
       }
     }
     return u8"";
+  }
+
+  template<StringLiteral lit>
+  std::optional<Float3> m_float3() const
+  {
+    if (auto node = m_node<lit>()) {
+      if (auto array = node->Array()) {
+        if (array->m_values.size() == 3) {
+          Float3 value;
+          value.x = *array->m_values[0]->Value<double>();
+          value.y = *array->m_values[1]->Value<double>();
+          value.z = *array->m_values[2]->Value<double>();
+          return value;
+        }
+      }
+    }
+    return std::nullopt;
+  }
+  template<StringLiteral lit>
+  std::optional<Float4> m_float4() const
+  {
+    if (auto node = m_node<lit>()) {
+      if (auto array = node->Array()) {
+        if (array->m_values.size() == 4) {
+          Float4 value;
+          value.x = *array->m_values[0]->Value<double>();
+          value.y = *array->m_values[1]->Value<double>();
+          value.z = *array->m_values[2]->Value<double>();
+          value.w = *array->m_values[3]->Value<double>();
+          return value;
+        }
+      }
+    }
+    return std::nullopt;
+  }
+  template<StringLiteral lit>
+  std::optional<Float16> m_float16() const
+  {
+    if (auto node = m_node<lit>()) {
+      if (auto array = node->Array()) {
+        if (array->m_values.size() == 16) {
+          Float16 value;
+          value._11 = *array->m_values[0]->Value<double>();
+          value._12 = *array->m_values[1]->Value<double>();
+          value._13 = *array->m_values[2]->Value<double>();
+          value._14 = *array->m_values[3]->Value<double>();
+          value._21 = *array->m_values[4]->Value<double>();
+          value._22 = *array->m_values[5]->Value<double>();
+          value._23 = *array->m_values[6]->Value<double>();
+          value._24 = *array->m_values[7]->Value<double>();
+          value._31 = *array->m_values[8]->Value<double>();
+          value._32 = *array->m_values[9]->Value<double>();
+          value._33 = *array->m_values[10]->Value<double>();
+          value._34 = *array->m_values[11]->Value<double>();
+          value._41 = *array->m_values[12]->Value<double>();
+          value._42 = *array->m_values[13]->Value<double>();
+          value._43 = *array->m_values[14]->Value<double>();
+          value._44 = *array->m_values[15]->Value<double>();
+          return value;
+        }
+      }
+    }
+    return std::nullopt;
   }
 
   template<typename T, StringLiteral lit>
@@ -133,8 +223,6 @@ struct Key
   std::optional<T> operator()() const { return std::nullopt; }
   // void operator()(const T& t);
 };
-
-using Id = uint32_t;
 
 struct ChildOfRootProperty
 {
@@ -321,17 +409,23 @@ struct Mesh : ChildOfRootProperty
 };
 
 // https://github.com/KhronosGroup/glTF/blob/main/specification/2.0/schema/node.schema.json
-struct Node : ChildOfRootProperty
+struct Node : JsonObject
 {
-  Key<Id> Camera{ u8"camera" };
-  Array<uint32_t> Children{ u8"children" };
-  Key<Id> Skin{ u8"skin" };
-  FixedArray<float, 16> Matrix{ u8"matrix" };
-  Key<Id> Mesh{ u8"mesh" };
-  FixedArray<float, 4> Rotation{ u8"rotation" };
-  FixedArray<float, 3> Scale{ u8"scale" };
-  FixedArray<float, 3> Translation{ u8"translation" };
-  Array<float> Weights{ u8"weights" };
+  Node(const tree::NodePtr& json)
+    : JsonObject(json)
+    , Children(json)
+    , Weights(json)
+  {
+  }
+  auto Camera() const { return m_id<u8"camera">(); }
+  NumberArray<uint32_t, u8"children"> Children;
+  auto Skin() const { return m_id<u8"skin">(); }
+  auto FixedArray() const { return m_float16<u8"matrix">(); }
+  auto Mesh() const { return m_id<u8"mesh">(); }
+  auto Rotation() const { return m_float4<u8"rotation">(); }
+  auto Scale() const { return m_float3<u8"scale">(); }
+  auto Translation() const { m_float3<u8"translation">(); }
+  NumberArray<float, u8"weights"> Weights;
 };
 
 // https://github.com/KhronosGroup/glTF/blob/main/specification/2.0/schema/animation.sampler.schema.json
@@ -389,6 +483,7 @@ struct Root : JsonObject
   Root(const tree::NodePtr& json)
     : JsonObject(json)
     , Scenes(json)
+    , Nodes(json)
   {
     m_json = json;
   }
@@ -403,7 +498,7 @@ struct Root : JsonObject
   Array<Texture> Textures{ u8"textures" };
   Array<Material> Materials{ u8"materials" };
   Array<Mesh> Meshes{ u8"meshes" };
-  Array<Node> Nodes{ u8"nodes" };
+  JsonArray<Node, u8"nodes"> Nodes;
   Array<Sampler> Samplers{ u8"samplers" };
 
   auto Scene() const { return m_number<uint32_t, u8"scene">(); }
