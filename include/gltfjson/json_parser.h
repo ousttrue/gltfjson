@@ -1,4 +1,5 @@
 #pragma once
+#include "json_token.h"
 #include <algorithm>
 #include <assert.h>
 #include <charconv>
@@ -14,19 +15,6 @@
 namespace gltfjson {
 
 struct Value;
-inline bool
-IsSpace(char8_t ch)
-{
-  switch (ch) {
-    case 0x20:
-    case 0x0A:
-    case 0x0D:
-    case 0x09:
-      return true;
-  }
-  return false;
-}
-
 enum class ValueType
 {
   // null, true, false, number or string
@@ -184,6 +172,9 @@ struct Value
           return object->Size();
         }
         break;
+
+      default:
+        break;
     }
     return 0;
   }
@@ -223,47 +214,25 @@ struct Parser
   friend struct ArrayValue;
   friend struct ObjectValue;
 
-  std::u8string_view Src;
   std::vector<Value> Values;
   std::stack<uint32_t> Stack;
-  uint32_t Pos = 0;
+
+  Tokenizer m_token;
 
   Parser(std::u8string_view src)
-    : Src(src)
+    : m_token(src)
   {
   }
 
   Parser(std::span<const uint8_t> src)
-    : Src((const char8_t*)src.data(), (const char8_t*)src.data() + src.size())
+    : m_token(
+        { (const char8_t*)src.data(), (const char8_t*)src.data() + src.size() })
   {
   }
 
-  bool IsEnd() const { return Pos >= Src.size(); }
-
-  void SkipSpace()
+  void Push(std::u8string_view range)
   {
-    for (; Pos < Src.size() && IsSpace(Src[Pos]); ++Pos) {
-      ;
-    }
-  }
-
-  std::u8string_view Remain() const { return Src.substr(Pos); }
-
-  std::optional<std::u8string_view> Peek(uint32_t size) const
-  {
-    if (Pos + size > Src.size()) {
-      return std::nullopt;
-    }
-    return Src.substr(Pos, size);
-  }
-
-  bool Push(uint32_t size)
-  {
-    if (Pos + size > Src.size()) {
-      return false;
-    }
-
-    auto range = Src.substr(Pos, size);
+    // if (auto range = m_token.Get(size)) {
     if (Stack.size()) {
       Values.push_back({
         .Range = range,
@@ -280,18 +249,20 @@ struct Parser
         .m_pos = static_cast<uint32_t>(Values.size()),
       });
     }
-    Pos += size;
-    return true;
+    // return true;
+    // } else {
+    //   return false;
+    // }
   }
 
   std::expected<Value, std::u8string> Parse()
   {
-    SkipSpace();
-    if (IsEnd()) {
+    m_token.SkipSpace();
+    if (m_token.IsEnd()) {
       return std::unexpected{ u8"empty" };
     }
 
-    auto ch = Src[Pos];
+    auto ch = *m_token;
     if (ch == 0x7b) {
       return ParseObject();
     } else if (ch == '[') {
@@ -333,80 +304,50 @@ struct Parser
 
   std::expected<Value, std::u8string> ParseSymbol(std::u8string_view symbol)
   {
-    if (auto src = Peek(symbol.size())) {
-      if (src->starts_with(symbol)) {
-        Push(src->size());
-        return Values.back();
-      } else {
-        return std::unexpected{ std::u8string(u8"Not match: ") +
-                                std::u8string{ src->begin(), src->end() } };
-      }
+    if (auto read = m_token.GetSymbol(symbol)) {
+      Push(*read);
+      return Values.back();
     } else {
-      return std::unexpected{ u8"Not enough size" };
+      return std::unexpected{ read.error() };
     }
   }
 
   std::expected<Value, std::u8string> ParseNumber()
   {
-    auto src = Remain();
-#ifdef _MSC_VER
-    double value;
-    if (auto [ptr, ec] = std::from_chars(
-          (const char*)src.data(), (const char*)src.data() + src.size(), value);
-        ec == std::errc{}) {
-      Push(ptr - (const char*)src.data());
+    if (auto read = m_token.GetNumber()) {
+      Push(*read);
       return Values.back();
     } else {
-      return std::unexpected{ u8"Invaild number" };
+      return std::unexpected{ read.error() };
     }
-#else
-    std::string str((const char*)src.data(),
-                    (const char*)src.data() + src.size());
-    size_t i;
-    std::stod(str, &i);
-    Push(i);
-    return Values.back();
-#endif
   }
 
   std::expected<Value, std::u8string> ParseString()
   {
-    assert(Src[Pos] == '"');
-
-    auto close = Pos + 1;
-    for (; close < Src.size(); ++close) {
-      // TODO: escape
-      // TODO: utf-8 multibyte
-      if (Src[close] == '"') {
-        break;
-      }
+    if (auto read = m_token.GetString()) {
+      Push(*read);
+      return Values.back();
+    } else {
+      return std::unexpected{ read.error() };
     }
-
-    if (Src[close] != '"') {
-      return std::unexpected{ u8"Unclosed string" };
-    }
-
-    Push(close - Pos + 1);
-    return Values.back();
   }
 
   std::expected<Value, std::u8string> ParseArray()
   {
-    assert(Src[Pos] == '[');
-
-    auto beginPos = Pos;
+    assert(*m_token == '[');
+    auto open = *m_token.Get(1);
     auto arrayIndex = Values.size();
-    Push(1);
+    Push(open);
     Values.back().Type = ValueType::Array;
     Stack.push(arrayIndex);
 
-    for (int i = 0; !IsEnd(); ++i) {
-      SkipSpace();
-      if (Src[Pos] == ']') {
+    for (int i = 0; !m_token.IsEnd(); ++i) {
+      m_token.SkipSpace();
+      if (*m_token == ']') {
         // closed
-        ++Pos;
+        auto close = *m_token.Get(1);
         auto& array = Values[arrayIndex];
-        array.Range = Src.substr(beginPos, Pos - beginPos);
+        array.Range = { open.begin(), close.end() };
         array.m_stride = static_cast<uint32_t>(Values.size()) - array.m_pos;
         Stack.pop();
         return Values[arrayIndex];
@@ -414,11 +355,11 @@ struct Parser
 
       if (i) {
         // must comma
-        if (Src[Pos] != ',') {
+        if (*m_token != ',') {
           return std::unexpected{ u8"comma required" };
         }
-        ++Pos;
-        SkipSpace();
+        m_token.Get(1);
+        m_token.SkipSpace();
       }
 
       Parse();
@@ -429,21 +370,20 @@ struct Parser
 
   std::expected<Value, std::u8string> ParseObject()
   {
-    assert(Src[Pos] == '{');
-
-    auto beginPos = Pos;
+    assert(*m_token == '{');
     auto objectIndex = Values.size();
-    Push(1);
+    auto open = *m_token.Get(1);
+    Push(open);
     Values.back().Type = ValueType::Object;
     Stack.push(objectIndex);
 
-    for (int i = 0; !IsEnd(); ++i) {
-      SkipSpace();
-      if (Src[Pos] == '}') {
+    for (int i = 0; !m_token.IsEnd(); ++i) {
+      m_token.SkipSpace();
+      if (*m_token == '}') {
         // closed
-        ++Pos;
+        auto close = *m_token.Get(1);
         auto& object = Values[objectIndex];
-        object.Range = Src.substr(beginPos, Pos - beginPos);
+        object.Range = { open.begin(), close.end() };
         object.m_stride = static_cast<uint32_t>(Values.size()) - object.m_pos;
         Stack.pop();
         return object;
@@ -451,11 +391,11 @@ struct Parser
 
       if (i) {
         // must comma
-        if (Src[Pos] != ',') {
+        if (*m_token != ',') {
           return std::unexpected{ u8"comma required" };
         }
-        ++Pos;
-        SkipSpace();
+        m_token.Get(1);
+        m_token.SkipSpace();
       }
 
       // key
@@ -464,13 +404,13 @@ struct Parser
       assert(Values.back().Range.front() == '"');
 
       {
-        SkipSpace();
+        m_token.SkipSpace();
         // must colon
-        if (Src[Pos] != ':') {
+        if (*m_token != ':') {
           return std::unexpected{ u8"colon required" };
         }
-        ++Pos;
-        SkipSpace();
+        m_token.Get(1);
+        m_token.SkipSpace();
       }
 
       // value
@@ -526,7 +466,7 @@ ArrayValue::Size() const
     return 0;
   }
   auto i = 0;
-  for (auto& _ : *this) {
+  for ([[maybe_unused]] auto& _ : *this) {
     ++i;
   }
   return i;
@@ -606,7 +546,7 @@ ObjectValue::Size() const
     return 0;
   }
   auto i = 0;
-  for (auto _ : *this) {
+  for ([[maybe_unused]] auto _ : *this) {
     ++i;
   }
   return i;
