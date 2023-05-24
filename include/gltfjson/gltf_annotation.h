@@ -218,50 +218,51 @@ struct JsonObject
   }
 };
 
-template<typename T>
-struct Array
-{
-  std::u8string m_key;
-  tree::NodePtr m_json;
-  struct Iterator
-  {
-    T operator*() { return {}; }
-    Iterator& operator++() { return *this; }
-    bool operator!=(const Iterator& rhs) const { return true; }
-  };
-  uint32_t size() const { return 0; }
-  T operator[](size_t index) const { return {}; }
-  Iterator begin() const { return {}; }
-  Iterator end() const { return {}; }
-};
-
-template<typename T>
-struct Key
-{
-  std::u8string m_key;
-  tree::NodePtr m_parent;
-  std::optional<T> operator()() const { return std::nullopt; }
-  // void operator()(const T& t);
-};
-
-struct ChildOfRootProperty
-{
-  Key<std::u8string> Name{ u8"name" };
-};
-
-template<typename T, size_t N>
-struct FixedArray : Key<std::array<T, N>>
-{};
+// template<typename T>
+// struct Array
+// {
+//   std::u8string m_key;
+//   tree::NodePtr m_json;
+//   struct Iterator
+//   {
+//     T operator*() { return {}; }
+//     Iterator& operator++() { return *this; }
+//     bool operator!=(const Iterator& rhs) const { return true; }
+//   };
+//   uint32_t size() const { return 0; }
+//   T operator[](size_t index) const { return {}; }
+//   Iterator begin() const { return {}; }
+//   Iterator end() const { return {}; }
+// };
+//
+// template<typename T>
+// struct Key
+// {
+//   std::u8string m_key;
+//   tree::NodePtr m_parent;
+//   std::optional<T> operator()() const { return std::nullopt; }
+//   // void operator()(const T& t);
+// };
+//
+// struct ChildOfRootProperty
+// {
+//   Key<std::u8string> Name{ u8"name" };
+// };
+//
+// template<typename T, size_t N>
+// struct FixedArray : Key<std::array<T, N>>
+// {};
 
 //
 // gltf
 //
 
 // https://github.com/KhronosGroup/glTF/blob/main/specification/2.0/schema/buffer.schema.json
-struct Buffer : ChildOfRootProperty
+struct Buffer : JsonObject
 {
-  Key<std::u8string> Uri{ u8"uri" };
-  Key<uint32_t> ByteLength{ u8"byteLength" };
+  using JsonObject::JsonObject;
+  auto Uri() const { return m_string<u8"uri">(); };
+  auto ByteLength() const { return m_number<uint32_t, u8"byteLength">(); };
 };
 
 // https://github.com/KhronosGroup/glTF/blob/main/specification/2.0/schema/bufferView.schema.json
@@ -326,102 +327,149 @@ struct Accessor : JsonObject
   auto Sparse() const { return m_object<annotation::Sparse, u8"sparse">(); }
 };
 
-struct Camera : ChildOfRootProperty
-{};
+struct Camera : JsonObject
+{
+  using JsonObject::JsonObject;
+};
 
 // https://github.com/KhronosGroup/glTF/blob/main/specification/2.0/schema/image.schema.json
-struct Image : ChildOfRootProperty
+struct Image : JsonObject
 {
-  Key<std::u8string> Uri{ u8"uri" };
-  Key<std::u8string> MimeType{ u8"mimeType" };
-  Key<Id> BufferView{ u8"bufferView" };
+  using JsonObject::JsonObject;
+  auto Uri() const { return m_string<u8"uri">(); }
+  auto MimeTypel() const { return m_string<u8"mimeType">(); }
+  auto BufferView() const { return m_id<u8"bufferView">(); }
 };
 
 // https://github.com/KhronosGroup/glTF/blob/main/specification/2.0/schema/sampler.schema.json
-struct Sampler : ChildOfRootProperty
+struct Sampler : JsonObject
 {
-  Key<format::TextureMagFilter> MagFilter{ u8"magFilter" };
-  Key<format::TextureMinFilter> MinFilter{ u8"minFilter" };
-  Key<format::TextureWrap> WrapS{ u8"wrapS" };
-  Key<format::TextureWrap> WrapT{ u8"wrapT" };
+  using JsonObject::JsonObject;
+  auto MagFilter() const
+  {
+    return m_number<format::TextureMagFilter, u8"magFilter">();
+  };
+  auto MinFilter() const
+  {
+    return m_number<format::TextureMinFilter, u8"minFilter">();
+  };
+  auto WrapS() const { return m_number<format::TextureWrap, u8"wrapS">(); }
+  auto WrapT() const { return m_number<format::TextureWrap, u8"wrapT">(); }
 };
 
 // https://github.com/KhronosGroup/glTF/blob/main/specification/2.0/schema/texture.schema.json
-struct Texture : ChildOfRootProperty
+struct Texture : JsonObject
 {
-  Key<Id> Sampler{ u8"sampler" };
-  Key<Id> Source{ u8"source" };
+  using JsonObject::JsonObject;
+  auto Sampler() const { return m_id<u8"sampler">(); }
+  auto Source() const { return m_id<u8"source">(); }
 };
 
 // https://github.com/KhronosGroup/glTF/blob/main/specification/2.0/schema/textureInfo.schema.json
-struct TextureInfo
+struct TextureInfo : JsonObject
 {
-  Key<Id> Index{ u8"index" };
-  Key<uint32_t> TexCoord{ u8"texCoord" };
+  using JsonObject::JsonObject;
+  auto Index() const { return m_id<u8"index">(); }
+  auto TexCoord() const { return m_number<uint32_t, u8"texCoord">(); }
 };
 
 // https://github.com/KhronosGroup/glTF/blob/main/specification/2.0/schema/material.normalTextureInfo.schema.json
 struct NormalTextureInfo : TextureInfo
 {
-  Key<float> Scale{ u8"scale" };
+  using TextureInfo::TextureInfo;
+  auto Scale() const { return m_number<float, u8"scale">(); }
 };
 
 // https://github.com/KhronosGroup/glTF/blob/main/specification/2.0/schema/material.occlusionTextureInfo.schema.json
 struct OcclusionTextureInfo : TextureInfo
 {
-  Key<float> Strength{ u8"strength" };
+  using TextureInfo::TextureInfo;
+  auto Strength() const { return m_number<float, u8"strength">(); };
 };
 
 // https://github.com/KhronosGroup/glTF/blob/main/specification/2.0/schema/material.pbrMetallicRoughness.schema.json
-struct PbrMetallicRoughness
+struct PbrMetallicRoughness : JsonObject
 {
-  FixedArray<float, 4> BaseColorFactor{ u8"baseColorFactor" };
-  Key<TextureInfo> BaseColorTexture{ u8"baseColorTexture" };
-  Key<float> MetallicFactor{ u8"metallicFactor" };
-  Key<float> RoughnessFactor{ u8"roughnessFactor" };
-  Key<TextureInfo> MetallicRoughnessTexture{ u8"metallicRoughnessTexture" };
+  using JsonObject::JsonObject;
+  auto BaseColorFactor() const { return m_float4<u8"baseColorFactor">(); }
+  auto BaseColorTexture() const
+  {
+    return m_object<TextureInfo, u8"baseColorTexture">();
+  }
+  auto MetallicFactor() const { return m_number<float, u8"metallicFactor">(); };
+  auto RoughnessFactor() const
+  {
+    return m_number<float, u8"roughnessFactor">();
+  };
+  auto MetallicRoughnessTexture() const
+  {
+    return m_object<TextureInfo, u8"metallicRoughnessTexture">();
+  };
 };
 
 // https://github.com/KhronosGroup/glTF/blob/main/specification/2.0/schema/material.schema.json
-struct Material : ChildOfRootProperty
+struct Material : JsonObject
 {
-  Key<PbrMetallicRoughness> PbrMetallicRoughness{ u8"pbrMetallicRoughness" };
-  Key<NormalTextureInfo> NormalTexture{ u8"normalTexture" };
-  Key<OcclusionTextureInfo> OcclusionTexture{ u8"occlusionTexture" };
-  Key<TextureInfo> EmissiveTexture{ u8"emissiveTexture" };
-  FixedArray<float, 3> EmissiveFactor{ u8"emissiveFactor" };
-  Key<format::AlphaModes> AlphaMode{ u8"alphaMode" };
-  Key<float> AlphaCutoff{ u8"alphaCutoff" };
-  Key<bool> DoubleSided{ u8"doubleSided" };
+  using JsonObject::JsonObject;
+  auto PbrMetallicRoughness() const
+  {
+    return m_object<annotation::PbrMetallicRoughness,
+                    u8"pbrMetallicRoughness">();
+  }
+  auto NormalTexture() const
+  {
+    return m_object<NormalTextureInfo, u8"normalTexture">();
+  }
+  auto OcclusionTexture() const
+  {
+    return m_object<OcclusionTextureInfo, u8"occlusionTexture">();
+  }
+  auto EmissiveTexture() const
+  {
+    return m_object<TextureInfo, u8"emissiveTexture">();
+  }
+  auto EmissiveFactor() const { return m_float3<u8"emissiveFactor">(); }
+  auto AlphaMode() const
+  {
+    return m_number<format::AlphaModes, u8"alphaMode">();
+  }
+  auto AlphaCutoff() const { return m_number<float, u8"alphaCutoff">(); };
+  auto DoubleSided() const { return m_number<bool, u8"doubleSided">(); };
 };
 
 // https://github.com/KhronosGroup/glTF/blob/main/specification/2.0/schema/skin.schema.json
-struct Skin : ChildOfRootProperty
+struct Skin : JsonObject
 {
-  Key<Id> InverseBindMatrices{ u8"inverseBindMatrices" };
-  Key<Id> Skeleton{ u8"skeleton" };
-  Array<uint32_t> Joints{ u8"joints" };
+  Skin(const tree::NodePtr& json)
+    : JsonObject(json)
+    , Joints(json)
+  {
+  }
+  auto InverseBindMatrices() const { return m_id<u8"inverseBindMatrices">(); }
+  auto Skeleton() const { return m_id<u8"skeleton">(); }
+  NumberArray<uint32_t, u8"joints"> Joints;
 };
 
 struct MeshPrimitiveAttributes : JsonObject
 {
   using JsonObject::JsonObject;
-  auto COLOR_0() const { return m_id<u8"COLOR_0">(); };
-  auto JOINTS_0() const { return m_id<u8"JOINTS_0">(); };
-  auto NORMAL() const { return m_id<u8"NORMAL">(); };
-  auto POSITION() const { return m_id<u8"POSITION">(); };
-  auto TANGENT() const { return m_id<u8"TANGENT">(); };
-  auto TEXCOORD_0() const { return m_id<u8"TEXCOORD_0">(); };
-  auto TEXCOORD_1() const { return m_id<u8"TEXCOORD_1">(); };
-  auto TEXCOORD_2() const { return m_id<u8"TEXCOORD_2">(); };
-  auto TEXCOORD_3() const { return m_id<u8"TEXCOORD_3">(); };
-  auto WEIGHTS_0() const { return m_id<u8"WEIGHTS_0">(); };
+  auto COLOR_0() const { return m_id<u8"COLOR_0">(); }
+  auto JOINTS_0() const { return m_id<u8"JOINTS_0">(); }
+  auto NORMAL() const { return m_id<u8"NORMAL">(); }
+  auto POSITION() const { return m_id<u8"POSITION">(); }
+  auto TANGENT() const { return m_id<u8"TANGENT">(); }
+  auto TEXCOORD_0() const { return m_id<u8"TEXCOORD_0">(); }
+  auto TEXCOORD_1() const { return m_id<u8"TEXCOORD_1">(); }
+  auto TEXCOORD_2() const { return m_id<u8"TEXCOORD_2">(); }
+  auto TEXCOORD_3() const { return m_id<u8"TEXCOORD_3">(); }
+  auto WEIGHTS_0() const { return m_id<u8"WEIGHTS_0">(); }
 };
 
-struct MeshPrimitiveMorphTarget
+struct MeshPrimitiveMorphTarget : JsonObject
 {
-  Key<Id> POSITION{ u8"POSITION" };
-  Key<Id> NORMAL{ u8"NORMAL" };
+  using JsonObject::JsonObject;
+  auto POSITION() const { return m_id<u8"POSITION">(); }
+  auto NORMAL() const { return m_id<u8"NORMAL">(); }
 };
 
 // https://github.com/KhronosGroup/glTF/blob/main/specification/2.0/schema/mesh.primitive.schema.json
@@ -479,32 +527,44 @@ struct Node : JsonObject
 };
 
 // https://github.com/KhronosGroup/glTF/blob/main/specification/2.0/schema/animation.sampler.schema.json
-struct AnimationSampler
+struct AnimationSampler : JsonObject
 {
-  Key<Id> Input{ u8"input" };
-  Key<format::InterpolationTypes> Interpolation{ u8"interpolation" };
-  Key<Id> Output{ u8"output" };
+  using JsonObject::JsonObject;
+  auto Input() const { return m_id<u8"input">(); }
+  auto Interpolation() const
+  {
+    return m_number<format::InterpolationTypes, u8"interpolation">();
+  }
+  auto Output() const { return m_id<u8"output">(); };
 };
 
 // https://github.com/KhronosGroup/glTF/blob/main/specification/2.0/schema/animation.channel.target.schema.json
-struct AnimationTarget
+struct AnimationTarget : JsonObject
 {
-  Key<Id> Node{ u8"node" };
-  Key<format::PathTypes> Path{ u8"path" };
+  using JsonObject::JsonObject;
+  auto Node() const { return m_id<u8"node">(); }
+  auto Path() const { return m_number<format::PathTypes, u8"path">(); }
 };
 
 // https://github.com/KhronosGroup/glTF/blob/main/specification/2.0/schema/animation.channel.schema.json
-struct AnimationChannel
+struct AnimationChannel : JsonObject
 {
-  Key<Id> Sampler{ u8"sampler" };
-  Key<AnimationTarget> Target{ u8"target" };
+  using JsonObject::JsonObject;
+  auto Sampler() const { return m_id<u8"sampler">(); }
+  auto Target() const { return m_object<AnimationTarget, u8"target">(); }
 };
 
 // https://github.com/KhronosGroup/glTF/blob/main/specification/2.0/schema/animation.schema.json
-struct Animation : ChildOfRootProperty
+struct Animation : JsonObject
 {
-  Array<AnimationChannel> Channels{ u8"channels" };
-  Array<AnimationSampler> Samplers{ u8"samplers" };
+  Animation(const tree::NodePtr& json)
+    : JsonObject(json)
+    , Channels(json)
+    , Samplers(json)
+  {
+  }
+  JsonArray<AnimationChannel, u8"channels"> Channels;
+  JsonArray<AnimationSampler, u8"samplers"> Samplers;
 };
 
 struct Scene : JsonObject
@@ -533,31 +593,37 @@ struct Root : JsonObject
   Root(const tree::NodePtr& json)
     : JsonObject(json)
     , Accessors(json)
+    , Animations(json)
+    , Buffers(json)
     , BufferViews(json)
-    , Scenes(json)
+    , Cameras(json)
+    , Images(json)
+    , Textures(json)
+    , Materials(json)
     , Meshes(json)
     , Nodes(json)
+    , Samplers(json)
+    , Scenes(json)
+    , Skins(json)
   {
     m_json = json;
   }
 
   JsonArray<Accessor, u8"accessors"> Accessors;
-  Array<Animation> Animations{ u8"animations" };
+  JsonArray<Animation, u8"animations"> Animations;
   auto Asset() const { return m_object<annotation::Asset, u8"asset">(); }
-  Array<Buffer> Buffers{ u8"buffers" };
+  JsonArray<Buffer, u8"buffers"> Buffers;
   JsonArray<BufferView, u8"bufferViews"> BufferViews;
-  Array<Camera> Cameras{ u8"cameras" };
-  Array<Image> Images{ u8"images" };
-  Array<Texture> Textures{ u8"textures" };
-  Array<Material> Materials{ u8"materials" };
+  JsonArray<Camera, u8"cameras"> Cameras;
+  JsonArray<Image, u8"images"> Images;
+  JsonArray<Texture, u8"textures"> Textures;
+  JsonArray<Material, u8"materials"> Materials;
   JsonArray<Mesh, u8"meshes"> Meshes;
   JsonArray<Node, u8"nodes"> Nodes;
-  Array<Sampler> Samplers{ u8"samplers" };
-
+  JsonArray<Sampler, u8"samplers"> Samplers;
   auto Scene() const { return m_number<uint32_t, u8"scene">(); }
   JsonArray<annotation::Scene, u8"scenes"> Scenes;
-
-  Array<Skin> Skins{ u8"skins" };
+  JsonArray<Skin, u8"skins"> Skins;
 };
 
 }

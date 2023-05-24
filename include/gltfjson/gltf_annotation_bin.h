@@ -23,7 +23,7 @@ struct Bin
 
     int buffer_index = *buffer_view.Buffer();
     auto buffer = gltf.Buffers[buffer_index];
-    auto uri = buffer.Uri().value_or(u8"");
+    auto uri = buffer.Uri();
     if (uri.size()) {
       // external file
       if (auto bytes = Dir->GetBuffer(uri)) {
