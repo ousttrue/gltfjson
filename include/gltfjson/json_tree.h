@@ -22,7 +22,7 @@ using ArrayValue = std::vector<NodePtr>;
 using ObjectValue = std::unordered_map<std::u8string, NodePtr>;
 struct Node
 {
-  std::variant<NullValue, bool, double, std::u8string, ArrayValue, ObjectValue>
+  std::variant<NullValue, bool, float, std::u8string, ArrayValue, ObjectValue>
     Var;
 
   template<typename T>
@@ -251,7 +251,7 @@ struct Parser
   {
     auto src = Remain();
 #ifdef _MSC_VER
-    double value;
+    float value;
     if (auto [ptr, ec] = std::from_chars(
           (const char*)src.data(), (const char*)src.data() + src.size(), value);
         ec == std::errc{}) {
@@ -264,7 +264,7 @@ struct Parser
     std::string str((const char*)src.data(),
                     (const char*)src.data() + src.size());
     size_t i;
-    std::stod(str, &i);
+    std::stof(str, &i);
     return Push(i, i);
 #endif
   }

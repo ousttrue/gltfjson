@@ -40,7 +40,7 @@ TEST(TestJsonTree, ParseNumber)
     auto result = parser.Parse();
     EXPECT_TRUE(result);
     if (result) {
-      EXPECT_EQ(*result->Value<double>(), 1);
+      EXPECT_EQ(*result->Value<float>(), 1);
     }
   }
   {
@@ -49,7 +49,7 @@ TEST(TestJsonTree, ParseNumber)
     auto result = parser.Parse();
     EXPECT_TRUE(result);
     if (result) {
-      EXPECT_EQ(*result->Value<double>(), -1);
+      EXPECT_EQ(*result->Value<float>(), -1);
     }
   }
   {
@@ -58,7 +58,7 @@ TEST(TestJsonTree, ParseNumber)
     auto result = parser.Parse();
     EXPECT_TRUE(result);
     if (result) {
-      EXPECT_EQ(*result->Value<double>(), 1e-5);
+      EXPECT_EQ(*result->Value<float>(), 1e-5f);
     }
   }
   {
@@ -67,7 +67,7 @@ TEST(TestJsonTree, ParseNumber)
     auto result = parser.Parse();
     EXPECT_TRUE(result);
     if (result) {
-      EXPECT_EQ(*result->Value<double>(), 1.1);
+      EXPECT_EQ(*result->Value<float>(), 1.1f);
     }
   }
 }
@@ -110,7 +110,7 @@ TEST(TestJsonTree, ParseArray)
     auto result = parser.Parse();
     if (auto array = result->Array()) {
       EXPECT_EQ(array->size(), 3);
-      EXPECT_EQ(*(*array)[0]->Value<double>(), 1);
+      EXPECT_EQ(*(*array)[0]->Value<float>(), 1);
     }
   }
   {
@@ -119,7 +119,7 @@ TEST(TestJsonTree, ParseArray)
     auto result = parser.Parse();
     if (auto array = result->Array()) {
       auto inner = (*array)[1]->Array();
-      EXPECT_EQ(*(*inner)[1]->Value<double>(), 3);
+      EXPECT_EQ(*(*inner)[1]->Value<float>(), 3);
     }
   }
 }
@@ -153,7 +153,7 @@ TEST(TestJsonTree, ParseObject)
     auto result = parser.Parse();
     if (result) {
       EXPECT_EQ(result->Size(), 1);
-      EXPECT_EQ(*result->Get(u8"key")->Value<double>(), 1);
+      EXPECT_EQ(*result->Get(u8"key")->Value<float>(), 1);
     }
   }
   {
@@ -162,7 +162,7 @@ TEST(TestJsonTree, ParseObject)
     auto result = parser.Parse();
     if (result) {
       auto inner = result->Get(u8"key");
-      EXPECT_EQ(*inner->Get(u8"key2")->Value<double>(), 2);
+      EXPECT_EQ(*inner->Get(u8"key2")->Value<float>(), 2);
     }
   }
 }

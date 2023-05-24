@@ -73,7 +73,7 @@ struct NumberArray
   uint32_t size() const { return m_json->Size(); }
   T operator[](size_t index) const
   {
-    return (T)*m_json->Get(index)->Value<double>();
+    return (T)*m_json->Get(index)->Value<float>();
   }
   Iterator begin() const { return {}; }
   Iterator end() const { return {}; }
@@ -110,7 +110,7 @@ struct JsonObject
   std::optional<T> m_number() const
   {
     if (auto node = m_node<lit>()) {
-      return (T)*node->Value<double>();
+      return (T)*node->Value<float>();
     }
     return std::nullopt;
   }
@@ -119,7 +119,7 @@ struct JsonObject
   std::optional<Id> m_id() const
   {
     if (auto node = m_node<lit>()) {
-      return (Id)*node->Value<double>();
+      return (Id)*node->Value<float>();
     }
     return std::nullopt;
   }
@@ -142,9 +142,9 @@ struct JsonObject
       if (auto array = node->Array()) {
         if (array->size() == 3) {
           Float3 value;
-          value.x = *(*array)[0]->Value<double>();
-          value.y = *(*array)[1]->Value<double>();
-          value.z = *(*array)[2]->Value<double>();
+          value.x = *(*array)[0]->Value<float>();
+          value.y = *(*array)[1]->Value<float>();
+          value.z = *(*array)[2]->Value<float>();
           return value;
         }
       }
@@ -158,10 +158,10 @@ struct JsonObject
       if (auto array = node->Array()) {
         if (array->size() == 4) {
           Float4 value;
-          value.x = *(*array)[0]->Value<double>();
-          value.y = *(*array)[1]->Value<double>();
-          value.z = *(*array)[2]->Value<double>();
-          value.w = *(*array)[3]->Value<double>();
+          value.x = *(*array)[0]->Value<float>();
+          value.y = *(*array)[1]->Value<float>();
+          value.z = *(*array)[2]->Value<float>();
+          value.w = *(*array)[3]->Value<float>();
           return value;
         }
       }
@@ -175,22 +175,22 @@ struct JsonObject
       if (auto array = node->Array()) {
         if (array->size() == 16) {
           Float16 value;
-          value._11 = *(*array)[0]->Value<double>();
-          value._12 = *(*array)[1]->Value<double>();
-          value._13 = *(*array)[2]->Value<double>();
-          value._14 = *(*array)[3]->Value<double>();
-          value._21 = *(*array)[4]->Value<double>();
-          value._22 = *(*array)[5]->Value<double>();
-          value._23 = *(*array)[6]->Value<double>();
-          value._24 = *(*array)[7]->Value<double>();
-          value._31 = *(*array)[8]->Value<double>();
-          value._32 = *(*array)[9]->Value<double>();
-          value._33 = *(*array)[10]->Value<double>();
-          value._34 = *(*array)[11]->Value<double>();
-          value._41 = *(*array)[12]->Value<double>();
-          value._42 = *(*array)[13]->Value<double>();
-          value._43 = *(*array)[14]->Value<double>();
-          value._44 = *(*array)[15]->Value<double>();
+          value._11 = *(*array)[0]->Value<float>();
+          value._12 = *(*array)[1]->Value<float>();
+          value._13 = *(*array)[2]->Value<float>();
+          value._14 = *(*array)[3]->Value<float>();
+          value._21 = *(*array)[4]->Value<float>();
+          value._22 = *(*array)[5]->Value<float>();
+          value._23 = *(*array)[6]->Value<float>();
+          value._24 = *(*array)[7]->Value<float>();
+          value._31 = *(*array)[8]->Value<float>();
+          value._32 = *(*array)[9]->Value<float>();
+          value._33 = *(*array)[10]->Value<float>();
+          value._34 = *(*array)[11]->Value<float>();
+          value._41 = *(*array)[12]->Value<float>();
+          value._42 = *(*array)[13]->Value<float>();
+          value._43 = *(*array)[14]->Value<float>();
+          value._44 = *(*array)[15]->Value<float>();
           return value;
         }
       }
