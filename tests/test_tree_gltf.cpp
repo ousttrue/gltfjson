@@ -84,14 +84,14 @@ TEST(GltfTestTree, Parse)
   auto version = asset->Get(u8"version");
   EXPECT_EQ(version->U8String(), u8"2.0");
 
-  gltfjson::annotation::Root gltf;
-  gltf.m_json = result;
+  gltfjson::annotation::Root gltf(result);
 
   EXPECT_EQ(*gltf.Scene(), 0);
 
-  // // scenes.0
-  // EXPECT_EQ(gltf.Scenes[0].Nodes, std::vector<uint32_t>{ 0 });
-  //
+  // scenes.0
+  EXPECT_EQ(gltf.Scenes[0].Nodes.size(), 1);
+  EXPECT_EQ(gltf.Scenes[0].Nodes[0], 0);
+
   // // nodes.0
   // EXPECT_EQ(gltf.Nodes[0].Mesh, 0);
   //

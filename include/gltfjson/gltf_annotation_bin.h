@@ -14,7 +14,7 @@ struct Bin
     const Root& gltf,
     int buffer_view_index) const
   {
-    if (buffer_view_index < 0 || buffer_view_index >= gltf.BufferViews.Size()) {
+    if (buffer_view_index < 0 || buffer_view_index >= gltf.BufferViews.size()) {
       return std::unexpected{ "buffer_view_index is out of range" };
     }
 

@@ -18,6 +18,47 @@ struct StringLiteral
   char8_t value[N];
 };
 
+template<typename T, StringLiteral lit>
+struct JsonArray
+{
+  tree::NodePtr m_json;
+  JsonArray(tree::NodePtr parent)
+    : m_json(parent->Get(lit.value))
+  {
+  }
+
+  struct Iterator
+  {
+    T operator*() { return {}; }
+    Iterator& operator++() { return *this; }
+    bool operator!=(const Iterator& rhs) const { return true; }
+  };
+  uint32_t size() const { return m_json->Size(); }
+  T operator[](size_t index) const { return T{ m_json->Get(index) }; }
+  Iterator begin() const { return {}; }
+  Iterator end() const { return {}; }
+};
+
+template<typename T, StringLiteral lit>
+struct NumberArray
+{
+  tree::NodePtr m_json;
+  NumberArray(tree::NodePtr parent)
+    : m_json(parent->Get(lit.value))
+  {
+  }
+
+  struct Iterator
+  {
+    T operator*() { return {}; }
+    Iterator& operator++() { return *this; }
+    bool operator!=(const Iterator& rhs) const { return true; }
+  };
+  uint32_t size() const { return m_json->Size(); }
+  T operator[](size_t index) const { return *m_json->Get(index)->Number<T>(); }
+  Iterator begin() const { return {}; }
+  Iterator end() const { return {}; }
+};
 struct JsonObject
 {
   tree::NodePtr m_json;
@@ -36,6 +77,33 @@ struct JsonObject
     }
     return std::nullopt;
   }
+
+  template<typename T, StringLiteral lit>
+  JsonArray<T, lit> m_array() const
+  {
+    JsonArray<T, lit> m;
+    if (auto node = m_node<lit>()) {
+      m.m_json = *node;
+    }
+    return m;
+  }
+};
+
+template<typename T>
+struct Array
+{
+  std::u8string m_key;
+  tree::NodePtr m_json;
+  struct Iterator
+  {
+    T operator*() { return {}; }
+    Iterator& operator++() { return *this; }
+    bool operator!=(const Iterator& rhs) const { return true; }
+  };
+  uint32_t size() const { return 0; }
+  T operator[](size_t index) const { return {}; }
+  Iterator begin() const { return {}; }
+  Iterator end() const { return {}; }
 };
 
 template<typename T>
@@ -57,23 +125,6 @@ struct ChildOfRootProperty
 template<typename T, size_t N>
 struct FixedArray : Key<std::array<T, N>>
 {};
-
-template<typename T>
-struct Array
-{
-  std::u8string m_key;
-  tree::NodePtr m_parent;
-  struct Iterator
-  {
-    T operator*() { return {}; }
-    Iterator& operator++() { return *this; }
-    bool operator!=(const Iterator& rhs) const { return true; }
-  };
-  uint32_t Size() const { return 0; }
-  T operator[](size_t index) const { return {}; }
-  Iterator begin() const { return {}; }
-  Iterator end() const { return {}; }
-};
 
 //
 // gltf
@@ -293,9 +344,13 @@ struct Animation : ChildOfRootProperty
   Array<AnimationSampler> Samplers{ u8"samplers" };
 };
 
-struct Scene : ChildOfRootProperty
+struct Scene : JsonObject
 {
-  Array<uint32_t> Nodes{ u8"nodes" };
+  Scene(const tree::NodePtr& json)
+    : Nodes(json)
+  {
+  }
+  NumberArray<uint32_t, u8"nodes"> Nodes;
 };
 
 // https://github.com/KhronosGroup/glTF/blob/main/specification/2.0/schema/asset.schema.json
@@ -309,6 +364,12 @@ struct Asset
 
 struct Root : JsonObject
 {
+  Root(tree::NodePtr json)
+    : Scenes(json)
+  {
+    m_json = json;
+  }
+
   Array<Accessor> Accessors{ u8"accessors" };
   Array<Animation> Animations{ u8"animations" };
   Key<Asset> Asset{ u8"asset" };
@@ -323,8 +384,8 @@ struct Root : JsonObject
   Array<Sampler> Samplers{ u8"samplers" };
 
   auto Scene() const { return m_number<uint32_t, u8"scene">(); }
+  JsonArray<annotation::Scene, u8"scenes"> Scenes;
 
-  Array<annotation::Scene> Scenes{ u8"scenes" };
   Array<Skin> Skins{ u8"skins" };
 };
 }

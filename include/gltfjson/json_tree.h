@@ -113,6 +113,14 @@ struct Node
   ArrayValue* Array() { return Ptr<ArrayValue>(); }
   const ObjectValue* Object() const { return Ptr<ObjectValue>(); }
   ObjectValue* Object() { return Ptr<ObjectValue>(); }
+  NodePtr Get(size_t index) const
+  {
+    if (auto array = Array()) {
+      return array->m_values[index];
+    }
+
+    return nullptr;
+  }
   NodePtr Get(std::u8string_view target) const
   {
     if (auto object = Object()) {
