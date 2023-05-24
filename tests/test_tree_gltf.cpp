@@ -80,11 +80,11 @@ TEST(GltfTestTree, Parse)
   gltfjson::tree::Parser parser(MINIMUM);
   auto result = parser.Parse();
   EXPECT_TRUE(result);
-  auto asset = result->Get(u8"asset");
-  auto version = asset->Get(u8"version");
-  EXPECT_EQ(version->U8String(), u8"2.0");
 
   gltfjson::annotation::Root gltf(result);
+
+  // asset
+  EXPECT_EQ(gltf.Asset()->Version(), u8"2.0");
 
   EXPECT_EQ(*gltf.Scene(), 0);
 
@@ -96,7 +96,7 @@ TEST(GltfTestTree, Parse)
   EXPECT_EQ(*gltf.Nodes[0].Mesh(), 0);
 
   // meshes.0.primitives.0
-  EXPECT_EQ(*gltf.Meshes[0].Primitives[0].Attributes().POSITION(), 1);
+  EXPECT_EQ(*gltf.Meshes[0].Primitives[0].Attributes()->POSITION(), 1);
   EXPECT_EQ(*gltf.Meshes[0].Primitives[0].Indices(), 0);
 
   // bufferViews.0
@@ -107,19 +107,22 @@ TEST(GltfTestTree, Parse)
   EXPECT_EQ(*gltf.BufferViews[0].Target(),
             gltfjson::format::Targets::ELEMENT_ARRAY_BUFFER);
 
-  // // accessors.0
-  // EXPECT_EQ(gltf.Accessors[0].BufferView, 0);
-  // EXPECT_EQ(gltf.Accessors[0].ByteOffset, 0);
-  // EXPECT_EQ(gltf.Accessors[0].ComponentType,
-  //           gltfjson::format::ComponentTypes::UNSIGNED_SHORT);
-  // EXPECT_EQ(gltf.Accessors[0].Count, 3);
-  // EXPECT_EQ(gltf.Accessors[0].Type, gltfjson::format::Types::SCALAR);
-  // EXPECT_EQ(gltf.Accessors[0].Max, std::vector<float>{ 2 });
-  // EXPECT_EQ(gltf.Accessors[0].Min, std::vector<float>{ 0 });
-  //
-  // // accessors.1
-  // std::vector<float> values = { 0, 0, 0 };
-  // EXPECT_EQ(gltf.Accessors[1].Min, values);
-  //
-  // EXPECT_EQ(gltf.Asset.Version, u8"2.0");
+  // accessors.0
+  EXPECT_EQ(*gltf.Accessors[0].BufferView(), 0);
+  EXPECT_EQ(*gltf.Accessors[0].ByteOffset(), 0);
+  EXPECT_EQ(*gltf.Accessors[0].ComponentType(),
+            gltfjson::format::ComponentTypes::UNSIGNED_SHORT);
+  EXPECT_EQ(*gltf.Accessors[0].Count(), 3);
+  EXPECT_EQ(gltf.Accessors[0].Type(), u8"SCALAR");
+  EXPECT_EQ(gltf.Accessors[0].Max.size(), 1);
+  EXPECT_EQ(gltf.Accessors[0].Max[0], 2);
+  EXPECT_EQ(gltf.Accessors[0].Min.size(), 1);
+  EXPECT_EQ(gltf.Accessors[0].Min[0], 0);
+
+  // accessors.1
+  EXPECT_EQ(gltf.Accessors[1].Min.size(), 3);
+  EXPECT_EQ(gltf.Accessors[1].Min[0], 0);
+  EXPECT_EQ(gltf.Accessors[1].Min[1], 0);
+  EXPECT_EQ(gltf.Accessors[1].Min[2], 0);
+
 }

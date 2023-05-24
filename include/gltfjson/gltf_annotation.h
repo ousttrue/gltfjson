@@ -95,6 +95,17 @@ struct JsonObject
     return m_json->Get(lit.value);
   }
 
+  template<StringLiteral lit>
+  bool m_bool() const
+  {
+    if (auto node = m_node<lit>()) {
+      if (auto value = node->Value<bool>()) {
+        return *value;
+      }
+    }
+    return false;
+  }
+
   template<typename T, StringLiteral lit>
   std::optional<T> m_number() const
   {
@@ -196,6 +207,15 @@ struct JsonObject
     }
     return m;
   }
+
+  template<typename T, StringLiteral lit>
+  std::optional<T> m_object() const
+  {
+    if (auto node = m_node<lit>()) {
+      return T{ node };
+    }
+    return std::nullopt;
+  }
 };
 
 template<typename T>
@@ -256,43 +276,54 @@ struct BufferView : JsonObject
 };
 
 // https://github.com/KhronosGroup/glTF/blob/main/specification/2.0/schema/accessor.sparse.indices.schema.json
-struct SparseIndices
+struct SparseIndices : JsonObject
 {
-  Key<Id> BufferView{ u8"bufferView" };
-  Key<uint32_t> ByteOffset{ u8"byteOffset" };
-  Key<format::ComponentTypes> ComponentType{ u8"componentType" };
+  using JsonObject::JsonObject;
+  auto BufferView() const { return m_id<u8"bufferView">(); };
+  auto ByteOffset() const { return m_number<uint32_t, u8"byteOffset">(); }
+  auto ComponentType() const
+  {
+    return m_number<format::ComponentTypes, u8"componentType">();
+  }
 };
 
 // https://github.com/KhronosGroup/glTF/blob/main/specification/2.0/schema/accessor.sparse.values.schema.json
-struct SparseValues
+struct SparseValues : JsonObject
 {
-  Key<Id> BufferView{ u8"bufferView" };
-  Key<uint32_t> ByteOffset{ u8"byteOffset" };
+  using JsonObject::JsonObject;
+  auto BufferView() const { return m_id<u8"bufferView">(); }
+  auto ByteOffset() const { return m_number<uint32_t, u8"byteOffset">(); }
 };
 
 // https://github.com/KhronosGroup/glTF/blob/main/specification/2.0/schema/accessor.sparse.schema.json
-struct Sparse
+struct Sparse : JsonObject
 {
-  Key<uint32_t> Count{ u8"count" };
-  Key<SparseIndices> Indices{ u8"indices" };
-  Key<SparseValues> Values{ u8"values" };
+  using JsonObject::JsonObject;
+  auto Count() const { return m_number<uint32_t, u8"count">(); }
+  auto Indices() const { return m_object<SparseIndices, u8"indices">(); }
+  auto Values() const { return m_object<SparseValues, u8"values">(); }
 };
 
-struct Accessor : ChildOfRootProperty
+struct Accessor : JsonObject
 {
-  Key<Id> BufferView{ u8"bufferView" };
-  Key<uint32_t> ByteOffset{ u8"byteOffset" };
-  Key<format::ComponentTypes> ComponentType{ u8"componentType" };
-  Key<bool> Normalized{ u8"normalized" };
-  Key<uint32_t> Count{ u8"count" };
-  Key<format::Types> Type{ u8"tyee" };
-  Array<float> Max{ u8"max" };
-  Array<float> Min{ u8"min" };
-  Key<Sparse> Sparse{ u8"sparse" };
-
-  uint32_t Stride() const { return ComponentSize() * TypeCount(); }
-  uint32_t ComponentSize() const { return 4; }
-  uint32_t TypeCount() const { return 1; }
+  Accessor(const tree::NodePtr& json)
+    : JsonObject(json)
+    , Max(json)
+    , Min(json)
+  {
+  }
+  auto BufferView() const { return m_id<u8"bufferView">(); }
+  auto ByteOffset() const { return m_number<uint32_t, u8"byteOffset">(); }
+  auto ComponentType() const
+  {
+    return m_number<format::ComponentTypes, u8"componentType">();
+  }
+  auto Normalized() const { return m_bool<u8"normalized">(); }
+  auto Count() const { return m_number<uint32_t, u8"count">(); }
+  auto Type() const { return m_string<u8"type">(); }
+  NumberArray<float, u8"max"> Max;
+  NumberArray<float, u8"min"> Min;
+  auto Sparse() const { return m_object<annotation::Sparse, u8"sparse">(); }
 };
 
 struct Camera : ChildOfRootProperty
@@ -403,8 +434,8 @@ struct MeshPrimitive : JsonObject
   }
   auto Attributes() const
   {
-    return MeshPrimitiveAttributes{ m_node<u8"attributes">() };
-  };
+    return m_object<MeshPrimitiveAttributes, u8"attributes">();
+  }
   auto Indices() const { return m_id<u8"indices">(); }
   auto Material() const { return m_id<u8"material">(); }
   auto Mode() const
@@ -501,6 +532,7 @@ struct Root : JsonObject
 {
   Root(const tree::NodePtr& json)
     : JsonObject(json)
+    , Accessors(json)
     , BufferViews(json)
     , Scenes(json)
     , Meshes(json)
@@ -509,9 +541,9 @@ struct Root : JsonObject
     m_json = json;
   }
 
-  Array<Accessor> Accessors{ u8"accessors" };
+  JsonArray<Accessor, u8"accessors"> Accessors;
   Array<Animation> Animations{ u8"animations" };
-  auto Asset() const { return annotation::Asset{ m_node<u8"asset">() }; };
+  auto Asset() const { return m_object<annotation::Asset, u8"asset">(); }
   Array<Buffer> Buffers{ u8"buffers" };
   JsonArray<BufferView, u8"bufferViews"> BufferViews;
   Array<Camera> Cameras{ u8"cameras" };
@@ -527,5 +559,6 @@ struct Root : JsonObject
 
   Array<Skin> Skins{ u8"skins" };
 };
+
 }
 }
