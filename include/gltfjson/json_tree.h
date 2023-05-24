@@ -18,14 +18,13 @@ namespace tree {
 
 struct Node;
 using NodePtr = std::shared_ptr<Node>;
-struct NullValue
-{};
 using ArrayValue = std::vector<NodePtr>;
 using ObjectValue = std::unordered_map<std::u8string, NodePtr>;
 struct Node
 {
-  std::variant<NullValue, bool, float, std::u8string, ArrayValue, ObjectValue>
-    Var;
+  std::
+    variant<std::monostate, bool, float, std::u8string, ArrayValue, ObjectValue>
+      Var;
 
   template<typename T>
   const T* Ptr() const
@@ -54,7 +53,7 @@ struct Node
   //     return std::nullopt;
   //   }
   // }
-  bool IsNull() const { return std::holds_alternative<NullValue>(Var); }
+  bool IsNull() const { return std::holds_alternative<std::monostate>(Var); }
   std::u8string U8String() const
   {
     if (auto str = Ptr<std::u8string>()) {
@@ -199,7 +198,7 @@ struct Parser
   {
     if (auto src = m_token.GetSymbol(target)) {
       if (*src == u8"null") {
-        return Push(NullValue{});
+        return Push(std::monostate{});
       } else if (*src == u8"true") {
         return Push(true);
       } else if (*src == u8"false") {

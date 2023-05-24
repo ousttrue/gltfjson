@@ -12,13 +12,11 @@ structures.
 ```c++
 struct Node;
 using NodePtr = std::shared_ptr<Node>;
-struct NullValue
-{};
 using ArrayValue = std::vector<NodePtr>;
 using ObjectValue = std::unordered_map<std::u8string, NodePtr>;
 struct Node
 {
-  std::variant<NullValue, bool, float, std::u8string, ArrayValue, ObjectValue>
+  std::variant<std::monostate, bool, float, std::u8string, ArrayValue, ObjectValue>
     Var;
 
   // Get pointer for payload
