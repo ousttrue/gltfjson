@@ -245,19 +245,20 @@ struct Buffer : ChildOfRootProperty
 };
 
 // https://github.com/KhronosGroup/glTF/blob/main/specification/2.0/schema/bufferView.schema.json
-struct BufferView : ChildOfRootProperty
+struct BufferView : JsonObject
 {
-  Key<Id> Buffer{ u8"Buffer" };
-  Key<uint32_t> ByteOffset{ u8"byteOffset" };
-  Key<uint32_t> ByteLength{ u8"byteLength" };
-  Key<uint32_t> ByteStride{ u8"byteStride" };
-  Key<format::Targets> Target{ u8"target" };
+  using JsonObject::JsonObject;
+  auto Buffer() const { return m_id<u8"buffer">(); };
+  auto ByteOffset() const { return m_number<uint32_t, u8"byteOffset">(); };
+  auto ByteLength() const { return m_number<uint32_t, u8"byteLength">(); };
+  auto ByteStride() const { return m_number<uint32_t, u8"byteStride">(); };
+  auto Target() const { return m_number<format::Targets, u8"target">(); };
 };
 
 // https://github.com/KhronosGroup/glTF/blob/main/specification/2.0/schema/accessor.sparse.indices.schema.json
 struct SparseIndices
 {
-  Key<Id> BufferView{ u8"BufferView" };
+  Key<Id> BufferView{ u8"bufferView" };
   Key<uint32_t> ByteOffset{ u8"byteOffset" };
   Key<format::ComponentTypes> ComponentType{ u8"componentType" };
 };
@@ -500,6 +501,7 @@ struct Root : JsonObject
 {
   Root(const tree::NodePtr& json)
     : JsonObject(json)
+    , BufferViews(json)
     , Scenes(json)
     , Meshes(json)
     , Nodes(json)
@@ -511,7 +513,7 @@ struct Root : JsonObject
   Array<Animation> Animations{ u8"animations" };
   auto Asset() const { return annotation::Asset{ m_node<u8"asset">() }; };
   Array<Buffer> Buffers{ u8"buffers" };
-  Array<BufferView> BufferViews{ u8"bufferViews" };
+  JsonArray<BufferView, u8"bufferViews"> BufferViews;
   Array<Camera> Cameras{ u8"cameras" };
   Array<Image> Images{ u8"images" };
   Array<Texture> Textures{ u8"textures" };
