@@ -95,7 +95,7 @@ TEST(TestJsonTree, ParseArray)
     auto result = parser.Parse();
     EXPECT_TRUE(result);
     if (auto array = result->Array()) {
-      EXPECT_TRUE(array->m_values.empty());
+      EXPECT_TRUE(array->empty());
     }
   }
   {
@@ -109,8 +109,8 @@ TEST(TestJsonTree, ParseArray)
     gltfjson::tree::Parser parser(SRC);
     auto result = parser.Parse();
     if (auto array = result->Array()) {
-      EXPECT_EQ(array->m_values.size(), 3);
-      EXPECT_EQ(*array->m_values[0]->Value<double>(), 1);
+      EXPECT_EQ(array->size(), 3);
+      EXPECT_EQ(*(*array)[0]->Value<double>(), 1);
     }
   }
   {
@@ -118,8 +118,8 @@ TEST(TestJsonTree, ParseArray)
     gltfjson::tree::Parser parser(SRC);
     auto result = parser.Parse();
     if (auto array = result->Array()) {
-      auto inner = array->m_values[1]->Array();
-      EXPECT_EQ(*inner->m_values[1]->Value<double>(), 3);
+      auto inner = (*array)[1]->Array();
+      EXPECT_EQ(*(*inner)[1]->Value<double>(), 3);
     }
   }
 }
@@ -136,7 +136,7 @@ TEST(TestJsonTree, ParseObject)
     }
 
     if (auto object = result->Object()) {
-      EXPECT_TRUE(object->m_values.empty());
+      EXPECT_TRUE(object->empty());
     }
   }
   {

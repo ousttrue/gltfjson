@@ -129,11 +129,11 @@ struct JsonObject
   {
     if (auto node = m_node<lit>()) {
       if (auto array = node->Array()) {
-        if (array->m_values.size() == 3) {
+        if (array->size() == 3) {
           Float3 value;
-          value.x = *array->m_values[0]->Value<double>();
-          value.y = *array->m_values[1]->Value<double>();
-          value.z = *array->m_values[2]->Value<double>();
+          value.x = *(*array)[0]->Value<double>();
+          value.y = *(*array)[1]->Value<double>();
+          value.z = *(*array)[2]->Value<double>();
           return value;
         }
       }
@@ -145,12 +145,12 @@ struct JsonObject
   {
     if (auto node = m_node<lit>()) {
       if (auto array = node->Array()) {
-        if (array->m_values.size() == 4) {
+        if (array->size() == 4) {
           Float4 value;
-          value.x = *array->m_values[0]->Value<double>();
-          value.y = *array->m_values[1]->Value<double>();
-          value.z = *array->m_values[2]->Value<double>();
-          value.w = *array->m_values[3]->Value<double>();
+          value.x = *(*array)[0]->Value<double>();
+          value.y = *(*array)[1]->Value<double>();
+          value.z = *(*array)[2]->Value<double>();
+          value.w = *(*array)[3]->Value<double>();
           return value;
         }
       }
@@ -162,24 +162,24 @@ struct JsonObject
   {
     if (auto node = m_node<lit>()) {
       if (auto array = node->Array()) {
-        if (array->m_values.size() == 16) {
+        if (array->size() == 16) {
           Float16 value;
-          value._11 = *array->m_values[0]->Value<double>();
-          value._12 = *array->m_values[1]->Value<double>();
-          value._13 = *array->m_values[2]->Value<double>();
-          value._14 = *array->m_values[3]->Value<double>();
-          value._21 = *array->m_values[4]->Value<double>();
-          value._22 = *array->m_values[5]->Value<double>();
-          value._23 = *array->m_values[6]->Value<double>();
-          value._24 = *array->m_values[7]->Value<double>();
-          value._31 = *array->m_values[8]->Value<double>();
-          value._32 = *array->m_values[9]->Value<double>();
-          value._33 = *array->m_values[10]->Value<double>();
-          value._34 = *array->m_values[11]->Value<double>();
-          value._41 = *array->m_values[12]->Value<double>();
-          value._42 = *array->m_values[13]->Value<double>();
-          value._43 = *array->m_values[14]->Value<double>();
-          value._44 = *array->m_values[15]->Value<double>();
+          value._11 = *(*array)[0]->Value<double>();
+          value._12 = *(*array)[1]->Value<double>();
+          value._13 = *(*array)[2]->Value<double>();
+          value._14 = *(*array)[3]->Value<double>();
+          value._21 = *(*array)[4]->Value<double>();
+          value._22 = *(*array)[5]->Value<double>();
+          value._23 = *(*array)[6]->Value<double>();
+          value._24 = *(*array)[7]->Value<double>();
+          value._31 = *(*array)[8]->Value<double>();
+          value._32 = *(*array)[9]->Value<double>();
+          value._33 = *(*array)[10]->Value<double>();
+          value._34 = *(*array)[11]->Value<double>();
+          value._41 = *(*array)[12]->Value<double>();
+          value._42 = *(*array)[13]->Value<double>();
+          value._43 = *(*array)[14]->Value<double>();
+          value._44 = *(*array)[15]->Value<double>();
           return value;
         }
       }

@@ -18,17 +18,8 @@ struct Node;
 using NodePtr = std::shared_ptr<Node>;
 struct NullValue
 {};
-struct ArrayValue
-{
-  std::vector<NodePtr> m_values;
-  void Push(const NodePtr& node) { m_values.push_back(node); }
-};
-struct ObjectValue
-{
-  std::unordered_map<std::u8string, NodePtr> m_values;
-  NodePtr m_lastKey;
-  void Push(const NodePtr& node);
-};
+using ArrayValue = std::vector<NodePtr>;
+using ObjectValue = std::unordered_map<std::u8string, NodePtr>;
 struct Node
 {
   std::variant<NullValue, bool, double, std::u8string, ArrayValue, ObjectValue>
@@ -77,7 +68,7 @@ struct Node
   NodePtr Get(size_t index) const
   {
     if (auto array = Array()) {
-      return array->m_values[index];
+      return (*array)[index];
     }
 
     return nullptr;
@@ -85,8 +76,8 @@ struct Node
   NodePtr Get(std::u8string_view target) const
   {
     if (auto object = Object()) {
-      auto found = object->m_values.find({ target.begin(), target.end() });
-      if (found != object->m_values.end()) {
+      auto found = object->find({ target.begin(), target.end() });
+      if (found != object->end()) {
         return found->second;
       }
     }
@@ -96,9 +87,9 @@ struct Node
   size_t Size() const
   {
     if (auto array = Ptr<ArrayValue>()) {
-      return array->m_values.size();
+      return array->size();
     } else if (auto object = Ptr<ObjectValue>()) {
-      return object->m_values.size();
+      return object->size();
     } else {
       return 0;
     }
@@ -130,6 +121,7 @@ struct Parser
     }
     return Src.substr(Pos, size);
   }
+  NodePtr m_key;
   template<typename T>
   NodePtr Push(uint32_t size, const T& value)
   {
@@ -138,9 +130,14 @@ struct Parser
     Pos += size;
     if (Stack.size()) {
       if (auto array = Stack.top()->Array()) {
-        array->Push(node);
+        array->push_back(node);
       } else if (auto object = Stack.top()->Object()) {
-        object->Push(node);
+        if (m_key) {
+          object->insert({ m_key->U8String(), node });
+          m_key = nullptr;
+        } else {
+          m_key = node;
+        }
       } else {
         assert(false);
       }
@@ -375,18 +372,6 @@ struct Parser
     return std::unexpected{ u8"Unclosed array" };
   }
 };
-
-inline void
-ObjectValue::Push(const NodePtr& node)
-{
-  if (m_lastKey) {
-    auto key = *m_lastKey->Value<std::u8string>();
-    m_values.insert({ key, node });
-    m_lastKey = {};
-  } else {
-    m_lastKey = node;
-  }
-}
 
 }
 }
