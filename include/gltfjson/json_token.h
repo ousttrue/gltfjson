@@ -74,12 +74,12 @@ struct Tokenizer
     }
   }
 
-  std::expected<std::u8string_view, std::u8string> GetNumber()
+  std::expected<std::u8string_view, std::u8string> GetNumber(float* p = nullptr)
   {
     auto src = Remain();
     size_t size = 0;
-#ifdef _MSC_VER
     double value;
+#ifdef _MSC_VER
     if (auto [ptr, ec] = std::from_chars(
           (const char*)src.data(), (const char*)src.data() + src.size(), value);
         ec == std::errc{}) {
@@ -90,9 +90,12 @@ struct Tokenizer
 #else
     std::string str((const char*)src.data(),
                     (const char*)src.data() + src.size());
-    std::stod(str, &size);
+    value = std::stod(str, &size);
 #endif
 
+    if (p) {
+      *p = value;
+    }
     return *Get(size);
   }
 

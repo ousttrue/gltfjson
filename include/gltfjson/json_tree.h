@@ -1,16 +1,17 @@
 #pragma once
+#include "json_token.h"
 #include <assert.h>
 #include <charconv>
 #include <expected>
 #include <list>
 #include <memory>
 #include <optional>
+#include <span>
 #include <stack>
 #include <string>
 #include <unordered_map>
 #include <variant>
 #include <vector>
-#include <span>
 
 namespace gltfjson {
 namespace tree {
@@ -99,36 +100,26 @@ struct Node
 
 struct Parser
 {
-  std::u8string_view Src;
-  uint32_t Pos = 0;
+  Tokenizer m_token;
   std::stack<NodePtr> Stack;
 
   Parser(std::u8string_view src)
-    : Src(src)
+    : m_token(src)
   {
   }
 
   Parser(std::span<const uint8_t> src)
-    : Src((const char8_t*)src.data(), (const char8_t*)src.data() + src.size())
+    : m_token(
+        { (const char8_t*)src.data(), (const char8_t*)src.data() + src.size() })
   {
   }
 
-  bool IsEnd() const { return Pos >= Src.size(); }
-  std::u8string_view Remain() const { return Src.substr(Pos); }
-  std::optional<std::u8string_view> Peek(uint32_t size) const
-  {
-    if (Pos + size > Src.size()) {
-      return std::nullopt;
-    }
-    return Src.substr(Pos, size);
-  }
   NodePtr m_key;
   template<typename T>
-  NodePtr Push(uint32_t size, const T& value)
+  NodePtr Push(const T& value)
   {
     auto node = std::make_shared<Node>();
     node->Var = value;
-    Pos += size;
     if (Stack.size()) {
       if (auto array = Stack.top()->Array()) {
         array->push_back(node);
@@ -146,35 +137,14 @@ struct Parser
     return node;
   }
 
-  bool IsSpace(char8_t ch)
-  {
-    switch (ch) {
-      case 0x20:
-      case 0x0A:
-      case 0x0D:
-      case 0x09:
-        return true;
-    }
-    return false;
-  }
-
-  void SkipSpace()
-  {
-    for (; !IsEnd(); ++Pos) {
-      if (!IsSpace(Src[Pos])) {
-        break;
-      }
-    }
-  }
-
   std::expected<NodePtr, std::u8string> ParseExpected()
   {
-    SkipSpace();
-    if (IsEnd()) {
+    m_token.SkipSpace();
+    if (m_token.IsEnd()) {
       return std::unexpected{ u8"empty" };
     }
 
-    auto ch = Src[Pos];
+    auto ch = *m_token;
     if (ch == 0x7b) {
       return ParseObject();
     } else if (ch == '[') {
@@ -227,95 +197,69 @@ struct Parser
 
   std::expected<NodePtr, std::u8string> ParseSymbol(std::u8string_view target)
   {
-    if (auto src = Peek(target.size())) {
-      if (src->starts_with(target)) {
-        if (*src == u8"null") {
-          return Push(src->size(), NullValue{});
-        } else if (*src == u8"true") {
-          return Push(src->size(), true);
-        } else if (*src == u8"false") {
-          return Push(src->size(), false);
-        } else {
-          return std::unexpected{ std::u8string(u8"unknown symbol: ") +
-                                  std::u8string{ src->begin(), src->end() } };
-        }
+    if (auto src = m_token.GetSymbol(target)) {
+      if (*src == u8"null") {
+        return Push(NullValue{});
+      } else if (*src == u8"true") {
+        return Push(true);
+      } else if (*src == u8"false") {
+        return Push(false);
       } else {
-        return std::unexpected{ std::u8string(u8"unknown symbol: ") +
-                                std::u8string{ src->begin(), src->end() } };
+        return std::unexpected{ u8"not reach here !" };
       }
     } else {
-      return std::unexpected{ u8"Not enough size" };
+      return std::unexpected{ src.error() };
     }
   }
 
   std::expected<NodePtr, std::u8string> ParseNumber()
   {
-    auto src = Remain();
-#ifdef _MSC_VER
     float value;
-    if (auto [ptr, ec] = std::from_chars(
-          (const char*)src.data(), (const char*)src.data() + src.size(), value);
-        ec == std::errc{}) {
-      auto size = ptr - (const char*)src.data();
-      return Push(size, value);
+    if (auto n = m_token.GetNumber(&value)) {
+      return Push(value);
     } else {
-      return std::unexpected{ u8"Invaild number" };
+      return std::unexpected{ n.error() };
     }
-#else
-    std::string str((const char*)src.data(),
-                    (const char*)src.data() + src.size());
-    size_t i;
-    float value = std::stof(str, &i);
-    return Push(i, value);
-#endif
   }
 
   std::expected<NodePtr, std::u8string> ParseString()
   {
-    assert(Src[Pos] == '"');
-
-    auto close = Pos + 1;
-    for (; close < Src.size(); ++close) {
-      // TODO: escape
-      // TODO: utf-8 multibyte
-      if (Src[close] == '"') {
-        break;
-      }
+    if (auto str = m_token.GetString()) {
+      return Push(std::u8string{ str->begin() + 1, str->end() - 1 });
+    } else {
+      return std::unexpected{ str.error() };
     }
-
-    if (Src[close] != '"') {
-      return std::unexpected{ u8"Unclosed string" };
-    }
-
-    return Push(close - Pos + 1,
-                std::u8string{ Src.begin() + (Pos + 1), Src.begin() + close });
   }
 
   std::expected<NodePtr, std::u8string> ParseArray()
   {
-    assert(Src[Pos] == '[');
-
-    Stack.push(Push(1, ArrayValue()));
+    if (*m_token != '[') {
+      return std::unexpected{ u8"Not starts with array open" };
+    }
+    m_token.Get(1);
+    Stack.push(Push(ArrayValue()));
     auto node = Stack.top();
 
-    for (int i = 0; !IsEnd(); ++i) {
-      SkipSpace();
-      if (Src[Pos] == ']') {
+    for (int i = 0; !m_token.IsEnd(); ++i) {
+      m_token.SkipSpace();
+      if (*m_token == ']') {
         // closed
-        ++Pos;
+        m_token.Get(1);
         // auto node = Stack.top();
-        assert(node == Stack.top());
+        if (node != Stack.top()) {
+          return std::unexpected{ u8"open close mismatch" };
+        }
         Stack.pop();
         return node;
       }
 
       if (i) {
         // must comma
-        if (Src[Pos] != ',') {
+        if (*m_token != ',') {
           return std::unexpected{ u8"comma required" };
         }
-        ++Pos;
-        SkipSpace();
+        m_token.Get(1);
+        m_token.SkipSpace();
       }
 
       Parse();
@@ -326,41 +270,45 @@ struct Parser
 
   std::expected<NodePtr, std::u8string> ParseObject()
   {
-    assert(Src[Pos] == '{');
-    Stack.push(Push(1, ObjectValue{}));
+    if (*m_token != '{') {
+      return std::unexpected{ u8"Not starts with object open" };
+    }
+    m_token.Get(1);
+    Stack.push(Push(ObjectValue{}));
+    auto node = Stack.top();
 
-    for (int i = 0; !IsEnd(); ++i) {
-      SkipSpace();
-      if (Src[Pos] == '}') {
+    for (int i = 0; !m_token.IsEnd(); ++i) {
+      m_token.SkipSpace();
+      if (*m_token == '}') {
         // closed
-        ++Pos;
-        auto node = Stack.top();
+        m_token.Get(1);
+        if (node != Stack.top()) {
+          return std::unexpected{ u8"open close mismatch" };
+        }
         Stack.pop();
         return node;
       }
 
       if (i) {
         // must comma
-        if (Src[Pos] != ',') {
+        if (*m_token != ',') {
           return std::unexpected{ u8"comma required" };
         }
-        ++Pos;
-        SkipSpace();
+        m_token.Get(1);
+        m_token.SkipSpace();
       }
 
       // key
       Parse();
-      // assert(Values.back().Type == ValueType::Primitive);
-      // assert(Values.back().Range.front() == '"');
 
       {
-        SkipSpace();
+        m_token.SkipSpace();
         // must colon
-        if (Src[Pos] != ':') {
+        if (*m_token != ':') {
           return std::unexpected{ u8"colon required" };
         }
-        ++Pos;
-        SkipSpace();
+        m_token.Get(1);
+        m_token.SkipSpace();
       }
 
       // value

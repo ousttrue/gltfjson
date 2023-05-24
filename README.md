@@ -3,6 +3,8 @@
 A json manipulation library for glTF.
 It focuses on usability of glTF editing, not on performance.
 
+`c++20(std::expected)` required.
+
 ## JSON DOM
 
 structures.
