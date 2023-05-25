@@ -347,7 +347,7 @@ struct Parser
         // closed
         auto close = *m_token.Get(1);
         auto& array = Values[arrayIndex];
-        array.Range = { open.begin(), close.end() };
+        array.Range = { open.data(), close.data() + close.size() };
         array.m_stride = static_cast<uint32_t>(Values.size()) - array.m_pos;
         Stack.pop();
         return Values[arrayIndex];
@@ -383,7 +383,7 @@ struct Parser
         // closed
         auto close = *m_token.Get(1);
         auto& object = Values[objectIndex];
-        object.Range = { open.begin(), close.end() };
+        object.Range = { open.data(), close.data() + close.size() };
         object.m_stride = static_cast<uint32_t>(Values.size()) - object.m_pos;
         Stack.pop();
         return object;

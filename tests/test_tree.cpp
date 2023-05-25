@@ -1,4 +1,4 @@
-#include <gltfjson/json_tree.h>
+#include <gltfjson/json_tree_parser.h>
 #include <gtest/gtest.h>
 
 TEST(TestJsonTree, Parse)

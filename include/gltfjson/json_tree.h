@@ -109,19 +109,21 @@ using EnterJson =
   std::function<bool(const NodePtr&, std::u8string_view jsonpath)>;
 using LeaveJson = std::function<void()>;
 inline void
-TraverseJson(const EnterJson& enter,
-             const LeaveJson& leave,
-             const NodePtr& item,
-             std::u8string& jsonpath)
+TraverseJsonRecursive(const EnterJson& enter,
+                      const LeaveJson& leave,
+                      const NodePtr& item,
+                      std::u8string& jsonpath)
 {
   const auto DELIMITER = u8'/';
   if (enter(item, jsonpath)) {
     if (auto object = item->Object()) {
       auto size = jsonpath.size();
       for (auto [k, v] : *object) {
-        jsonpath.push_back(DELIMITER);
+        if (jsonpath != u8"/") {
+          jsonpath.push_back(DELIMITER);
+        }
         jsonpath += k;
-        TraverseJson(enter, leave, v, jsonpath);
+        TraverseJsonRecursive(enter, leave, v, jsonpath);
         jsonpath.resize(size);
       }
     } else if (auto array = item->Array()) {
@@ -132,10 +134,12 @@ TraverseJson(const EnterJson& enter,
       for (auto& v : *array) {
         ss << (i++);
         auto str = ss.str();
-        jsonpath.push_back(DELIMITER);
+        if (jsonpath != u8"/") {
+          jsonpath.push_back(DELIMITER);
+        }
         jsonpath +=
           std::u8string_view{ (const char8_t*)str.c_str(), str.size() };
-        TraverseJson(enter, leave, v, jsonpath);
+        TraverseJsonRecursive(enter, leave, v, jsonpath);
         jsonpath.resize(size);
       }
     }
@@ -143,6 +147,19 @@ TraverseJson(const EnterJson& enter,
       leave();
     }
   }
+}
+
+inline void
+TraverseJson(const EnterJson& enter,
+             const LeaveJson& leave,
+             const NodePtr& item)
+{
+  std::u8string buf = u8"/";
+  // if (enter(item, buf)) {
+  // buf.clear();
+  TraverseJsonRecursive(enter, leave, item, buf);
+  // leave();
+  // }
 }
 
 }
