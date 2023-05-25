@@ -105,6 +105,31 @@ struct Node
     return nullptr;
   }
 
+  void Remove(std::u8string_view target)
+  {
+    if (auto object = Object()) {
+      object->erase({ target.begin(), target.end() });
+    }
+  }
+
+  template<typename T>
+  NodePtr Add(std::u8string_view target, const T& value)
+  {
+    auto object = Object();
+    if (!object) {
+      return nullptr;
+    }
+
+    auto p = Get(target);
+    if (!p) {
+      p = std::make_shared<Node>();
+      object->insert({ { target.begin(), target.end() }, p });
+    }
+    p->Var = value;
+
+    return p;
+  }
+
   // array or object size
   size_t Size() const
   {
@@ -215,5 +240,23 @@ TraverseJson(const EnterJson& enter,
   TraverseJsonRecursive(enter, leave, item, buf);
 }
 
+inline NodePtr
+FindJsonPath(const NodePtr& root, std::u8string_view jsonpath)
+{
+  NodePtr found;
+  auto enter = [&found, jsonpath](const NodePtr& node,
+                                  std::u8string_view current) {
+    if (current == jsonpath) {
+      found = node;
+      return false;
+    }
+
+    return true;
+  };
+
+  TraverseJson(enter, {}, root);
+
+  return found;
+}
 }
 }

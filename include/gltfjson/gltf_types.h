@@ -52,7 +52,7 @@ enum class Types
   MAT3,
   MAT4,
 };
-inline std::tuple<gltfjson::format::Types, const char*> TypesCombo[] = {
+inline std::tuple<gltfjson::format::Types, std::string> TypesCombo[] = {
   { Types::SCALAR, "SCALAR" }, { Types::VEC2, "VEC2" }, { Types::VEC3, "VEC3" },
   { Types::VEC4, "VEC4" },     { Types::MAT2, "MAT2" }, { Types::MAT3, "MAT3" },
   { Types::MAT4, "MAT4" },
