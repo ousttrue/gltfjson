@@ -105,9 +105,10 @@ struct Node
   }
 };
 
-using EnterJson = std::function<bool(NodePtr, std::u8string_view jsonpath)>;
+using EnterJson =
+  std::function<bool(const NodePtr&, std::u8string_view jsonpath)>;
 using LeaveJson = std::function<void()>;
-void
+inline void
 TraverseJson(const EnterJson& enter,
              const LeaveJson& leave,
              const NodePtr& item,
