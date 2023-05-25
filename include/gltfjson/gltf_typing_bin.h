@@ -28,14 +28,14 @@ struct Bin
       // external file
       if (auto bytes = Dir->GetBuffer(uri)) {
         return bytes->subspan(value_or<uint32_t>(buffer_view.ByteOffset(), 0),
-                              *buffer_view.ByteLength());
+                              (size_t)*buffer_view.ByteLength());
       } else {
         return bytes;
       }
     } else {
       // glb
       return Bytes.subspan(value_or<uint32_t>(buffer_view.ByteOffset(), 0),
-                           *buffer_view.ByteLength());
+                           (size_t)*buffer_view.ByteLength());
     }
   }
 
@@ -65,7 +65,7 @@ struct Bin
   {
     // std::cout << accessor << std::endl;
     // assert(*item_size(accessor) == sizeof(T));
-    int count = *accessor.Count();
+    auto count = (int)*accessor.Count();
     if (auto sparse = accessor.Sparse()) {
       m_sparseBuffer.resize(count * sizeof(T));
       auto begin = (T*)m_sparseBuffer.data();
@@ -78,7 +78,7 @@ struct Bin
         T zero = {};
         std::fill(sparse_span.begin(), sparse_span.end(), zero);
       }
-      int sparse_count = *sparse->Count();
+      auto sparse_count = (uint32_t)*sparse->Count();
       auto sparse_indices = *sparse->Indices();
       auto sparse_values = *sparse->Values();
       switch (
