@@ -6,6 +6,7 @@
 #include <list>
 #include <memory>
 #include <optional>
+#include <ostream>
 #include <span>
 #include <sstream>
 #include <stack>
@@ -16,6 +17,18 @@
 
 namespace gltfjson {
 namespace tree {
+
+inline std::string_view
+from_u8(std::u8string_view src)
+{
+  return { (const char*)src.data(), (const char*)src.data() + src.size() };
+}
+inline std::u8string_view
+to_u8(std::string_view src)
+{
+  return { (const char8_t*)src.data(),
+           (const char8_t*)src.data() + src.size() };
+}
 
 struct Node;
 using NodePtr = std::shared_ptr<Node>;
@@ -105,16 +118,41 @@ struct Node
   }
 };
 
-inline std::string_view
-from_u8(std::u8string_view src)
+inline std::ostream&
+operator<<(std::ostream& os, const Node& node)
 {
-  return { (const char*)src.data(), (const char*)src.data() + src.size() };
-}
-inline std::u8string_view
-to_u8(std::string_view src)
-{
-  return { (const char8_t*)src.data(),
-           (const char8_t*)src.data() + src.size() };
+  struct Visitor
+  {
+    std::ostream& m_os;
+    Visitor(std::ostream& os)
+      : m_os(os)
+    {
+    }
+    void operator()(std::monostate) { m_os << "null"; }
+    void operator()(bool value)
+    {
+      if (value) {
+        m_os << "true";
+      } else {
+        m_os << "false";
+      }
+    }
+    void operator()(float value) { m_os << value; }
+    void operator()(const std::u8string& value)
+    {
+      m_os << '"' << from_u8(value) << '"';
+    }
+    void operator()(const ArrayValue& value)
+    {
+      m_os << '[' << value.size() << ']';
+    }
+    void operator()(const ObjectValue& value)
+    {
+      m_os << '{' << value.size() << '}';
+    }
+  };
+  std::visit(Visitor(os), node.Var);
+  return os;
 }
 
 inline void
