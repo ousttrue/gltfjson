@@ -105,6 +105,37 @@ struct Node
   }
 };
 
+inline std::string_view
+from_u8(std::u8string_view src)
+{
+  return { (const char*)src.data(), (const char*)src.data() + src.size() };
+}
+inline std::u8string_view
+to_u8(std::string_view src)
+{
+  return { (const char8_t*)src.data(),
+           (const char8_t*)src.data() + src.size() };
+}
+
+inline void
+AddDelimiter(std::u8string& jsonpath)
+{
+  const auto DELIMITER = u8'/';
+  if (jsonpath != u8"/") {
+    jsonpath.push_back(DELIMITER);
+  }
+}
+
+inline void
+concat_int(std::u8string& str, int i)
+{
+  if (i >= 10) {
+    concat_int(str, i / 10);
+  }
+  auto n = i % 10;
+  str.push_back(u8'0' + n);
+}
+
 using EnterJson =
   std::function<bool(const NodePtr&, std::u8string_view jsonpath)>;
 using LeaveJson = std::function<void()>;
@@ -114,31 +145,19 @@ TraverseJsonRecursive(const EnterJson& enter,
                       const NodePtr& item,
                       std::u8string& jsonpath)
 {
-  const auto DELIMITER = u8'/';
   if (enter(item, jsonpath)) {
+    AddDelimiter(jsonpath);
+    auto size = jsonpath.size();
     if (auto object = item->Object()) {
-      auto size = jsonpath.size();
       for (auto [k, v] : *object) {
-        if (jsonpath != u8"/") {
-          jsonpath.push_back(DELIMITER);
-        }
         jsonpath += k;
         TraverseJsonRecursive(enter, leave, v, jsonpath);
         jsonpath.resize(size);
       }
     } else if (auto array = item->Array()) {
-      auto size = jsonpath.size();
-      static std::stringstream ss;
-      ss.str("");
       int i = 0;
       for (auto& v : *array) {
-        ss << (i++);
-        auto str = ss.str();
-        if (jsonpath != u8"/") {
-          jsonpath.push_back(DELIMITER);
-        }
-        jsonpath +=
-          std::u8string_view{ (const char8_t*)str.c_str(), str.size() };
+        concat_int(jsonpath, i++);
         TraverseJsonRecursive(enter, leave, v, jsonpath);
         jsonpath.resize(size);
       }
@@ -155,11 +174,7 @@ TraverseJson(const EnterJson& enter,
              const NodePtr& item)
 {
   std::u8string buf = u8"/";
-  // if (enter(item, buf)) {
-  // buf.clear();
   TraverseJsonRecursive(enter, leave, item, buf);
-  // leave();
-  // }
 }
 
 }

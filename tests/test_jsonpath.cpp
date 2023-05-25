@@ -8,6 +8,13 @@ from_u8(std::u8string_view src)
   return { (const char*)src.data(), (const char*)src.data() + src.size() };
 }
 
+TEST(TestJsonPath, ConcatInt)
+{
+  std::u8string buf;
+  gltfjson::tree::concat_int(buf, 1);
+  EXPECT_EQ(buf, u8"1");
+}
+
 TEST(TestJsonPath, Test)
 {
   auto SRC = u8"{\"key\": {\"key2\": 2}, \"ar\": [1,2, 3]}";
