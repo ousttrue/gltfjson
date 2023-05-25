@@ -141,6 +141,22 @@ struct Node
       return 0;
     }
   }
+
+  template<size_t N>
+  void Set(const std::array<float, N>& values)
+  {
+    auto p = Array();
+    if (!p) {
+      Var = ArrayValue{};
+      p = Array();
+    }
+    for (int i = 0; i < 4; ++i) {
+      if (i >= p->size()) {
+        p->push_back(std::make_shared<Node>());
+      }
+      (*p)[i]->Var = values[i];
+    }
+  }
 };
 
 inline std::ostream&
