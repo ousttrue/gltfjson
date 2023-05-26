@@ -21,6 +21,12 @@ struct Parser
   {
   }
 
+  Parser(std::string_view src)
+    : m_token(
+        { (const char8_t*)src.data(), (const char8_t*)src.data() + src.size() })
+  {
+  }
+
   NodePtr m_key;
   template<typename T>
   NodePtr Push(const T& value)
