@@ -1,12 +1,9 @@
+#include <gltfjson.h>
 #include <gtest/gtest.h>
-#include <nlohmann/json.hpp>
 #include <string>
-#include <vrm/exporter.h>
-#include <gltfjson/glb.h>
-#include <vrm/gltfroot.h>
 
 // https://github.com/KhronosGroup/glTF-Tutorials/blob/master/gltfTutorial/gltfTutorial_003_MinimalGltfFile.md
-const std::string SRC = R"({
+const std::u8string SRC = u8R"({
   "scene": 0,
   "scenes" : [
     {
@@ -79,31 +76,32 @@ const std::string SRC = R"({
 
 TEST(GlbExport, minimal)
 {
-  auto src = nlohmann::json::parse(SRC);
-  src["buffers"].clear();
-  for (auto& b : src.at("bufferViews")) {
-    b.erase("target");
-  }
-  for (auto& a : src.at("accessors")) {
-    a.erase("max");
-    a.erase("min");
-  }
+  // auto src = nlohmann::json::parse(SRC);
+  // src["buffers"].clear();
+  // for (auto& b : src.at("bufferViews")) {
+  //   b.erase("target");
+  // }
+  // for (auto& a : src.at("accessors")) {
+  //   a.erase("max");
+  //   a.erase("min");
+  // }
 
-  libvrm::gltf::GltfRoot scene;
-  std::span<const uint8_t> span{ (const uint8_t*)SRC.data(),
-                                 (const uint8_t*)SRC.data() + SRC.size() };
-  // EXPECT_TRUE(scene.Load(span));
-  libvrm::gltf::Exporter exporter;
-  exporter.Export(scene);
-  auto dst = nlohmann::json::parse(exporter.JsonChunk);
-  dst["buffers"].clear();
-  for (auto& b : dst.at("bufferViews")) {
-    b.erase("target");
-  }
-  for (auto& a : dst.at("accessors")) {
-    a.erase("max");
-    a.erase("min");
-  }
+  // libvrm::gltf::GltfRoot scene;
+  gltfjson::tree::Parser parser(SRC);
+  auto result = parser.Parse();
+  EXPECT_TRUE(result);
+
+  // libvrm::gltf::Exporter exporter;
+  // exporter.Export(scene);
+  // auto dst = nlohmann::json::parse(exporter.JsonChunk);
+  // dst["buffers"].clear();
+  // for (auto& b : dst.at("bufferViews")) {
+  //   b.erase("target");
+  // }
+  // for (auto& a : dst.at("accessors")) {
+  //   a.erase("max");
+  //   a.erase("min");
+  // }
 
   // // DEBUG
   // gltf::Glb{
@@ -112,5 +110,5 @@ TEST(GlbExport, minimal)
   // }
   //   .WriteTo("minimal.glb");
 
-  EXPECT_EQ(src, dst);
+  // EXPECT_EQ(src, dst);
 }

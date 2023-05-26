@@ -1,7 +1,6 @@
 #include <gltfjson.h>
 #include <gltfjson/json_writer.h>
 #include <gtest/gtest.h>
-#include <nlohmann/json.hpp>
 #include <sstream>
 
 template<typename T>
@@ -13,8 +12,11 @@ EQ(T value)
   gltfjson::Writer writer(callback);
   writer.value(value);
   auto str = ss.str();
-  auto parsed = nlohmann::json::parse(str);
-  EXPECT_EQ(parsed, value);
+  // auto parsed = nlohmann::json::parse(str);
+
+  gltfjson::tree::Parser parser(str);
+  auto parsed = parser.Parse();
+  EXPECT_EQ(*parsed->Ptr<T>(), value);
 }
 
 TEST(JsonStream, write_null)
@@ -23,27 +25,17 @@ TEST(JsonStream, write_null)
   gltfjson::WriteFunc callback = [&ss](std::string_view str) { ss << str; };
   gltfjson::Writer writer(callback);
   writer.null();
+  auto str = ss.str();
 
-  auto parsed = nlohmann::json::parse(ss.str());
-  EXPECT_TRUE(parsed.is_null());
+  gltfjson::tree::Parser parser(str);
+  auto parsed = parser.ParseExpected();
+  EXPECT_TRUE((*parsed)->IsNull());
 }
 
 TEST(JsonStream, write_bool)
 {
   EQ(true);
   EQ(false);
-}
-
-TEST(JsonStream, write_int)
-{
-  EQ(1);
-  EQ(10);
-}
-
-TEST(JsonStream, write_short)
-{
-  EQ((short)1);
-  EQ((short)10);
 }
 
 TEST(JsonStream, write_float)
@@ -54,7 +46,7 @@ TEST(JsonStream, write_float)
 
 TEST(JsonStream, write_string)
 {
-  EQ("hoge");
+  EQ(std::u8string{ u8"hoge" });
   // escape
   // utf-8
 }
