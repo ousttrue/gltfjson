@@ -2,7 +2,6 @@ gtest_main_dep = dependency('gtest_main')
 executable(
     'tests',
     [
-        'json.cpp',
         'test_json.cpp',
         'test_gltf.cpp',
         'test_base64.cpp',
@@ -11,6 +10,8 @@ executable(
         'test_jsonpath.cpp',
         'gltf_samples.cpp',
         'glb_export.cpp',
+        'json.cpp',
+        'write_read.cpp',
     ],
     install: true,
     dependencies: [gtest_main_dep, gltfjson_dep],

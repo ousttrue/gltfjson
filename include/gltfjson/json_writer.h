@@ -1,5 +1,6 @@
 #pragma once
 #include <assert.h>
+#include <charconv>
 #include <functional>
 #include <string_view>
 
@@ -117,8 +118,17 @@ public:
 
   void value(float value)
   {
+#if 0
     auto len = snprintf(m_buf, sizeof(m_buf), "%f", value);
     push({ m_buf, m_buf + len });
+#else
+    auto begin = std::begin(m_buf);
+    auto end = std::end(m_buf);
+    if (auto [ptr, ec] = std::to_chars(begin, end, value); ec == std::errc{}) {
+      // std::cout << std::string_view(begin, ptr - begin) << std::endl;
+      push(std::string_view(begin, ptr - begin));
+    }
+#endif
   }
 
   void value(std::string_view str)
@@ -140,6 +150,10 @@ public:
     value(str);
     m_stack[m_depth - 1] =
       static_cast<StackFlags>(m_stack[m_depth - 1] | StackFlags::Collon);
+  }
+  void key(std::u8string_view str)
+  {
+    key(std::string_view((const char*)str.data(), str.size()));
   }
 };
 

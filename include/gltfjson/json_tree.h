@@ -40,6 +40,33 @@ struct Node
     variant<std::monostate, bool, float, std::u8string, ArrayValue, ObjectValue>
       Var;
 
+  Node() {}
+
+  Node(bool b)
+    : Var(b)
+  {
+  }
+
+  Node(float n)
+    : Var(n)
+  {
+  }
+
+  Node(std::u8string_view str)
+    : Var(std::u8string{ str.begin(), str.end() })
+  {
+  }
+
+  Node(const ArrayValue& a)
+    : Var(a)
+  {
+  }
+
+  Node(const ObjectValue& o)
+    : Var(o)
+  {
+  }
+
   template<typename T>
   const T* Ptr() const
   {
