@@ -150,7 +150,7 @@ struct Node
       Var = ArrayValue{};
       p = Array();
     }
-    for (int i = 0; i < 4; ++i) {
+    for (int i = 0; i < N; ++i) {
       if (i >= p->size()) {
         p->push_back(std::make_shared<Node>());
       }
