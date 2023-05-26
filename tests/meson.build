@@ -8,6 +8,7 @@ executable(
         'test_tree.cpp',
         'test_tree_gltf.cpp',
         'test_jsonpath.cpp',
+        'gltf_samples.cpp',
     ],
     install: true,
     dependencies: [gtest_main_dep, gltfjson_dep],
