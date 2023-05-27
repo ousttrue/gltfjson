@@ -40,20 +40,25 @@ public:
     return {};
   }
 
+  static std::optional<int> GetInt(std::u8string_view src)
+  {
+    int i;
+    if (std::from_chars(
+          (const char*)src.data(), (const char*)src.data() + src.size(), i)
+          .ec == std::errc{}) {
+      return i;
+    }
+    return {};
+  }
+
   std::optional<int> GetInt(int n) const
   {
     auto i_view = (*this)[n];
     if (i_view.empty()) {
       return {};
     }
-    int i;
-    if (std::from_chars((const char*)i_view.data(),
-                        (const char*)i_view.data() + i_view.size(),
-                        i)
-          .ec == std::errc{}) {
-      return i;
-    }
-    return {};
+
+    return GetInt(i_view);
   }
 
   std::optional<int> GetLastInt() const { return GetInt(Size() - 1); }
@@ -91,6 +96,47 @@ public:
     }
 
     return ls == m_str.end() && rs == rhs.end();
+  }
+
+  std::pair<std::u8string_view, int> GetChildOfRootIndex() const
+  {
+    std::u8string_view childOfRoot;
+
+    size_t size = 0;
+    for (auto jp : m_str | std::views::split(DELIMITER)) {
+      ++size;
+      if (size == 2) {
+        childOfRoot = { jp };
+      } else if (size == 3) {
+        if (auto i = GetInt(std::u8string_view{ jp })) {
+          return { childOfRoot, *i };
+        }
+        break;
+      }
+    }
+    return {};
+  }
+};
+
+template<typename T>
+struct JsonPathMap
+{
+  struct KeyValue
+  {
+    std::u8string Key;
+    T Value;
+  };
+  std::list<KeyValue> m_map;
+
+  std::optional<T> Match(std::u8string_view jsonpath)
+  {
+    for (auto& kv : m_map) {
+      if (gltfjson::JsonPath(kv.Key).Match(jsonpath)) {
+        return kv.Value;
+      }
+    }
+    // not found
+    return std::nullopt;
   }
 };
 

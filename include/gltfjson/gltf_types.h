@@ -279,5 +279,10 @@ enum class InterpolationTypes
   CUBESPLINE,
 };
 
+inline const char8_t* ChildOfRootProperties[]{
+  u8"textures",
+  u8"materials",
+};
+
 }
 }

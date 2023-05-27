@@ -190,8 +190,8 @@ struct Extras : JsonObject
 struct GltfProperty : JsonObject
 {
   using JsonObject::JsonObject;
-  // auto Extensions() const { return m_object<Extensions, u8"extensions">(); }
-  // auto Extras() const { return m_object<Extras, u8"extras">(); }
+  auto Extensions() const { return m_json->Get(u8"extensions"); }
+  auto Extras() const { return m_json->Get(u8"extras"); }
 };
 
 struct ChildOfRootProperty : GltfProperty
