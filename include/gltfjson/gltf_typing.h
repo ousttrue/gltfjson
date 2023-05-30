@@ -572,5 +572,16 @@ struct Root : GltfProperty
   JsonArray<Skin, u8"skins"> Skins;
 };
 
+inline format::AlphaModes
+GetAlphaMode(const Root& root, std::optional<uint32_t> material)
+{
+  if (material) {
+    if (auto alphaMode = root.Materials[*material].AlphaMode()) {
+      return (format::AlphaModes)*alphaMode;
+    }
+  }
+  return format::AlphaModes::Opaque;
+}
+
 }
 }
