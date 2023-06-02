@@ -370,7 +370,7 @@ struct Material : ChildOfRootProperty
     return m_object<TextureInfo, u8"emissiveTexture">();
   }
   NumberArray<float, u8"emissiveFactor"> EmissiveFactor;
-  auto AlphaMode() const { return m_ptr<float, u8"alphaMode">(); }
+  auto AlphaMode() const { return m_string<u8"alphaMode">(); }
   auto AlphaCutoff() const { return m_ptr<float, u8"alphaCutoff">(); };
   auto DoubleSided() const { return m_ptr<bool, u8"doubleSided">(); };
 };
@@ -576,8 +576,11 @@ inline format::AlphaModes
 GetAlphaMode(const Root& root, std::optional<uint32_t> material)
 {
   if (material) {
-    if (auto alphaMode = root.Materials[*material].AlphaMode()) {
-      return (format::AlphaModes)*alphaMode;
+    auto alphaMode = root.Materials[*material].AlphaMode();
+    if (alphaMode == u8"MASK") {
+      format::AlphaModes::Mask;
+    } else if (alphaMode == u8"BLEND") {
+      format::AlphaModes::Blend;
     }
   }
   return format::AlphaModes::Opaque;
