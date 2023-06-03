@@ -34,6 +34,16 @@ struct Vrm0Material : GltfProperty
     }
     return (float*)nullptr;
   }
+
+  std::u8string RenderType()
+  {
+    if (auto tagMap = m_json->Get(u8"tagMap")) {
+      if (auto renderType = tagMap->Get(u8"RenderType")) {
+        return renderType->U8String();
+      }
+    }
+    return u8"";
+  }
 };
 
 }
