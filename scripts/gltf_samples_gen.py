@@ -6,7 +6,16 @@ HERE = pathlib.Path(__file__).parent
 TEMPLATE = """
 TEST(GltfSamples, {name}) {{
   auto path = get_path("{relative}");
+  if(!std::filesystem::exists(path))
+  {{
+    std::cerr << path << " not exists" << std::endl;
+  }}
   auto bytes = ReadAllBytes(path);
+  if(bytes.empty())
+  {{
+    std::cerr << path << " 0 bytes" << std::endl;
+    return;
+  }}
   if(path.extension()==".glb")
   {{
     auto glb = gltfjson::Glb::Parse(bytes);
@@ -72,4 +81,4 @@ ReadAllBytes(const std::filesystem::path& filename)
 if __name__ == "__main__":
     sample_models = os.environ["GLTF_SAMPLE_MODELS"]
 
-    process(pathlib.Path(sample_models) / "2.0", HERE / "gltf_samples.cpp")
+    process(pathlib.Path(sample_models) / "2.0", HERE.parent / "tests/gltf_samples.cpp")
