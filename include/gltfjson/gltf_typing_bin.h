@@ -3,7 +3,6 @@
 #include "gltf_typing.h"
 
 namespace gltfjson {
-namespace typing {
 
 struct Bin
 {
@@ -159,5 +158,4 @@ struct Bin
   }
 };
 
-}
-}
+} // namespace

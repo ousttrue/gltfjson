@@ -492,7 +492,7 @@ struct AnimationTarget : JsonObject
 {
   using JsonObject::JsonObject;
   auto Node() const { return m_id<u8"node">(); }
-  auto Path() const { return m_ptr<float, u8"path">(); }
+  auto Path() const { return m_string<u8"path">(); }
 };
 
 // https://github.com/KhronosGroup/glTF/blob/main/specification/2.0/schema/animation.channel.schema.json

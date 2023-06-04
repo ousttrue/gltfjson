@@ -31,42 +31,15 @@ enum class ComponentTypes
   UNSIGNED_INT = 5125,
   FLOAT = 5126,
 };
-inline std::tuple<ComponentTypes, const char*>
-  ComponentTypesCombo[] = {
-    { ComponentTypes::BYTE, "BYTE" },
-    { ComponentTypes::UNSIGNED_BYTE, "UNSIGNED_BYTE" },
-    { ComponentTypes::SHORT, "SHORT" },
-    { ComponentTypes::UNSIGNED_SHORT, "UNSIGNED_SHORT" },
-    { ComponentTypes::UNSIGNED_INT, "UNSIGNED_INT" },
-    { ComponentTypes::FLOAT, "FLOAT" },
-  };
+inline std::tuple<ComponentTypes, const char*> ComponentTypesCombo[] = {
+  { ComponentTypes::BYTE, "BYTE" },
+  { ComponentTypes::UNSIGNED_BYTE, "UNSIGNED_BYTE" },
+  { ComponentTypes::SHORT, "SHORT" },
+  { ComponentTypes::UNSIGNED_SHORT, "UNSIGNED_SHORT" },
+  { ComponentTypes::UNSIGNED_INT, "UNSIGNED_INT" },
+  { ComponentTypes::FLOAT, "FLOAT" },
+};
 
-enum class Types
-{
-  SCALAR,
-  VEC2,
-  VEC3,
-  VEC4,
-  MAT2,
-  MAT3,
-  MAT4,
-};
-inline std::tuple<Types, std::string> TypesCombo[] = {
-  { Types::SCALAR, "SCALAR" }, { Types::VEC2, "VEC2" }, { Types::VEC3, "VEC3" },
-  { Types::VEC4, "VEC4" },     { Types::MAT2, "MAT2" }, { Types::MAT3, "MAT3" },
-  { Types::MAT4, "MAT4" },
-};
-inline std::optional<Types>
-types_from_str(std::u8string_view u8)
-{
-  std::string src{ (const char*)u8.data() };
-  for (auto [t, str] : TypesCombo) {
-    if (str == src) {
-      return t;
-    }
-  }
-  return std::nullopt;
-}
 inline std::optional<size_t>
 component_size(ComponentTypes component_type)
 {
@@ -153,39 +126,16 @@ type_count(std::u8string_view type)
     return std::nullopt;
   }
 }
-inline const char*
-type_str(Types type)
-{
-  switch (type) {
-    case Types::SCALAR:
-      return "SCALAR";
-    case Types::VEC2:
-      return "VEC2";
-    case Types::VEC3:
-      return "VEC3";
-    case Types::VEC4:
-      return "VEC4";
-    case Types::MAT2:
-      return "MAT2";
-    case Types::MAT3:
-      return "MAT3";
-    case Types::MAT4:
-      return "MAT4";
-    default:
-      return "";
-  }
-}
 
 enum class TextureMagFilter
 {
   NEAREST = 9728,
   LINEAR = 9729,
 };
-inline std::tuple<TextureMagFilter, const char*>
-  TextureMagFilterCombo[] = {
-    { TextureMagFilter::NEAREST, "NEAREST" },
-    { TextureMagFilter::LINEAR, "LINEAR" },
-  };
+inline std::tuple<TextureMagFilter, const char*> TextureMagFilterCombo[] = {
+  { TextureMagFilter::NEAREST, "NEAREST" },
+  { TextureMagFilter::LINEAR, "LINEAR" },
+};
 
 enum class TextureMinFilter
 {
@@ -196,15 +146,14 @@ enum class TextureMinFilter
   NEAREST_MIPMAP_LINEAR = 9986,
   LINEAR_MIPMAP_LINEAR = 9987,
 };
-inline std::tuple<TextureMinFilter, const char*>
-  TextureMinFilterCombo[] = {
-    { TextureMinFilter::NEAREST, "NEAREST" },
-    { TextureMinFilter::LINEAR, "LINEAR" },
-    { TextureMinFilter::NEAREST_MIPMAP_NEAREST, "NEAREST_MIPMAP_NEAREST" },
-    { TextureMinFilter::LINEAR_MIPMAP_NEAREST, "LINEAR_MIPMAP_NEAREST" },
-    { TextureMinFilter::NEAREST_MIPMAP_LINEAR, "NEAREST_MIPMAP_LINEAR" },
-    { TextureMinFilter::LINEAR_MIPMAP_LINEAR, "LINEAR_MIPMAP_LINEAR" },
-  };
+inline std::tuple<TextureMinFilter, const char*> TextureMinFilterCombo[] = {
+  { TextureMinFilter::NEAREST, "NEAREST" },
+  { TextureMinFilter::LINEAR, "LINEAR" },
+  { TextureMinFilter::NEAREST_MIPMAP_NEAREST, "NEAREST_MIPMAP_NEAREST" },
+  { TextureMinFilter::LINEAR_MIPMAP_NEAREST, "LINEAR_MIPMAP_NEAREST" },
+  { TextureMinFilter::NEAREST_MIPMAP_LINEAR, "NEAREST_MIPMAP_LINEAR" },
+  { TextureMinFilter::LINEAR_MIPMAP_LINEAR, "LINEAR_MIPMAP_LINEAR" },
+};
 
 enum class TextureWrap
 {
@@ -212,45 +161,21 @@ enum class TextureWrap
   MIRRORED_REPEAT = 33648,
   REPEAT = 10497,
 };
-inline std::tuple<TextureWrap, const char*>
-  TextureWrapCombo[] = {
-    { TextureWrap::CLAMP_TO_EDGE, "CLAMP_TO_EDGE" },
-    { TextureWrap::MIRRORED_REPEAT, "MIRRORED_REPEAT" },
-    { TextureWrap::REPEAT, "REPEAT" },
-  };
-
-// enum class AlphaModes
-// {
-//   Opaque,
-//   Mask,
-//   Blend,
-// };
-// inline std::tuple<gltfjson::format::AlphaModes, const char*>
-//   AlphaModesCombo[] = {
-//     { AlphaModes::Opaque, "OPAQUE" },
-//     { AlphaModes::Mask, "MASK" },
-//     { AlphaModes::Blend, "BLEND" },
-//   };
-// inline AlphaModes
-// AlphaModesFromStr(std::u8string_view str)
-// {
-//   for (auto [mode, label] : AlphaModesCombo) {
-//     if (str == (const char8_t*)label) {
-//       return mode;
-//     }
-//   }
-//   return {};
-// }
+inline std::tuple<TextureWrap, const char*> TextureWrapCombo[] = {
+  { TextureWrap::CLAMP_TO_EDGE, "CLAMP_TO_EDGE" },
+  { TextureWrap::MIRRORED_REPEAT, "MIRRORED_REPEAT" },
+  { TextureWrap::REPEAT, "REPEAT" },
+};
 
 enum class MeshPrimitiveTopology
 {
-  POINTS,
-  LINES,
-  LINE_LOOP,
-  LINE_STRIP,
-  TRIANGLES,
-  TRIANGLE_STRIP,
-  TRIANGLE_FAN,
+  POINTS = 0,
+  LINES = 1,
+  LINE_LOOP = 2,
+  LINE_STRIP = 3,
+  TRIANGLES = 4,
+  TRIANGLE_STRIP = 5,
+  TRIANGLE_FAN = 6,
 };
 inline std::tuple<MeshPrimitiveTopology, const char*>
   MeshPrimitiveTopologyCombo[] = {
@@ -262,25 +187,5 @@ inline std::tuple<MeshPrimitiveTopology, const char*>
     { MeshPrimitiveTopology::TRIANGLE_STRIP, "TRIANGLE_STRIP" },
     { MeshPrimitiveTopology::TRIANGLE_FAN, "TRIANGLE_FAN" },
   };
-
-// enum class PathTypes
-// {
-//   Translation,
-//   Rotation,
-//   Scale,
-//   Weights,
-// };
-//
-// enum class InterpolationTypes
-// {
-//   LINEAR,
-//   STEP,
-//   CUBESPLINE,
-// };
-
-// inline const char8_t* ChildOfRootProperties[]{
-//   u8"textures",
-//   u8"materials",
-// };
 
 } // namespace

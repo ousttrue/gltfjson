@@ -2,7 +2,6 @@
 #include "gltf.h"
 
 namespace gltfjson {
-namespace format {
 
 using WriteFunc = std::function<void(std::span<const uint8_t>)>;
 
@@ -100,5 +99,4 @@ struct BinWriter
   }
 };
 
-}
-}
+} // namespace

@@ -16,19 +16,27 @@
 #include <vector>
 
 namespace gltfjson {
-namespace tree {
+
+inline float
+deref_or(const float* p, float defaultValue)
+{
+  return p ? *p : defaultValue;
+}
 
 inline std::string_view
 from_u8(std::u8string_view src)
 {
   return { (const char*)src.data(), (const char*)src.data() + src.size() };
 }
+
 inline std::u8string_view
 to_u8(std::string_view src)
 {
   return { (const char8_t*)src.data(),
            (const char8_t*)src.data() + src.size() };
 }
+
+namespace tree {
 
 struct Node;
 using NodePtr = std::shared_ptr<Node>;
