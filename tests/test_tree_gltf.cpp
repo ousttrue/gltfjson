@@ -1,5 +1,4 @@
 #include <gltfjson.h>
-#include <gltfjson/json_tree_parser.h>
 #include <gtest/gtest.h>
 
 // https://github.com/KhronosGroup/glTF-Tutorials/blob/master/gltfTutorial/gltfTutorial_003_MinimalGltfFile.md
@@ -82,7 +81,7 @@ TEST(GltfTestTree, Parse)
   auto result = parser.Parse();
   EXPECT_TRUE(result);
 
-  gltfjson::typing::Root gltf(result);
+  gltfjson::Root gltf(result);
 
   // asset
   EXPECT_EQ(gltf.Asset()->Version(), u8"2.0");
@@ -111,9 +110,8 @@ TEST(GltfTestTree, Parse)
   // accessors.0
   EXPECT_EQ(*gltf.Accessors[0].BufferView(), 0);
   EXPECT_EQ(*gltf.Accessors[0].ByteOffset(), 0);
-  EXPECT_EQ(
-    (gltfjson::ComponentTypes)*gltf.Accessors[0].ComponentType(),
-    gltfjson::ComponentTypes::UNSIGNED_SHORT);
+  EXPECT_EQ((gltfjson::ComponentTypes)*gltf.Accessors[0].ComponentType(),
+            gltfjson::ComponentTypes::UNSIGNED_SHORT);
   EXPECT_EQ(*gltf.Accessors[0].Count(), 3);
   EXPECT_EQ(gltf.Accessors[0].Type(), u8"SCALAR");
   EXPECT_EQ(gltf.Accessors[0].Max.size(), 1);

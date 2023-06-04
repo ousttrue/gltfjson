@@ -1,4 +1,5 @@
 #include <gltfjson.h>
+#include <gltfjson/json_tree_exporter.h>
 #include <gtest/gtest.h>
 #include <sstream>
 

@@ -7,7 +7,6 @@
 #include <vector>
 
 namespace gltfjson {
-namespace typing {
 
 template<typename T>
 inline T
@@ -264,7 +263,7 @@ struct Accessor : ChildOfRootProperty
   auto Type() const { return m_string<u8"type">(); }
   NumberArray<float, u8"max"> Max;
   NumberArray<float, u8"min"> Min;
-  auto Sparse() const { return m_object<typing::Sparse, u8"sparse">(); }
+  auto Sparse() const { return m_object<gltfjson::Sparse, u8"sparse">(); }
 
   uint32_t Stride() const
   {
@@ -359,7 +358,7 @@ struct Material : ChildOfRootProperty
   }
   auto PbrMetallicRoughness() const
   {
-    return m_object<typing::PbrMetallicRoughness, u8"pbrMetallicRoughness">();
+    return m_object<gltfjson::PbrMetallicRoughness, u8"pbrMetallicRoughness">();
   }
   auto NormalTexture() const
   {
@@ -563,7 +562,7 @@ struct Root : GltfProperty
 
   JsonArray<Accessor, u8"accessors"> Accessors;
   JsonArray<Animation, u8"animations"> Animations;
-  auto Asset() const { return m_object<typing::Asset, u8"asset">(); }
+  auto Asset() const { return m_object<gltfjson::Asset, u8"asset">(); }
   JsonArray<Buffer, u8"buffers"> Buffers;
   JsonArray<BufferView, u8"bufferViews"> BufferViews;
   JsonArray<Camera, u8"cameras"> Cameras;
@@ -574,9 +573,8 @@ struct Root : GltfProperty
   JsonArray<Node, u8"nodes"> Nodes;
   JsonArray<Sampler, u8"samplers"> Samplers;
   auto Scene() const { return m_ptr<float, u8"scene">(); }
-  JsonArray<typing::Scene, u8"scenes"> Scenes;
+  JsonArray<gltfjson::Scene, u8"scenes"> Scenes;
   JsonArray<Skin, u8"skins"> Skins;
 };
 
-}
-}
+} // namespace
