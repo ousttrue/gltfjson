@@ -2,7 +2,6 @@
 #include "gltf_typing.h"
 
 namespace gltfjson {
-namespace typing {
 namespace vrm0 {
 
 // https://github.com/vrm-c/vrm-specification/blob/master/specification/0.0/schema/vrm.meta.schema.json
@@ -250,6 +249,143 @@ struct VRM : JsonObject
   JsonArray<Material, u8"materialProperties"> MaterialProperties;
 };
 
+inline std::array<float, 3>
+Vec3(const gltfjson::tree::NodePtr& json,
+     const std::array<float, 3>& defaultValue)
+{
+  if (json) {
+    if (auto a = json->Array()) {
+      if (a->size() == 3) {
+        if (auto a0 = (*a)[0]) {
+          if (auto p0 = a0->Ptr<float>()) {
+            if (auto a1 = (*a)[1]) {
+              if (auto p1 = a1->Ptr<float>()) {
+                if (auto a2 = (*a)[2]) {
+                  if (auto p2 = a2->Ptr<float>()) {
+                    return { *p0, *p1, *p2 };
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+  return defaultValue;
 }
+
+inline std::array<float, 4>
+Vec4(const gltfjson::tree::NodePtr& json,
+     const std::array<float, 4>& defaultValue)
+{
+  if (json) {
+    if (auto a = json->Array()) {
+      if (a->size() == 4) {
+        if (auto a0 = (*a)[0]) {
+          if (auto p0 = a0->Ptr<float>()) {
+            if (auto a1 = (*a)[1]) {
+              if (auto p1 = a1->Ptr<float>()) {
+                if (auto a2 = (*a)[2]) {
+                  if (auto p2 = a2->Ptr<float>()) {
+                    if (auto a3 = (*a)[3]) {
+                      if (auto p3 = a3->Ptr<float>()) {
+                        return { *p0, *p1, *p2, *p3 };
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+  return defaultValue;
 }
-}
+
+enum RenderMode
+{
+  Opaque = 0,
+  Cutout = 1,
+  Transparent = 2,
+  TransparentWithZWrite = 3,
+};
+
+struct Vrm0Material : GltfProperty
+{
+  using GltfProperty::GltfProperty;
+
+  auto MainTexture()
+  {
+    if (auto textures = m_json->Get(u8"textureProperties")) {
+      if (auto texture = textures->Get(u8"_MainTex")) {
+        return texture->Ptr<float>();
+      }
+    }
+    return (float*)nullptr;
+  }
+
+  std::array<float, 4> Color()
+  {
+    if (auto vectors = m_json->Get(u8"vectorProperties")) {
+      return Vec4(vectors->Get(u8"_Color"), { 1, 1, 1, 1 });
+    }
+    return { 1, 1, 1, 1 };
+  }
+
+  auto ShadeTexture()
+  {
+    if (auto textures = m_json->Get(u8"textureProperties")) {
+      if (auto texture = textures->Get(u8"_ShadeTexture")) {
+        return texture->Ptr<float>();
+      }
+    }
+    return (float*)nullptr;
+  }
+
+  std::array<float, 3> ShadeColor()
+  {
+    {
+      if (auto vectors = m_json->Get(u8"vectorProperties")) {
+        auto c = Vec4(vectors->Get(u8"_ShadeColor"), { 1, 1, 1 });
+        return { c[0], c[1], c[2] };
+      }
+      return { 1, 1, 1 };
+    }
+  }
+
+  auto SphereAddTexture()
+  {
+    if (auto textures = m_json->Get(u8"textureProperties")) {
+      if (auto texture = textures->Get(u8"_SphereAdd")) {
+        return texture->Ptr<float>();
+      }
+    }
+    return (float*)nullptr;
+  }
+
+  float* BlendMode()
+  {
+    if (auto props = m_json->Get(u8"floatProperties")) {
+      if (auto mode = props->Get(u8"_BlendMode")) {
+        return mode->Ptr<float>();
+      }
+    }
+    return {};
+  }
+
+  float* Cutoff()
+  {
+    if (auto props = m_json->Get(u8"floatProperties")) {
+      if (auto mode = props->Get(u8"_Cutoff")) {
+        return mode->Ptr<float>();
+      }
+    }
+    return {};
+  }
+};
+
+} // namespace
+} // namespace
