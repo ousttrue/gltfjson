@@ -61,6 +61,14 @@ Vec4(const gltfjson::tree::NodePtr& json,
   return defaultValue;
 }
 
+enum RenderMode
+{
+  Opaque = 0,
+  Cutout = 1,
+  Transparent = 2,
+  TransparentWithZWrite = 3,
+};
+
 struct Vrm0Material : GltfProperty
 {
   using GltfProperty::GltfProperty;
@@ -114,16 +122,26 @@ struct Vrm0Material : GltfProperty
     return (float*)nullptr;
   }
 
-  std::u8string RenderType()
+  float *BlendMode()
   {
-    if (auto tagMap = m_json->Get(u8"tagMap")) {
-      if (auto renderType = tagMap->Get(u8"RenderType")) {
-        return renderType->U8String();
+    if (auto props = m_json->Get(u8"floatProperties")) {
+      if (auto mode = props->Get(u8"_BlendMode")) {
+        return mode->Ptr<float>();
       }
     }
-    return u8"";
+    return {};
+  }
+
+  float *Cutoff()
+  {
+    if (auto props = m_json->Get(u8"floatProperties")) {
+      if (auto mode = props->Get(u8"_Cutoff")) {
+        return mode->Ptr<float>();
+      }
+    }
+    return {};
   }
 };
 
-}
-}
+} // namespace
+} // namespace
