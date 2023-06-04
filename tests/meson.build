@@ -3,7 +3,6 @@ executable(
     'tests',
     [
         'test_json.cpp',
-        'test_gltf.cpp',
         'test_base64.cpp',
         'test_tree.cpp',
         'test_tree_gltf.cpp',

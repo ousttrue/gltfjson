@@ -5,11 +5,11 @@
 namespace gltfjson {
 namespace format {
 
-const auto VERTEX_JOINT = "JOINTS_0";
-const auto VERTEX_WEIGHT = "WEIGHTS_0";
-const auto VERTEX_POSITION = "POSITION";
-const auto VERTEX_NORMAL = "NORMAL";
-const auto VERTEX_UV = "TEXCOORD_0";
+inline const auto VERTEX_JOINT = "JOINTS_0";
+inline const auto VERTEX_WEIGHT = "WEIGHTS_0";
+inline const auto VERTEX_POSITION = "POSITION";
+inline const auto VERTEX_NORMAL = "NORMAL";
+inline const auto VERTEX_UV = "TEXCOORD_0";
 
 enum class Targets
 {
@@ -220,28 +220,28 @@ inline std::tuple<gltfjson::format::TextureWrap, const char*>
     { TextureWrap::REPEAT, "REPEAT" },
   };
 
-enum class AlphaModes
-{
-  Opaque,
-  Mask,
-  Blend,
-};
-inline std::tuple<gltfjson::format::AlphaModes, const char*>
-  AlphaModesCombo[] = {
-    { AlphaModes::Opaque, "OPAQUE" },
-    { AlphaModes::Mask, "MASK" },
-    { AlphaModes::Blend, "BLEND" },
-  };
-inline AlphaModes
-AlphaModesFromStr(std::u8string_view str)
-{
-  for (auto [mode, label] : AlphaModesCombo) {
-    if (str == (const char8_t*)label) {
-      return mode;
-    }
-  }
-  return {};
-}
+// enum class AlphaModes
+// {
+//   Opaque,
+//   Mask,
+//   Blend,
+// };
+// inline std::tuple<gltfjson::format::AlphaModes, const char*>
+//   AlphaModesCombo[] = {
+//     { AlphaModes::Opaque, "OPAQUE" },
+//     { AlphaModes::Mask, "MASK" },
+//     { AlphaModes::Blend, "BLEND" },
+//   };
+// inline AlphaModes
+// AlphaModesFromStr(std::u8string_view str)
+// {
+//   for (auto [mode, label] : AlphaModesCombo) {
+//     if (str == (const char8_t*)label) {
+//       return mode;
+//     }
+//   }
+//   return {};
+// }
 
 enum class MeshPrimitiveTopology
 {
@@ -264,25 +264,25 @@ inline std::tuple<gltfjson::format::MeshPrimitiveTopology, const char*>
     { MeshPrimitiveTopology::TRIANGLE_FAN, "TRIANGLE_FAN" },
   };
 
-enum class PathTypes
-{
-  Translation,
-  Rotation,
-  Scale,
-  Weights,
-};
+// enum class PathTypes
+// {
+//   Translation,
+//   Rotation,
+//   Scale,
+//   Weights,
+// };
+//
+// enum class InterpolationTypes
+// {
+//   LINEAR,
+//   STEP,
+//   CUBESPLINE,
+// };
 
-enum class InterpolationTypes
-{
-  LINEAR,
-  STEP,
-  CUBESPLINE,
-};
-
-inline const char8_t* ChildOfRootProperties[]{
-  u8"textures",
-  u8"materials",
-};
+// inline const char8_t* ChildOfRootProperties[]{
+//   u8"textures",
+//   u8"materials",
+// };
 
 }
 }

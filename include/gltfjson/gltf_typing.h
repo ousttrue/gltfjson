@@ -187,6 +187,7 @@ struct Extras : JsonObject
   using JsonObject::JsonObject;
 };
 
+// https://github.com/KhronosGroup/glTF/blob/main/specification/2.0/schema/glTFProperty.schema.json
 struct GltfProperty : JsonObject
 {
   using JsonObject::JsonObject;
@@ -194,6 +195,7 @@ struct GltfProperty : JsonObject
   auto Extras() const { return m_json->Get(u8"extras"); }
 };
 
+// https://github.com/KhronosGroup/glTF/blob/main/specification/2.0/schema/glTFChildOfRootProperty.schema.json
 struct ChildOfRootProperty : GltfProperty
 {
   using GltfProperty::GltfProperty;
@@ -245,6 +247,7 @@ struct Sparse : JsonObject
   auto Values() const { return m_object<SparseValues, u8"values">(); }
 };
 
+// https://github.com/KhronosGroup/glTF/blob/main/specification/2.0/schema/accessor.schema.json
 struct Accessor : ChildOfRootProperty
 {
   Accessor(const tree::NodePtr& json)
@@ -270,6 +273,7 @@ struct Accessor : ChildOfRootProperty
   }
 };
 
+// https://github.com/KhronosGroup/glTF/blob/main/specification/2.0/schema/camera.schema.json
 struct Camera : ChildOfRootProperty
 {
   using ChildOfRootProperty::ChildOfRootProperty;
@@ -513,6 +517,7 @@ struct Animation : ChildOfRootProperty
   JsonArray<AnimationSampler, u8"samplers"> Samplers;
 };
 
+// https://github.com/KhronosGroup/glTF/blob/main/specification/2.0/schema/scene.schema.json
 struct Scene : ChildOfRootProperty
 {
   Scene(const tree::NodePtr& json)
@@ -534,6 +539,7 @@ struct Asset : JsonObject
   auto MinVersion() const { return m_string<u8"minVersion">(); };
 };
 
+// https://github.com/KhronosGroup/glTF/blob/main/specification/2.0/schema/glTF.schema.json
 struct Root : GltfProperty
 {
   Root(const tree::NodePtr& json)
@@ -571,20 +577,6 @@ struct Root : GltfProperty
   JsonArray<typing::Scene, u8"scenes"> Scenes;
   JsonArray<Skin, u8"skins"> Skins;
 };
-
-inline format::AlphaModes
-GetAlphaMode(const Root& root, std::optional<uint32_t> material)
-{
-  if (material) {
-    auto alphaMode = root.Materials[*material].AlphaMode();
-    if (alphaMode == u8"MASK") {
-      format::AlphaModes::Mask;
-    } else if (alphaMode == u8"BLEND") {
-      format::AlphaModes::Blend;
-    }
-  }
-  return format::AlphaModes::Opaque;
-}
 
 }
 }
