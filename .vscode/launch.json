@@ -24,10 +24,10 @@
             "cwd": "${workspaceFolder}"
         },
         {
-            "name": "Python: Current File",
+            "name": "gltf_samples_gen.py",
             "type": "python",
             "request": "launch",
-            "program": "${workspaceFolder}/tests/gltf_samples_gen.py",
+            "program": "${workspaceFolder}/scripts/gltf_samples_gen.py",
             "console": "integratedTerminal",
             "justMyCode": true
         },
