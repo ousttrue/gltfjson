@@ -268,8 +268,8 @@ struct Accessor : ChildOfRootProperty
 
   uint32_t Stride() const
   {
-    return *format::component_size((format::ComponentTypes)*ComponentType()) *
-           *format::type_count(Type());
+    return *component_size((ComponentTypes)*ComponentType()) *
+           *type_count(Type());
   }
 };
 

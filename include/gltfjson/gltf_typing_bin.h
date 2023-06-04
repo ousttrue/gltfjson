@@ -82,8 +82,8 @@ struct Bin
       auto sparse_indices = *sparse->Indices();
       auto sparse_values = *sparse->Values();
       switch (
-        (gltfjson::format::ComponentTypes)*sparse_indices.ComponentType()) {
-        case gltfjson::format::ComponentTypes::UNSIGNED_BYTE:
+        (ComponentTypes)*sparse_indices.ComponentType()) {
+        case ComponentTypes::UNSIGNED_BYTE:
           if (auto sparse_indices_bytes =
                 GetBufferViewBytes(gltf, *sparse_indices.BufferView())) {
             auto begin = (const uint8_t*)sparse_indices_bytes->data();
@@ -100,7 +100,7 @@ struct Bin
             return std::unexpected{ sparse_indices_bytes.error() };
           }
 
-        case gltfjson::format::ComponentTypes::UNSIGNED_SHORT:
+        case ComponentTypes::UNSIGNED_SHORT:
           if (auto sparse_indices_bytes =
                 GetBufferViewBytes(gltf, *sparse_indices.BufferView())) {
             auto begin = (const uint16_t*)sparse_indices_bytes->data();
@@ -117,7 +117,7 @@ struct Bin
           } else {
             return std::unexpected{ sparse_indices_bytes.error() };
           }
-        case gltfjson::format::ComponentTypes::UNSIGNED_INT:
+        case ComponentTypes::UNSIGNED_INT:
           if (auto sparse_indices_bytes =
                 GetBufferViewBytes(gltf, *sparse_indices.BufferView())) {
             auto begin = (const uint32_t*)sparse_indices_bytes->data();

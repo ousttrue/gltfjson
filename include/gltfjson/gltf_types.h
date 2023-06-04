@@ -3,7 +3,6 @@
 #include <string>
 
 namespace gltfjson {
-namespace format {
 
 inline const auto VERTEX_JOINT = "JOINTS_0";
 inline const auto VERTEX_WEIGHT = "WEIGHTS_0";
@@ -17,7 +16,7 @@ enum class Targets
   ARRAY_BUFFER = 34962,
   ELEMENT_ARRAY_BUFFER = 34963,
 };
-inline std::tuple<gltfjson::format::Targets, const char*> TargetsCombo[] = {
+inline std::tuple<Targets, const char*> TargetsCombo[] = {
   { Targets::NONE, "NONE" },
   { Targets::ARRAY_BUFFER, "ARRAY_BUFFER" },
   { Targets::ELEMENT_ARRAY_BUFFER, "ELEMENT_ARRAY_BUFFER" },
@@ -32,7 +31,7 @@ enum class ComponentTypes
   UNSIGNED_INT = 5125,
   FLOAT = 5126,
 };
-inline std::tuple<gltfjson::format::ComponentTypes, const char*>
+inline std::tuple<ComponentTypes, const char*>
   ComponentTypesCombo[] = {
     { ComponentTypes::BYTE, "BYTE" },
     { ComponentTypes::UNSIGNED_BYTE, "UNSIGNED_BYTE" },
@@ -52,7 +51,7 @@ enum class Types
   MAT3,
   MAT4,
 };
-inline std::tuple<gltfjson::format::Types, std::string> TypesCombo[] = {
+inline std::tuple<Types, std::string> TypesCombo[] = {
   { Types::SCALAR, "SCALAR" }, { Types::VEC2, "VEC2" }, { Types::VEC3, "VEC3" },
   { Types::VEC4, "VEC4" },     { Types::MAT2, "MAT2" }, { Types::MAT3, "MAT3" },
   { Types::MAT4, "MAT4" },
@@ -182,7 +181,7 @@ enum class TextureMagFilter
   NEAREST = 9728,
   LINEAR = 9729,
 };
-inline std::tuple<gltfjson::format::TextureMagFilter, const char*>
+inline std::tuple<TextureMagFilter, const char*>
   TextureMagFilterCombo[] = {
     { TextureMagFilter::NEAREST, "NEAREST" },
     { TextureMagFilter::LINEAR, "LINEAR" },
@@ -197,7 +196,7 @@ enum class TextureMinFilter
   NEAREST_MIPMAP_LINEAR = 9986,
   LINEAR_MIPMAP_LINEAR = 9987,
 };
-inline std::tuple<gltfjson::format::TextureMinFilter, const char*>
+inline std::tuple<TextureMinFilter, const char*>
   TextureMinFilterCombo[] = {
     { TextureMinFilter::NEAREST, "NEAREST" },
     { TextureMinFilter::LINEAR, "LINEAR" },
@@ -213,7 +212,7 @@ enum class TextureWrap
   MIRRORED_REPEAT = 33648,
   REPEAT = 10497,
 };
-inline std::tuple<gltfjson::format::TextureWrap, const char*>
+inline std::tuple<TextureWrap, const char*>
   TextureWrapCombo[] = {
     { TextureWrap::CLAMP_TO_EDGE, "CLAMP_TO_EDGE" },
     { TextureWrap::MIRRORED_REPEAT, "MIRRORED_REPEAT" },
@@ -253,7 +252,7 @@ enum class MeshPrimitiveTopology
   TRIANGLE_STRIP,
   TRIANGLE_FAN,
 };
-inline std::tuple<gltfjson::format::MeshPrimitiveTopology, const char*>
+inline std::tuple<MeshPrimitiveTopology, const char*>
   MeshPrimitiveTopologyCombo[] = {
     { MeshPrimitiveTopology::POINTS, "POINTS" },
     { MeshPrimitiveTopology::LINES, "LINES" },
@@ -284,5 +283,4 @@ inline std::tuple<gltfjson::format::MeshPrimitiveTopology, const char*>
 //   u8"materials",
 // };
 
-}
-}
+} // namespace
