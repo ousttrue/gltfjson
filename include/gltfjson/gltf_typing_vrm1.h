@@ -290,6 +290,7 @@ struct VRMC_materials_mtoon : Extension<u8"VRMC_materials_mtoon">
 
   auto MatcapTexture() { return m_object<TextureInfo, u8"matcapTexture">(); }
 };
+using MToon = VRMC_materials_mtoon;
 
 // https://github.com/vrm-c/vrm-specification/blob/master/specification/VRMC_springBone-1.0/schema/VRMC_springBone.schema.json
 struct VRMC_springBone : Extension<u8"VRMC_springBone">
