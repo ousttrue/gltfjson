@@ -176,15 +176,6 @@ struct JsonObject
 //
 // gltf
 //
-struct Extensions : JsonObject
-{
-  using JsonObject::JsonObject;
-};
-
-struct Extras : JsonObject
-{
-  using JsonObject::JsonObject;
-};
 
 // https://github.com/KhronosGroup/glTF/blob/main/specification/2.0/schema/glTFProperty.schema.json
 struct GltfProperty : JsonObject
@@ -192,6 +183,24 @@ struct GltfProperty : JsonObject
   using JsonObject::JsonObject;
   auto Extensions() const { return m_json->Get(u8"extensions"); }
   auto Extras() const { return m_json->Get(u8"extras"); }
+
+  template<typename T>
+  std::optional<T> GetExtension()
+  {
+    if (auto extensions = Extensions()) {
+      if (auto extension = extensions->Get(T::EXTENSION_NAME)) {
+        return T(extension);
+      }
+    }
+    return std::nullopt;
+  }
+};
+
+template<StringLiteral lit>
+struct Extension : GltfProperty
+{
+  static inline const char8_t* EXTENSION_NAME = lit.value;
+  using GltfProperty::GltfProperty;
 };
 
 // https://github.com/KhronosGroup/glTF/blob/main/specification/2.0/schema/glTFChildOfRootProperty.schema.json

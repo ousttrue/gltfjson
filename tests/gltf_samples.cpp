@@ -4,7 +4,7 @@
 #include <gltfjson.h>
 #include <gtest/gtest.h>
 
-std::filesystem::path
+static std::filesystem::path
 get_path(std::string_view relative)
 {
   std::filesystem::path base = std::getenv("GLTF_SAMPLE_MODELS");

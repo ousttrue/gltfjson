@@ -40,7 +40,7 @@ def process(gltf_dir: pathlib.Path, path: pathlib.Path):
 #include <gtest/gtest.h>
 #include <gltfjson.h>
 
-std::filesystem::path get_path(std::string_view relative) {
+static std::filesystem::path get_path(std::string_view relative) {
   std::filesystem::path base = std::getenv("GLTF_SAMPLE_MODELS");
   return base / "2.0" / relative;
 }

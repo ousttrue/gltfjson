@@ -27,6 +27,7 @@ TEST(Vrm0, Alicia)
 
   if (!std::filesystem::exists(path)) {
     std::cerr << path << " not exists" << std::endl;
+    return;
   }
   auto bytes = ReadAllBytes(path);
   if (bytes.empty()) {
