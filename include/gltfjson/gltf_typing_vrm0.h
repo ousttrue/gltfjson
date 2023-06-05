@@ -192,6 +192,14 @@ struct SecondaryAnimation : JsonObject
   JsonArray<ColliderGroup, u8"colliderGroups"> ColliderGroups;
 };
 
+enum RenderMode
+{
+  Opaque = 0,
+  Cutout = 1,
+  Transparent = 2,
+  TransparentWithZWrite = 3,
+};
+
 // https://github.com/vrm-c/vrm-specification/blob/master/specification/0.0/schema/vrm.material.schema.json
 struct Material : JsonObject
 {
@@ -220,46 +228,6 @@ struct Material : JsonObject
   {
     return m_ptr<gltfjson::tree::ObjectValue, u8"tagMap">();
   }
-};
-
-struct VRM : JsonObject
-{
-  VRM(const gltfjson::tree::NodePtr& json)
-    : JsonObject(json)
-    , MaterialProperties(json)
-  {
-  }
-
-  auto ExporterVersion() const { return m_string<u8"exporterVersion">(); }
-  auto SpecVersion() const { return m_string<u8"specVersion">(); }
-  auto Meta() const { return m_object<vrm0::Meta, u8"meta">(); }
-  auto Humanoid() const { return m_object<vrm0::Humanoid, u8"humanoid">(); }
-  auto FirstPerson() const
-  {
-    return m_object<vrm0::FirstPerson, u8"FirstPerson">();
-  }
-  auto BlendShapeMaster() const
-  {
-    return m_object<vrm0::BlendShapeMaster, u8"blendShapeMaster">();
-  }
-  auto SecondaryAnimation() const
-  {
-    return m_object<vrm0::SecondaryAnimation, u8"secondaryAnimation">();
-  }
-  JsonArray<Material, u8"materialProperties"> MaterialProperties;
-};
-
-enum RenderMode
-{
-  Opaque = 0,
-  Cutout = 1,
-  Transparent = 2,
-  TransparentWithZWrite = 3,
-};
-
-struct Vrm0Material : GltfProperty
-{
-  using GltfProperty::GltfProperty;
 
   auto MainTexture()
   {
@@ -329,6 +297,38 @@ struct Vrm0Material : GltfProperty
     }
     return {};
   }
+};
+
+// https://github.com/vrm-c/vrm-specification/blob/master/specification/0.0/schema/vrm.schema.json
+struct VRM : JsonObject
+{
+  VRM(const gltfjson::tree::NodePtr& json)
+    : JsonObject(json)
+    , MaterialProperties(json)
+  {
+  }
+
+  auto ExporterVersion() const { return m_string<u8"exporterVersion">(); }
+  auto SpecVersion() const { return m_string<u8"specVersion">(); }
+  auto Meta() const { return m_object<vrm0::Meta, u8"meta">(); }
+  auto Humanoid() const { return m_object<vrm0::Humanoid, u8"humanoid">(); }
+  auto FirstPerson() const
+  {
+    return m_object<vrm0::FirstPerson, u8"firstPerson">();
+  }
+  auto BlendShapeMaster() const
+  {
+    return m_object<vrm0::BlendShapeMaster, u8"blendShapeMaster">();
+  }
+  auto SecondaryAnimation() const
+  {
+    return m_object<vrm0::SecondaryAnimation, u8"secondaryAnimation">();
+  }
+  auto Spring() const
+  {
+    return m_object<vrm0::SecondaryAnimation, u8"secondaryAnimation">();
+  }
+  JsonArray<Material, u8"materialProperties"> MaterialProperties;
 };
 
 } // namespace

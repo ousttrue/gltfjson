@@ -11,6 +11,7 @@ executable(
         'glb_export.cpp',
         'json.cpp',
         'write_read.cpp',
+        'test_vrm0.cpp',
     ],
     install: true,
     dependencies: [gtest_main_dep, gltfjson_dep],
