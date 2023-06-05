@@ -300,10 +300,10 @@ struct Material : JsonObject
 };
 
 // https://github.com/vrm-c/vrm-specification/blob/master/specification/0.0/schema/vrm.schema.json
-struct VRM : JsonObject
+struct VRM : Extension<u8"VRM">
 {
   VRM(const gltfjson::tree::NodePtr& json)
-    : JsonObject(json)
+    : Extension(json)
     , MaterialProperties(json)
   {
   }
@@ -330,6 +330,21 @@ struct VRM : JsonObject
   }
   JsonArray<Material, u8"materialProperties"> MaterialProperties;
 };
+
+inline std::u8string
+GetHumanBoneName(Root root, uint32_t i)
+{
+  if (auto vrm = root.GetExtension<VRM>()) {
+    if (auto humanoid = vrm->Humanoid()) {
+      for (auto bone : humanoid->HumanBones) {
+        if (bone.Node() == i) {
+          return bone.Bone();
+        }
+      }
+    }
+  }
+  return {};
+}
 
 } // namespace
 } // namespace

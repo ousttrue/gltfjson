@@ -260,10 +260,9 @@ struct Expressions : JsonObject
 };
 
 // https://github.com/vrm-c/vrm-specification/blob/master/specification/VRMC_vrm-1.0/schema/VRMC_vrm.schema.json
-struct VRMC_vrm : JsonObject
+struct VRMC_vrm : Extension<u8"VRMC_vrm">
 {
-  static inline const char8_t* EXTENSION_NAME = u8"VRMC_materials_mtoon";
-  using JsonObject::JsonObject;
+  using Extension::Extension;
 
   auto SpecVersion() { return m_string<u8"specVersion">(); }
   auto Meta() { return m_object<vrm1::Meta, u8"meta">(); }
@@ -305,6 +304,29 @@ struct VRMC_node_constraint : Extension<u8"VRMC_node_constraint">
 {
   using Extension::Extension;
 };
+
+inline std::u8string
+GetHumanBoneName(Root root, uint32_t i)
+{
+  if (auto vrm = root.GetExtension<VRMC_vrm>()) {
+    if (auto humanoid = vrm->Humanoid()) {
+      if (auto humanbones = humanoid->HumanBones()) {
+        if (auto obj = humanbones->m_json->Object()) {
+          for (auto kv : *obj) {
+            if (auto node = kv.second->Get(u8"node")) {
+              if (auto p = node->Ptr<float>()) {
+                if (*p == i) {
+                  return kv.first;
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+  return {};
+}
 
 } // namespace
 } // namespace
