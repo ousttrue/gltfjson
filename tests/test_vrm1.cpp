@@ -108,5 +108,9 @@ TEST(Vrm1, SeedSan)
 
   {
     // constraint
+    EXPECT_EQ(147, root.Nodes.size());
+    auto node = root.Nodes[21];
+    auto constraint = node.GetExtension<gltfjson::vrm1::VRMC_node_constraint>();
+    EXPECT_TRUE(constraint);
   }
 }
