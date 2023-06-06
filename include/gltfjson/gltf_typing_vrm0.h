@@ -346,5 +346,18 @@ GetHumanBoneName(Root root, uint32_t i)
   return {};
 }
 
+inline tree::NodePtr
+GetVrmMaterial(Root root, uint32_t i)
+{
+  if (auto vrm = root.GetExtension<VRM>()) {
+    {
+      if (i < vrm->MaterialProperties.size()) {
+        return vrm->MaterialProperties[i].m_json;
+      }
+    }
+  }
+  return {};
+}
+
 } // namespace
 } // namespace

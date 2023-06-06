@@ -291,18 +291,131 @@ struct VRMC_materials_mtoon : Extension<u8"VRMC_materials_mtoon">
 };
 using MToon = VRMC_materials_mtoon;
 
+struct SpringColliderShapeSphere : JsonObject
+{
+  using JsonObject::JsonObject;
+  auto Offset() { return m_ptr<tree::ObjectValue, u8"offset">(); }
+  auto Radius() { return m_ptr<float, u8"radius">(); }
+};
+
+struct SpringColliderShapeCapsule : JsonObject
+{
+  using JsonObject::JsonObject;
+  auto Offset() { return m_ptr<tree::ObjectValue, u8"offset">(); }
+  auto Radius() { return m_ptr<float, u8"radius">(); }
+  auto Tail() { return m_ptr<tree::ObjectValue, u8"tail">(); }
+};
+
+// https://github.com/vrm-c/vrm-specification/blob/master/specification/VRMC_springBone-1.0/schema/VRMC_springBone.shape.schema.json
+struct SpringColliderShape : JsonObject
+{
+  using JsonObject::JsonObject;
+  auto Sphere() { return m_object<SpringColliderShapeSphere, u8"sphere">(); }
+  auto Capsule() { return m_object<SpringColliderShapeSphere, u8"capsule">(); }
+};
+
+// https://github.com/vrm-c/vrm-specification/blob/master/specification/VRMC_springBone-1.0/schema/VRMC_springBone.collider.schema.json
+struct SpringCollider : JsonObject
+{
+  using JsonObject::JsonObject;
+  auto Node() { return m_id<u8"node">(); }
+  auto Shape() { return m_object<SpringColliderShape, u8"shape">(); }
+};
+
+// https://github.com/vrm-c/vrm-specification/blob/master/specification/VRMC_springBone-1.0/schema/VRMC_springBone.colliderGroup.schema.json
+struct SpringColliderGroup : JsonObject
+{
+  using JsonObject::JsonObject;
+  auto Name() { return m_string<u8"name">(); }
+  JsonArray<SpringCollider, u8"colliders"> Colliders;
+};
+
+// https://github.com/vrm-c/vrm-specification/blob/master/specification/VRMC_springBone-1.0/schema/VRMC_springBone.joint.schema.json
+struct SpringJoint : JsonObject
+{
+  using JsonObject::JsonObject;
+  auto Node() { return m_id<u8"node">(); }
+  auto HitRadius() { return m_ptr<float, u8"hitRadius">(); }
+  auto Stiffness() { return m_ptr<float, u8"stiffness">(); }
+  auto GravityPower() { return m_ptr<float, u8"gravityPower">(); }
+  auto GravityDir() { return m_ptr<tree::ArrayValue, u8"gravityDir">(); }
+  auto DragForce() { return m_ptr<float, u8"dragForce">(); }
+};
+
+// https://github.com/vrm-c/vrm-specification/blob/master/specification/VRMC_springBone-1.0/schema/VRMC_springBone.spring.schema.json
+struct Spring : JsonObject
+{
+  Spring(const tree::NodePtr& json)
+    : JsonObject(json)
+    , Joints(json)
+  {
+  }
+  auto Name() { return m_string<u8"name">(); }
+  JsonArray<SpringJoint, u8"joints"> Joints;
+  auto ColliderGroups()
+  {
+    return m_ptr<tree::ArrayValue, u8"colliderGroups">();
+  }
+  auto Center() { return m_id<u8"center">(); }
+};
+
 // https://github.com/vrm-c/vrm-specification/blob/master/specification/VRMC_springBone-1.0/schema/VRMC_springBone.schema.json
 struct VRMC_springBone : Extension<u8"VRMC_springBone">
 {
-  using Extension::Extension;
-
+  VRMC_springBone(const tree::NodePtr& json)
+    : Extension(json)
+    , Colliders(json)
+    , ColliderGroups(json)
+    , Springs(json)
+  {
+  }
   auto SpecVersion() { return m_string<u8"specVersion">(); }
+  JsonArray<SpringCollider, u8"colliders"> Colliders;
+  JsonArray<SpringColliderGroup, u8"colliderGroups"> ColliderGroups;
+  JsonArray<Spring, u8"springs"> Springs;
+};
+
+// https://github.com/vrm-c/vrm-specification/blob/master/specification/VRMC_node_constraint-1.0/schema/VRMC_node_constraint.rollConstraint.schema.json
+struct ConstraintRoll : JsonObject
+{
+  using JsonObject::JsonObject;
+  auto Source() { return m_id<u8"source">(); }
+  auto RollAxis() { return m_string<u8"rollAxis">(); }
+  auto Weight() { return m_float<u8"weight">(); }
+};
+
+// https://github.com/vrm-c/vrm-specification/blob/master/specification/VRMC_node_constraint-1.0/schema/VRMC_node_constraint.aimConstraint.schema.json
+struct ConstraintAim : JsonObject
+{
+  using JsonObject::JsonObject;
+  auto Source() { return m_id<u8"source">(); }
+  auto AimAxis() { return m_string<u8"AimAxis">(); }
+  auto Weight() { return m_float<u8"weight">(); }
+};
+
+// https://github.com/vrm-c/vrm-specification/blob/master/specification/VRMC_node_constraint-1.0/schema/VRMC_node_constraint.rotationConstraint.schema.json
+struct ConstraintRotation : JsonObject
+{
+  using JsonObject::JsonObject;
+  auto Source() { return m_id<u8"source">(); }
+  auto Weight() { return m_float<u8"weight">(); }
+};
+
+// https://github.com/vrm-c/vrm-specification/blob/master/specification/VRMC_node_constraint-1.0/schema/VRMC_node_constraint.constraint.schema.json
+struct Constraint : JsonObject
+{
+  using JsonObject::JsonObject;
+  auto Roll() { return m_object<ConstraintRoll, u8"roll">(); }
+  auto Aim() { return m_object<ConstraintAim, u8"aim">(); }
+  auto Rotation() { return m_object<ConstraintRotation, u8"rotation">(); }
 };
 
 // https://github.com/vrm-c/vrm-specification/blob/master/specification/VRMC_node_constraint-1.0/schema/VRMC_node_constraint.schema.json
 struct VRMC_node_constraint : Extension<u8"VRMC_node_constraint">
 {
   using Extension::Extension;
+  auto SpecVersion() { return m_string<u8"specVersion">(); }
+  auto Constraint() { return m_object<vrm1::Constraint, u8"constraint">(); }
 };
 
 inline std::u8string

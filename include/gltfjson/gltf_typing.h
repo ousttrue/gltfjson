@@ -1,6 +1,7 @@
 #pragma once
 #include "gltf_types.h"
 #include "json_tree.h"
+#include <array>
 #include <optional>
 #include <string>
 #include <string_view>
@@ -140,6 +141,55 @@ struct JsonObject
   {
     if (auto node = m_node<lit>()) {
       return (Id)*node->template Ptr<float>();
+    }
+    return std::nullopt;
+  }
+
+  template<StringLiteral lit>
+  std::optional<float> m_float() const
+  {
+    if (auto node = m_node<lit>()) {
+      return *node->template Ptr<float>();
+    }
+    return std::nullopt;
+  }
+
+  template<StringLiteral lit>
+  std::optional<std::array<float, 3>> m_float3() const
+  {
+    if (auto node = m_node<lit>()) {
+      if (auto array = node->template Ptr<tree::ArrayValue>()) {
+        if (array->size() == 3) {
+          if (auto x = (*array)[0]->Ptr<float>()) {
+            if (auto y = (*array)[1]->Ptr<float>()) {
+              if (auto z = (*array)[2]->Ptr<float>()) {
+                return std::array<float, 3>{ *x, *y, *z };
+              }
+            }
+          }
+        }
+      }
+    }
+    return std::nullopt;
+  }
+
+  template<StringLiteral lit>
+  std::optional<std::array<float, 4>> m_float4() const
+  {
+    if (auto node = m_node<lit>()) {
+      if (auto array = node->template Ptr<tree::ArrayValue>()) {
+        if (array->size() == 4) {
+          if (auto x = (*array)[0]->Ptr<float>()) {
+            if (auto y = (*array)[1]->Ptr<float>()) {
+              if (auto z = (*array)[2]->Ptr<float>()) {
+                if (auto w = (*array)[3]->Ptr<float>()) {
+                  return std::array<float, 4>{ *x, *y, *z, *w };
+                }
+              }
+            }
+          }
+        }
+      }
     }
     return std::nullopt;
   }
