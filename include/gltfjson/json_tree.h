@@ -161,7 +161,7 @@ struct Node
       p = std::make_shared<Node>();
       object->insert({ { target.begin(), target.end() }, p });
     }
-    p->Var = value;
+    p->Set(value);
 
     return p;
   }
@@ -177,6 +177,12 @@ struct Node
       return 0;
     }
   }
+
+  void Set(bool b) { Var = b; }
+  void Set(float f) { Var = f; }
+  void Set(const std::u8string& s) { Var = s; }
+  void Set(const ArrayValue& a) { Var = a; }
+  void Set(const ObjectValue& o) { Var = o; }
 
   template<size_t N>
   void Set(const std::array<float, N>& values)
@@ -339,8 +345,7 @@ Vec3(const tree::NodePtr& json, const std::array<float, 3>& defaultValue)
 }
 
 inline std::array<float, 4>
-Vec4(const tree::NodePtr& json,
-     const std::array<float, 4>& defaultValue)
+Vec4(const tree::NodePtr& json, const std::array<float, 4>& defaultValue)
 {
   if (json) {
     if (auto a = json->Array()) {
