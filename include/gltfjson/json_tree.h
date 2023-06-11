@@ -220,7 +220,10 @@ operator<<(std::ostream& os, const Node& node)
         m_os << "false";
       }
     }
-    void operator()(float value) { m_os << value; }
+    void operator()(float value)
+    {
+      m_os << std::setprecision(9) << value;
+    }
     void operator()(const std::u8string& value)
     {
       m_os << '"' << from_u8(value) << '"';
