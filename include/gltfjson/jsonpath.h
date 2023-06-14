@@ -1,5 +1,6 @@
 #pragma once
 #include <charconv>
+#include <list>
 #include <optional>
 #include <ranges>
 #include <string_view>

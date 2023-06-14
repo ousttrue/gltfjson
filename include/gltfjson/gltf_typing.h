@@ -636,4 +636,9 @@ struct Root : GltfProperty
   JsonArray<Skin, u8"skins"> Skins;
 };
 
+struct KHR_materials_unlit : Extension<u8"KHR_materials_unlit">
+{
+  using Extension::Extension;
+};
+
 } // namespace
