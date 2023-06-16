@@ -235,7 +235,7 @@ struct GltfProperty : JsonObject
   auto Extras() const { return m_json->Get(u8"extras"); }
 
   template<typename T>
-  std::optional<T> GetExtension()
+  std::optional<T> GetExtension() const
   {
     if (auto extensions = Extensions()) {
       if (auto extension = extensions->Get(T::EXTENSION_NAME)) {
