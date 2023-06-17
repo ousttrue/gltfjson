@@ -342,7 +342,7 @@ struct Image : ChildOfRootProperty
 {
   using ChildOfRootProperty::ChildOfRootProperty;
   auto Uri() const { return m_string<u8"uri">(); }
-  auto MimeTypel() const { return m_string<u8"mimeType">(); }
+  auto MimeType() const { return m_string<u8"mimeType">(); }
   auto BufferView() const { return m_id<u8"bufferView">(); }
 };
 
