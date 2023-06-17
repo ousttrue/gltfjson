@@ -9,26 +9,26 @@ struct Meta : JsonObject
 {
   using JsonObject::JsonObject;
 
-  auto Title() const { return m_string<u8"title">(); }
-  auto Version() const { return m_string<u8"version">(); }
-  auto Author() const { return m_string<u8"author">(); }
-  auto ContactInformation() const { return m_string<u8"contactInformation">(); }
-  auto Reference() const { return m_string<u8"reference">(); }
-  auto Texture() const { return m_id<u8"texture">(); }
-  auto AllowedUser() const { return m_string<u8"allowedUserName">(); }
-  auto ViolentUsage() const { return m_string<u8"violentUssageName">(); }
-  auto SexualUsage() const { return m_string<u8"sexualUssageName">(); }
-  auto CommercialUsage() const { return m_string<u8"commercialUssageName">(); }
-  auto OtherPermissionUrl() const { return m_string<u8"otherPermissionUrl">(); }
-  auto License() const { return m_string<u8"licenseName">(); }
-  auto OtherLicenseUrl() const { return m_string<u8"otherLicenseUrl">(); }
+  auto TitleString() const { return m_string<u8"title">(); }
+  auto VersionString() const { return m_string<u8"version">(); }
+  auto AuthorString() const { return m_string<u8"author">(); }
+  auto ContactInformationString() const { return m_string<u8"contactInformation">(); }
+  auto ReferenceString() const { return m_string<u8"reference">(); }
+  auto TextureId() const { return m_id<u8"texture">(); }
+  auto AllowedUserString() const { return m_string<u8"allowedUserName">(); }
+  auto ViolentUsageString() const { return m_string<u8"violentUssageName">(); }
+  auto SexualUsageString() const { return m_string<u8"sexualUssageName">(); }
+  auto CommercialUsageString() const { return m_string<u8"commercialUssageName">(); }
+  auto OtherPermissionUrlString() const { return m_string<u8"otherPermissionUrl">(); }
+  auto LicenseString() const { return m_string<u8"licenseName">(); }
+  auto OtherLicenseUrlString() const { return m_string<u8"otherLicenseUrl">(); }
 };
 
 // https://github.com/vrm-c/vrm-specification/blob/master/specification/0.0/schema/vrm.humanoid.bone.schema.json
 struct HumanBone : JsonObject
 {
-  auto Bone() const { return m_string<u8"bone">(); }
-  auto Node() const { return m_id<u8"node">(); }
+  auto BoneString() const { return m_string<u8"bone">(); }
+  auto NodeId() const { return m_id<u8"node">(); }
   auto Center() const
   {
     return m_ptr<gltfjson::tree::ObjectValue, u8"center">();
@@ -61,13 +61,13 @@ struct FirstPerson : JsonObject
   {
   }
 
-  auto FirstPersonBone() const { return m_id<u8"firstPersonBone">(); }
+  auto FirstPersonBoneId() const { return m_id<u8"firstPersonBone">(); }
   auto FirstPersonBoneOffset() const
   {
     return m_ptr<gltfjson::tree::ObjectValue, u8"firstPersonBoneOffset">();
   }
   JsonArray<MeshAnnotation, u8"meshAnnotations"> MeshAnnotations;
-  auto LookAtType() const { return m_string<u8"lookAtTypeName">(); }
+  auto LookAtTypeString() const { return m_string<u8"lookAtTypeName">(); }
   auto lookAtHorizontalInner() const
   {
     return m_object<DegreeMap, u8"lookAtHorizontalInner">();
@@ -90,8 +90,8 @@ struct FirstPerson : JsonObject
 struct MorphBind : JsonObject
 {
   using JsonObject::JsonObject;
-  auto Mesh() const { return m_id<u8"mesh">(); }
-  auto MorphIndex() const { return m_id<u8"index">(); }
+  auto MeshId() const { return m_id<u8"mesh">(); }
+  auto MorphIndexId() const { return m_id<u8"index">(); }
   auto Weight() const { return m_ptr<float, u8"weight">(); }
 };
 
@@ -99,8 +99,8 @@ struct MorphBind : JsonObject
 struct MaterialBind : JsonObject
 {
   using JsonObject::JsonObject;
-  auto MaterialName() const { return m_string<u8"materialName">(); }
-  auto PropertyName() const { return m_string<u8"propertyName">(); }
+  auto MaterialNameString() const { return m_string<u8"materialName">(); }
+  auto PropertyNameString() const { return m_string<u8"propertyName">(); }
   auto TargetValue() const
   {
     return m_ptr<gltfjson::tree::ObjectValue, u8"targetValue">();
@@ -116,8 +116,8 @@ struct BlendShapeGroup : JsonObject
     , MaterialBinds(json)
   {
   }
-  const auto Name() const { return m_string<u8"name">(); }
-  const auto Preset() const { return m_string<u8"presetName">(); }
+  const auto NameString() const { return m_string<u8"name">(); }
+  const auto PresetString() const { return m_string<u8"presetName">(); }
   JsonArray<MorphBind, u8"binds"> MorphBinds;
   JsonArray<MaterialBind, u8"materialValues"> MaterialBinds;
   const auto IsBinary() const { return m_ptr<bool, u8"isBinary">(); }
@@ -140,7 +140,7 @@ struct Spring : JsonObject
 {
   using JsonObject::JsonObject;
 
-  auto Comment() const { return m_string<u8"comment">(); }
+  auto CommentString() const { return m_string<u8"comment">(); }
   auto Stifness() const { return m_ptr<float, u8"stiffiness">(); }
   auto GravityPower() const { return m_ptr<float, u8"gravityPower">(); }
   auto GravityDir() const
@@ -148,7 +148,7 @@ struct Spring : JsonObject
     return m_ptr<gltfjson::tree::ObjectValue, u8"gravityDir">();
   }
   auto DragForce() const { return m_ptr<float, u8"dragForce">(); }
-  auto Center() const { return m_id<u8"center">(); }
+  auto CenterId() const { return m_id<u8"center">(); }
   auto HitRadius() const { return m_ptr<float, u8"hitRadius">(); }
   auto Bones() const { return m_ptr<gltfjson::tree::ArrayValue, u8"bones">(); }
   auto ColliderGroups() const
@@ -175,7 +175,7 @@ struct ColliderGroup : JsonObject
     , Colliders(json)
   {
   }
-  auto Node() const { return m_id<u8"node">(); }
+  auto NodeId() const { return m_id<u8"node">(); }
   JsonArray<Collider, u8"colliders"> Colliders;
 };
 
@@ -205,8 +205,8 @@ struct Material : JsonObject
 {
   using JsonObject::JsonObject;
 
-  auto Name() const { return m_string<u8"name">(); }
-  auto Shader() const { return m_string<u8"shader">(); }
+  auto NameString() const { return m_string<u8"name">(); }
+  auto ShaderString() const { return m_string<u8"shader">(); }
   auto RenderQueue() const { return m_ptr<float, u8"renderQueue">(); }
   auto FloatProperties() const
   {
@@ -308,8 +308,8 @@ struct VRM : Extension<u8"VRM">
   {
   }
 
-  auto ExporterVersion() const { return m_string<u8"exporterVersion">(); }
-  auto SpecVersion() const { return m_string<u8"specVersion">(); }
+  auto ExporterVersionString() const { return m_string<u8"exporterVersion">(); }
+  auto SpecVersionString() const { return m_string<u8"specVersion">(); }
   auto Meta() const { return m_object<vrm0::Meta, u8"meta">(); }
   auto Humanoid() const { return m_object<vrm0::Humanoid, u8"humanoid">(); }
   auto FirstPerson() const
@@ -337,8 +337,8 @@ GetHumanBoneName(Root root, uint32_t i)
   if (auto vrm = root.GetExtension<VRM>()) {
     if (auto humanoid = vrm->Humanoid()) {
       for (auto bone : humanoid->HumanBones) {
-        if (bone.Node() == i) {
-          return bone.Bone();
+        if (bone.NodeId() == i) {
+          return bone.BoneString();
         }
       }
     }

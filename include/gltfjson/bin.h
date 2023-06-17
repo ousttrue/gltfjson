@@ -29,9 +29,9 @@ struct Bin
     auto buffer_view = gltf.BufferViews[buffer_view_index];
     // std::cout << buffer_view << std::endl;
 
-    int buffer_index = *buffer_view.Buffer();
+    int buffer_index = *buffer_view.BufferId();
     auto buffer = gltf.Buffers[buffer_index];
-    auto uri = buffer.Uri();
+    auto uri = buffer.UriString();
     if (uri.size()) {
       // external file
       if (auto bytes = Dir->GetBuffer(uri)) {
@@ -80,7 +80,7 @@ struct Bin
       m_sparseBuffer.resize(count * sizeof(T));
       auto begin = (T*)m_sparseBuffer.data();
       auto sparse_span = std::span<T>(begin, begin + count);
-      if (accessor.BufferView()) {
+      if (accessor.BufferViewId()) {
         // non zero sparse
         return std::unexpected{ "non zero sparse not implemented" };
       } else {
@@ -94,12 +94,12 @@ struct Bin
       switch ((gltfjson::ComponentTypes)*sparse_indices.ComponentType()) {
         case gltfjson::ComponentTypes::UNSIGNED_BYTE:
           if (auto sparse_indices_bytes =
-                GetBufferViewBytes(gltf, *sparse_indices.BufferView())) {
+                GetBufferViewBytes(gltf, *sparse_indices.BufferViewId())) {
             auto begin = (const uint8_t*)sparse_indices_bytes->data();
             auto indices_span = std::span(begin, begin + sparse_count);
             if (auto result = GetSparseValue(gltf,
                                              indices_span,
-                                             *sparse_values.BufferView(),
+                                             *sparse_values.BufferViewId(),
                                              sparse_span)) {
               return sparse_span;
             } else {
@@ -111,12 +111,12 @@ struct Bin
 
         case gltfjson::ComponentTypes::UNSIGNED_SHORT:
           if (auto sparse_indices_bytes =
-                GetBufferViewBytes(gltf, *sparse_indices.BufferView())) {
+                GetBufferViewBytes(gltf, *sparse_indices.BufferViewId())) {
             auto begin = (const uint16_t*)sparse_indices_bytes->data();
             auto indices_span = std::span(begin, begin + sparse_count);
             if (auto result = GetSparseValue(gltf,
                                              indices_span,
-                                             *sparse_values.BufferView(),
+                                             *sparse_values.BufferViewId(),
                                              sparse_span)) {
 
               return sparse_span;
@@ -128,12 +128,12 @@ struct Bin
           }
         case gltfjson::ComponentTypes::UNSIGNED_INT:
           if (auto sparse_indices_bytes =
-                GetBufferViewBytes(gltf, *sparse_indices.BufferView())) {
+                GetBufferViewBytes(gltf, *sparse_indices.BufferViewId())) {
             auto begin = (const uint32_t*)sparse_indices_bytes->data();
             auto indices_span = std::span(begin, begin + sparse_count);
             if (auto result = GetSparseValue(gltf,
                                              indices_span,
-                                             *sparse_values.BufferView(),
+                                             *sparse_values.BufferViewId(),
                                              sparse_span)) {
               return sparse_span;
             } else {
@@ -146,7 +146,7 @@ struct Bin
           return std::unexpected{ "sparse.indices: unknown" };
       }
       throw std::runtime_error("not implemented");
-    } else if (auto bufferView = accessor.BufferView()) {
+    } else if (auto bufferView = accessor.BufferViewId()) {
       if (auto span = GetBufferViewBytes(gltf, *bufferView)) {
         auto offset = (uint32_t)gltfjson::deref_or(accessor.ByteOffset(), 0);
         return std::span<const T>((const T*)(span->data() + offset), count);

@@ -10,15 +10,15 @@ struct Meta : JsonObject
   using JsonObject::JsonObject;
 
   auto Name() { return m_string<u8"name">(); }
-  auto Version() { return m_string<u8"version">(); }
+  auto VersionString() { return m_string<u8"version">(); }
   auto Authors() { return m_ptr<tree::ArrayValue, u8"authors">(); }
-  auto CopyrightInformation() { return m_string<u8"copyrightInformation">(); }
-  auto ContactInformation() { return m_string<u8"contactInformation">(); }
+  auto CopyrightInformationString() { return m_string<u8"copyrightInformation">(); }
+  auto ContactInformationString() { return m_string<u8"contactInformation">(); }
   auto References() { return m_ptr<tree::ArrayValue, u8"references">(); }
-  auto ThirdPartyLicenses() { return m_string<u8"thirdPartyLicenses">(); }
-  auto ThumbnailImage() { return m_id<u8"thumbnailImage">(); }
-  auto LicenseUrl() { return m_string<u8"licenseUrl">(); }
-  auto AvatarPermission() { return m_string<u8"avatarPermission">(); }
+  auto ThirdPartyLicensesString() { return m_string<u8"thirdPartyLicenses">(); }
+  auto ThumbnailImageId() { return m_id<u8"thumbnailImage">(); }
+  auto LicenseUrlString() { return m_string<u8"licenseUrl">(); }
+  auto AvatarPermissionString() { return m_string<u8"avatarPermission">(); }
   auto AllowExcessivelyViolentUsage()
   {
     return m_ptr<bool, u8"allowExcessivelyViolentUsage">();
@@ -27,7 +27,7 @@ struct Meta : JsonObject
   {
     return m_ptr<bool, u8"allowExcessivelySexualUsage">();
   }
-  auto CommercialUsage() { return m_string<u8"commercialUsage">(); }
+  auto CommercialUsageString() { return m_string<u8"commercialUsage">(); }
   auto AllowPoliticalOrReligiousUsage()
   {
     return m_ptr<bool, u8"allowPoliticalOrReligiousUsage">();
@@ -36,10 +36,10 @@ struct Meta : JsonObject
   {
     return m_ptr<bool, u8"allowAntisocialOrHateUsage">();
   }
-  auto CreditNotation() { return m_string<u8"creditNotation">(); }
+  auto CreditNotationString() { return m_string<u8"creditNotation">(); }
   auto AllowRedistribution() { return m_ptr<bool, u8"allowRedistribution">(); }
-  auto Modification() { return m_string<u8"modification">(); }
-  auto OtherLicenseUrl() { return m_string<u8"otherLicenseUrl">(); }
+  auto ModificationString() { return m_string<u8"modification">(); }
+  auto OtherLicenseUrlString() { return m_string<u8"otherLicenseUrl">(); }
 };
 
 // https://github.com/vrm-c/vrm-specification/blob/master/specification/VRMC_vrm-1.0/schema/VRMC_vrm.humanoid.humanBones.schema.json
@@ -228,7 +228,7 @@ struct ExpressionPreset : JsonObject
 // https://github.com/vrm-c/vrm-specification/blob/master/specification/VRMC_vrm-1.0/schema/VRMC_vrm.lookAt.schema.json
 struct LookAt : JsonObject
 {
-  auto Type() { return m_string<u8"type">(); }
+  auto TypeString() { return m_string<u8"type">(); }
 };
 
 // https://github.com/vrm-c/vrm-specification/blob/master/specification/VRMC_vrm-1.0/schema/VRMC_vrm.firstPerson.meshAnnotation.schema.json
@@ -236,8 +236,8 @@ struct MeshAnnotation : JsonObject
 {
   using JsonObject::JsonObject;
 
-  auto Node() { return m_id<u8"node">(); }
-  auto Type() { return m_string<u8"type">(); }
+  auto NodeId() { return m_id<u8"node">(); }
+  auto TypeString() { return m_string<u8"type">(); }
 };
 
 // https://github.com/vrm-c/vrm-specification/blob/master/specification/VRMC_vrm-1.0/schema/VRMC_vrm.firstPerson.schema.json
@@ -264,7 +264,7 @@ struct VRMC_vrm : Extension<u8"VRMC_vrm">
 {
   using Extension::Extension;
 
-  auto SpecVersion() { return m_string<u8"specVersion">(); }
+  auto SpecVersionString() { return m_string<u8"specVersion">(); }
   auto Meta() { return m_object<vrm1::Meta, u8"meta">(); }
   auto Humanoid() { return m_object<vrm1::Humanoid, u8"humanoid">(); }
   auto LookAt() { return m_object<vrm1::LookAt, u8"lookAt">(); }
@@ -318,7 +318,7 @@ struct SpringColliderShape : JsonObject
 struct SpringCollider : JsonObject
 {
   using JsonObject::JsonObject;
-  auto Node() { return m_id<u8"node">(); }
+  auto NodeId() { return m_id<u8"node">(); }
   auto Shape() { return m_object<SpringColliderShape, u8"shape">(); }
 };
 
@@ -326,7 +326,7 @@ struct SpringCollider : JsonObject
 struct SpringColliderGroup : JsonObject
 {
   using JsonObject::JsonObject;
-  auto Name() { return m_string<u8"name">(); }
+  auto NameString() { return m_string<u8"name">(); }
   JsonArray<SpringCollider, u8"colliders"> Colliders;
 };
 
@@ -334,7 +334,7 @@ struct SpringColliderGroup : JsonObject
 struct SpringJoint : JsonObject
 {
   using JsonObject::JsonObject;
-  auto Node() { return m_id<u8"node">(); }
+  auto NodeId() { return m_id<u8"node">(); }
   auto HitRadius() { return m_ptr<float, u8"hitRadius">(); }
   auto Stiffness() { return m_ptr<float, u8"stiffness">(); }
   auto GravityPower() { return m_ptr<float, u8"gravityPower">(); }
@@ -350,13 +350,13 @@ struct Spring : JsonObject
     , Joints(json)
   {
   }
-  auto Name() { return m_string<u8"name">(); }
+  auto NameString() { return m_string<u8"name">(); }
   JsonArray<SpringJoint, u8"joints"> Joints;
   auto ColliderGroups()
   {
     return m_ptr<tree::ArrayValue, u8"colliderGroups">();
   }
-  auto Center() { return m_id<u8"center">(); }
+  auto CenterId() { return m_id<u8"center">(); }
 };
 
 // https://github.com/vrm-c/vrm-specification/blob/master/specification/VRMC_springBone-1.0/schema/VRMC_springBone.schema.json
@@ -369,7 +369,7 @@ struct VRMC_springBone : Extension<u8"VRMC_springBone">
     , Springs(json)
   {
   }
-  auto SpecVersion() { return m_string<u8"specVersion">(); }
+  auto SpecVersionString() { return m_string<u8"specVersion">(); }
   JsonArray<SpringCollider, u8"colliders"> Colliders;
   JsonArray<SpringColliderGroup, u8"colliderGroups"> ColliderGroups;
   JsonArray<Spring, u8"springs"> Springs;
@@ -379,8 +379,8 @@ struct VRMC_springBone : Extension<u8"VRMC_springBone">
 struct ConstraintRoll : JsonObject
 {
   using JsonObject::JsonObject;
-  auto Source() { return m_id<u8"source">(); }
-  auto RollAxis() { return m_string<u8"rollAxis">(); }
+  auto SourceId() { return m_id<u8"source">(); }
+  auto RollAxisString() { return m_string<u8"rollAxis">(); }
   auto Weight() { return m_float<u8"weight">(); }
 };
 
@@ -388,8 +388,8 @@ struct ConstraintRoll : JsonObject
 struct ConstraintAim : JsonObject
 {
   using JsonObject::JsonObject;
-  auto Source() { return m_id<u8"source">(); }
-  auto AimAxis() { return m_string<u8"AimAxis">(); }
+  auto SourceId() { return m_id<u8"source">(); }
+  auto AimAxisString() { return m_string<u8"AimAxis">(); }
   auto Weight() { return m_float<u8"weight">(); }
 };
 
@@ -397,7 +397,7 @@ struct ConstraintAim : JsonObject
 struct ConstraintRotation : JsonObject
 {
   using JsonObject::JsonObject;
-  auto Source() { return m_id<u8"source">(); }
+  auto SourceId() { return m_id<u8"source">(); }
   auto Weight() { return m_float<u8"weight">(); }
 };
 
@@ -414,7 +414,7 @@ struct Constraint : JsonObject
 struct VRMC_node_constraint : Extension<u8"VRMC_node_constraint">
 {
   using Extension::Extension;
-  auto SpecVersion() { return m_string<u8"specVersion">(); }
+  auto SpecVersionString() { return m_string<u8"specVersion">(); }
   auto Constraint() { return m_object<vrm1::Constraint, u8"constraint">(); }
 };
 
@@ -446,7 +446,7 @@ struct VRMC_vrm_animation : Extension<u8"VRMC_vrm_animation">
 {
   using Extension::Extension;
 
-  auto SpecVersion() { return m_string<u8"specVersion">(); }
+  auto SpecVersionString() { return m_string<u8"specVersion">(); }
   auto Humanoid() { return m_object<vrm1::Humanoid, u8"humanoid">(); }
   auto Expressions() { return m_ptr<tree::ObjectValue, u8"expressions">(); }
   auto LookAt() { return m_ptr<tree::ObjectValue, u8"lookAt">(); }

@@ -257,14 +257,14 @@ struct Extension : GltfProperty
 struct ChildOfRootProperty : GltfProperty
 {
   using GltfProperty::GltfProperty;
-  auto Name() const { return m_string<u8"name">(); }
+  auto NameString() const { return m_string<u8"name">(); }
 };
 
 // https://github.com/KhronosGroup/glTF/blob/main/specification/2.0/schema/buffer.schema.json
 struct Buffer : ChildOfRootProperty
 {
   using ChildOfRootProperty::ChildOfRootProperty;
-  auto Uri() const { return m_string<u8"uri">(); };
+  auto UriString() const { return m_string<u8"uri">(); };
   auto ByteLength() const { return m_ptr<float, u8"byteLength">(); };
 };
 
@@ -272,7 +272,7 @@ struct Buffer : ChildOfRootProperty
 struct BufferView : ChildOfRootProperty
 {
   using ChildOfRootProperty::ChildOfRootProperty;
-  auto Buffer() const { return m_id<u8"buffer">(); };
+  auto BufferId() const { return m_id<u8"buffer">(); };
   auto ByteOffset() const { return m_ptr<float, u8"byteOffset">(); };
   auto ByteLength() const { return m_ptr<float, u8"byteLength">(); };
   auto ByteStride() const { return m_ptr<float, u8"byteStride">(); };
@@ -283,7 +283,7 @@ struct BufferView : ChildOfRootProperty
 struct SparseIndices : JsonObject
 {
   using JsonObject::JsonObject;
-  auto BufferView() const { return m_id<u8"bufferView">(); };
+  auto BufferViewId() const { return m_id<u8"bufferView">(); };
   auto ByteOffset() const { return m_ptr<float, u8"byteOffset">(); }
   auto ComponentType() const { return m_ptr<float, u8"componentType">(); }
 };
@@ -292,7 +292,7 @@ struct SparseIndices : JsonObject
 struct SparseValues : JsonObject
 {
   using JsonObject::JsonObject;
-  auto BufferView() const { return m_id<u8"bufferView">(); }
+  auto BufferViewId() const { return m_id<u8"bufferView">(); }
   auto ByteOffset() const { return m_ptr<float, u8"byteOffset">(); }
 };
 
@@ -314,12 +314,12 @@ struct Accessor : ChildOfRootProperty
     , Min(json)
   {
   }
-  auto BufferView() const { return m_id<u8"bufferView">(); }
+  auto BufferViewId() const { return m_id<u8"bufferView">(); }
   auto ByteOffset() const { return m_ptr<float, u8"byteOffset">(); }
   auto ComponentType() const { return m_ptr<float, u8"componentType">(); }
   auto Normalized() const { return m_ptr<bool, u8"normalized">(); }
   auto Count() const { return m_ptr<float, u8"count">(); }
-  auto Type() const { return m_string<u8"type">(); }
+  auto TypeString() const { return m_string<u8"type">(); }
   NumberArray<float, u8"max"> Max;
   NumberArray<float, u8"min"> Min;
   auto Sparse() const { return m_object<gltfjson::Sparse, u8"sparse">(); }
@@ -327,7 +327,7 @@ struct Accessor : ChildOfRootProperty
   uint32_t Stride() const
   {
     return *component_size((ComponentTypes)*ComponentType()) *
-           *type_count(Type());
+           *type_count(TypeString());
   }
 };
 
@@ -341,9 +341,9 @@ struct Camera : ChildOfRootProperty
 struct Image : ChildOfRootProperty
 {
   using ChildOfRootProperty::ChildOfRootProperty;
-  auto Uri() const { return m_string<u8"uri">(); }
-  auto MimeType() const { return m_string<u8"mimeType">(); }
-  auto BufferView() const { return m_id<u8"bufferView">(); }
+  auto UriString() const { return m_string<u8"uri">(); }
+  auto MimeTypeString() const { return m_string<u8"mimeType">(); }
+  auto BufferViewId() const { return m_id<u8"bufferView">(); }
 };
 
 // https://github.com/KhronosGroup/glTF/blob/main/specification/2.0/schema/sampler.schema.json
@@ -360,15 +360,15 @@ struct Sampler : ChildOfRootProperty
 struct Texture : ChildOfRootProperty
 {
   using ChildOfRootProperty::ChildOfRootProperty;
-  auto Sampler() const { return m_id<u8"sampler">(); }
-  auto Source() const { return m_id<u8"source">(); }
+  auto SamplerId() const { return m_id<u8"sampler">(); }
+  auto SourceId() const { return m_id<u8"source">(); }
 };
 
 // https://github.com/KhronosGroup/glTF/blob/main/specification/2.0/schema/textureInfo.schema.json
 struct TextureInfo : JsonObject
 {
   using JsonObject::JsonObject;
-  auto Index() const { return m_id<u8"index">(); }
+  auto IndexId() const { return m_id<u8"index">(); }
   auto TexCoord() const { return m_ptr<float, u8"texCoord">(); }
 };
 
@@ -432,7 +432,7 @@ struct Material : ChildOfRootProperty
     return m_object<TextureInfo, u8"emissiveTexture">();
   }
   NumberArray<float, u8"emissiveFactor"> EmissiveFactor;
-  auto AlphaMode() const { return m_string<u8"alphaMode">(); }
+  auto AlphaModeString() const { return m_string<u8"alphaMode">(); }
   auto AlphaCutoff() const { return m_ptr<float, u8"alphaCutoff">(); };
   auto DoubleSided() const { return m_ptr<bool, u8"doubleSided">(); };
 };
@@ -445,41 +445,45 @@ struct Skin : ChildOfRootProperty
     , Joints(json)
   {
   }
-  auto InverseBindMatrices() const { return m_id<u8"inverseBindMatrices">(); }
-  auto Skeleton() const { return m_id<u8"skeleton">(); }
+  auto InverseBindMatricesId() const { return m_id<u8"inverseBindMatrices">(); }
+  auto SkeletonId() const { return m_id<u8"skeleton">(); }
   NumberArray<uint32_t, u8"joints"> Joints;
 };
 
 struct MeshPrimitiveAttributes : JsonObject
 {
   using JsonObject::JsonObject;
-  auto COLOR_0() const { return m_id<u8"COLOR_0">(); }
-  auto JOINTS_0() const { return m_id<u8"JOINTS_0">(); }
-  auto NORMAL() const { return m_id<u8"NORMAL">(); }
-  auto POSITION() const { return m_id<u8"POSITION">(); }
-  auto TANGENT() const { return m_id<u8"TANGENT">(); }
-  auto TEXCOORD_0() const { return m_id<u8"TEXCOORD_0">(); }
-  auto TEXCOORD_1() const { return m_id<u8"TEXCOORD_1">(); }
-  auto TEXCOORD_2() const { return m_id<u8"TEXCOORD_2">(); }
-  auto TEXCOORD_3() const { return m_id<u8"TEXCOORD_3">(); }
-  auto WEIGHTS_0() const { return m_id<u8"WEIGHTS_0">(); }
+  auto COLOR_0_Id() const { return m_id<u8"COLOR_0">(); }
+  auto JOINTS_0_Id() const { return m_id<u8"JOINTS_0">(); }
+  auto NORMAL_Id() const { return m_id<u8"NORMAL">(); }
+  auto POSITION_Id() const { return m_id<u8"POSITION">(); }
+  auto TANGENT_Id() const { return m_id<u8"TANGENT">(); }
+  auto TEXCOORD_0_Id() const { return m_id<u8"TEXCOORD_0">(); }
+  auto TEXCOORD_1_Id() const { return m_id<u8"TEXCOORD_1">(); }
+  auto TEXCOORD_2_Id() const { return m_id<u8"TEXCOORD_2">(); }
+  auto TEXCOORD_3_Id() const { return m_id<u8"TEXCOORD_3">(); }
+  auto WEIGHTS_0_Id() const { return m_id<u8"WEIGHTS_0">(); }
 
   bool operator==(const MeshPrimitiveAttributes& rhs) const
   {
-    return COLOR_0() == rhs.COLOR_0() && JOINTS_0() == rhs.JOINTS_0() &&
-           NORMAL() == rhs.NORMAL() && POSITION() == rhs.POSITION() &&
-           TANGENT() == rhs.TANGENT() && TEXCOORD_0() == rhs.TEXCOORD_0() &&
-           TEXCOORD_1() == rhs.TEXCOORD_1() &&
-           TEXCOORD_2() == rhs.TEXCOORD_2() &&
-           TEXCOORD_3() == rhs.TEXCOORD_3() && WEIGHTS_0() == rhs.WEIGHTS_0();
+    return COLOR_0_Id() == rhs.COLOR_0_Id() &&
+           JOINTS_0_Id() == rhs.JOINTS_0_Id() &&
+           NORMAL_Id() == rhs.NORMAL_Id() &&
+           POSITION_Id() == rhs.POSITION_Id() &&
+           TANGENT_Id() == rhs.TANGENT_Id() &&
+           TEXCOORD_0_Id() == rhs.TEXCOORD_0_Id() &&
+           TEXCOORD_1_Id() == rhs.TEXCOORD_1_Id() &&
+           TEXCOORD_2_Id() == rhs.TEXCOORD_2_Id() &&
+           TEXCOORD_3_Id() == rhs.TEXCOORD_3_Id() &&
+           WEIGHTS_0_Id() == rhs.WEIGHTS_0_Id();
   }
 };
 
 struct MeshPrimitiveMorphTarget : JsonObject
 {
   using JsonObject::JsonObject;
-  auto POSITION() const { return m_id<u8"POSITION">(); }
-  auto NORMAL() const { return m_id<u8"NORMAL">(); }
+  auto POSITION_Id() const { return m_id<u8"POSITION">(); }
+  auto NORMAL_Id() const { return m_id<u8"NORMAL">(); }
 };
 
 // https://github.com/KhronosGroup/glTF/blob/main/specification/2.0/schema/mesh.primitive.schema.json
@@ -494,8 +498,8 @@ struct MeshPrimitive : JsonObject
   {
     return m_object<MeshPrimitiveAttributes, u8"attributes">();
   }
-  auto Indices() const { return m_id<u8"indices">(); }
-  auto Material() const { return m_id<u8"material">(); }
+  auto IndicesId() const { return m_id<u8"indices">(); }
+  auto MaterialId() const { return m_id<u8"material">(); }
   auto Mode() const { return m_ptr<float, u8"mode">(); };
   JsonArray<MeshPrimitiveMorphTarget, u8"targets"> Targets;
 };
@@ -526,11 +530,11 @@ struct Node : ChildOfRootProperty
     , Weights(json)
   {
   }
-  auto Camera() const { return m_id<u8"camera">(); }
+  auto CameraId() const { return m_id<u8"camera">(); }
   NumberArray<uint32_t, u8"children"> Children;
-  auto Skin() const { return m_id<u8"skin">(); }
+  auto SkinId() const { return m_id<u8"skin">(); }
   NumberArray<float, u8"matrix"> Matrix;
-  auto Mesh() const { return m_id<u8"mesh">(); }
+  auto MeshId() const { return m_id<u8"mesh">(); }
   NumberArray<float, u8"rotation"> Rotation;
   NumberArray<float, u8"scale"> Scale;
   NumberArray<float, u8"translation"> Translation;
@@ -541,9 +545,9 @@ struct Node : ChildOfRootProperty
 struct AnimationSampler : JsonObject
 {
   using JsonObject::JsonObject;
-  auto Input() const { return m_id<u8"input">(); }
+  auto InputId() const { return m_id<u8"input">(); }
   auto Interpolation() const { return m_ptr<float, u8"interpolation">(); }
-  auto Output() const { return m_id<u8"output">(); };
+  auto OutputId() const { return m_id<u8"output">(); };
 };
 
 // https://github.com/KhronosGroup/glTF/blob/main/specification/2.0/schema/animation.channel.target.schema.json
@@ -551,14 +555,14 @@ struct AnimationTarget : JsonObject
 {
   using JsonObject::JsonObject;
   auto Node() const { return m_id<u8"node">(); }
-  auto Path() const { return m_string<u8"path">(); }
+  auto PathString() const { return m_string<u8"path">(); }
 };
 
 // https://github.com/KhronosGroup/glTF/blob/main/specification/2.0/schema/animation.channel.schema.json
 struct AnimationChannel : JsonObject
 {
   using JsonObject::JsonObject;
-  auto Sampler() const { return m_id<u8"sampler">(); }
+  auto SamplerId() const { return m_id<u8"sampler">(); }
   auto Target() const { return m_object<AnimationTarget, u8"target">(); }
 };
 
@@ -591,10 +595,10 @@ struct Asset : JsonObject
 {
   using JsonObject::JsonObject;
 
-  auto Copyright() const { return m_string<u8"copyright">(); };
-  auto Generator() const { return m_string<u8"generator">(); };
-  auto Version() const { return m_string<u8"version">(); };
-  auto MinVersion() const { return m_string<u8"minVersion">(); };
+  auto CopyrightString() const { return m_string<u8"copyright">(); };
+  auto GeneratorString() const { return m_string<u8"generator">(); };
+  auto VersionString() const { return m_string<u8"version">(); };
+  auto MinVersionString() const { return m_string<u8"minVersion">(); };
 };
 
 // https://github.com/KhronosGroup/glTF/blob/main/specification/2.0/schema/glTF.schema.json

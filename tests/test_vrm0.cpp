@@ -47,12 +47,12 @@ TEST(Vrm0, Alicia)
   EXPECT_TRUE(extension);
 
   gltfjson::vrm0::VRM vrm(extension);
-  EXPECT_EQ(u8"UniVRM-0.51.0", vrm.ExporterVersion());
+  EXPECT_EQ(u8"UniVRM-0.51.0", vrm.ExporterVersionString());
 
   // meta
   auto meta = vrm.Meta();
   EXPECT_TRUE(meta);
-  EXPECT_EQ(u8"Alicia Solid", meta->Title());
+  EXPECT_EQ(u8"Alicia Solid", meta->TitleString());
 
   // humanoid
   auto humanoid = vrm.Humanoid();
@@ -60,13 +60,13 @@ TEST(Vrm0, Alicia)
   auto& humanBones = humanoid->HumanBones;
   EXPECT_EQ(55, humanBones.size());
   auto hips = humanBones[0];
-  EXPECT_EQ(u8"hips", hips.Bone());
+  EXPECT_EQ(u8"hips", hips.BoneString());
 
   // mtoon
   auto& mtoons = vrm.MaterialProperties;
   EXPECT_EQ(12, mtoons.size());
   auto mtoon = mtoons[0];
-  EXPECT_EQ(u8"Alicia_body", mtoon.Name());
+  EXPECT_EQ(u8"Alicia_body", mtoon.NameString());
 
   // blendshape
   auto blendShapeMaster = vrm.BlendShapeMaster();
@@ -84,7 +84,7 @@ TEST(Vrm0, Alicia)
   // lookat / firstperson
   auto firstPerson = vrm.FirstPerson();
   EXPECT_TRUE(firstPerson);
-  EXPECT_EQ(u8"Bone", firstPerson->LookAtType());
+  EXPECT_EQ(u8"Bone", firstPerson->LookAtTypeString());
   auto& annotations = firstPerson->MeshAnnotations;
   EXPECT_EQ(12, annotations.size());
 }

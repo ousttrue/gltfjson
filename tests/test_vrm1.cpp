@@ -53,7 +53,7 @@ TEST(Vrm1, SeedSan)
   {
     // VRMC_vrm
     gltfjson::vrm1::VRMC_vrm vrm(extension);
-    EXPECT_EQ(u8"1.0-beta", vrm.SpecVersion());
+    EXPECT_EQ(u8"1.0-beta", vrm.SpecVersionString());
 
     // meta
     auto meta = vrm.Meta();
@@ -70,7 +70,7 @@ TEST(Vrm1, SeedSan)
     // lookat
     auto lookat = vrm.LookAt();
     EXPECT_TRUE(lookat);
-    EXPECT_EQ(u8"expression", lookat->Type());
+    EXPECT_EQ(u8"expression", lookat->TypeString());
 
     // firstperson
     auto firstPerson = vrm.FirstPerson();
