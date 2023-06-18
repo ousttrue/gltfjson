@@ -155,6 +155,23 @@ struct JsonObject
   }
 
   template<StringLiteral lit>
+  std::optional<std::array<float, 2>> m_float2() const
+  {
+    if (auto node = m_node<lit>()) {
+      if (auto array = node->template Ptr<tree::ArrayValue>()) {
+        if (array->size() == 2) {
+          if (auto x = (*array)[0]->Ptr<float>()) {
+            if (auto y = (*array)[1]->Ptr<float>()) {
+              return std::array<float, 2>{ *x, *y };
+            }
+          }
+        }
+      }
+    }
+    return std::nullopt;
+  }
+
+  template<StringLiteral lit>
   std::optional<std::array<float, 3>> m_float3() const
   {
     if (auto node = m_node<lit>()) {
@@ -547,6 +564,13 @@ struct AnimationSampler : JsonObject
   using JsonObject::JsonObject;
   auto InputId() const { return m_id<u8"input">(); }
   auto Interpolation() const { return m_ptr<float, u8"interpolation">(); }
+  AnimationInterpolationModes InterpolationEnum() const
+  {
+    if (auto p = m_ptr<float, u8"interpolation">()) {
+      return (AnimationInterpolationModes)*p;
+    };
+    return AnimationInterpolationModes::LINEAR;
+  }
   auto OutputId() const { return m_id<u8"output">(); };
 };
 

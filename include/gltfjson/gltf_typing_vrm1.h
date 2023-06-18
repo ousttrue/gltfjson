@@ -12,7 +12,10 @@ struct Meta : JsonObject
   auto Name() { return m_string<u8"name">(); }
   auto VersionString() { return m_string<u8"version">(); }
   auto Authors() { return m_ptr<tree::ArrayValue, u8"authors">(); }
-  auto CopyrightInformationString() { return m_string<u8"copyrightInformation">(); }
+  auto CopyrightInformationString()
+  {
+    return m_string<u8"copyrightInformation">();
+  }
   auto ContactInformationString() { return m_string<u8"contactInformation">(); }
   auto References() { return m_ptr<tree::ArrayValue, u8"references">(); }
   auto ThirdPartyLicensesString() { return m_string<u8"thirdPartyLicenses">(); }
@@ -201,28 +204,78 @@ struct Humanoid : JsonObject
   auto HumanBones() { return m_object<vrm1::HumanBones, u8"humanBones">(); }
 };
 
+// https://github.com/vrm-c/vrm-specification/blob/master/specification/VRMC_vrm-1.0/schema/VRMC_vrm.expressions.expression.morphTargetBind.schema.json
+struct MorphTargetBind : JsonObject
+{
+  using JsonObject::JsonObject;
+  auto NodeId() { return m_id<u8"node">(); }
+  auto IndexId() { return m_id<u8"index">(); }
+  auto Weight() { return m_ptr<float, u8"weight">(); }
+};
+
+// https://github.com/vrm-c/vrm-specification/blob/master/specification/VRMC_vrm-1.0/schema/VRMC_vrm.expressions.expression.materialColorBind.schema.json
+struct MaterialColorBind : JsonObject
+{
+  using JsonObject::JsonObject;
+  auto MaterialId() { return m_id<u8"material">(); }
+  auto TypeString() { return m_string<u8"type">(); }
+  auto TargetValueVec4() { return m_float4<u8"targetValue">(); }
+};
+
+// https://github.com/vrm-c/vrm-specification/blob/master/specification/VRMC_vrm-1.0/schema/VRMC_vrm.expressions.expression.textureTransformBind.schema.json
+struct TextureTransformBind : JsonObject
+{
+  using JsonObject::JsonObject;
+  auto MaterialId() { return m_id<u8"material">(); }
+  auto ScaleVec2() { return m_float2<u8"scale">(); }
+  auto OffsetVec2() { return m_float2<u8"offset">(); }
+};
+
+// https://github.com/vrm-c/vrm-specification/blob/master/specification/VRMC_vrm-1.0/schema/VRMC_vrm.expressions.expression.schema.json
+struct Expression : JsonObject
+{
+  Expression(const tree::NodePtr& json)
+    : JsonObject(json)
+    , MorphTargetBinds(json)
+    , MaterialColorBinds(json)
+    , TextureTransformBinds(json)
+  {
+  }
+  JsonArray<MorphTargetBind, u8"morphTargetBinds"> MorphTargetBinds;
+  JsonArray<MaterialColorBind, u8"materialColorBinds"> MaterialColorBinds;
+  JsonArray<TextureTransformBind, u8"textureTransformBinds">
+    TextureTransformBinds;
+  auto IsBinary() const { return m_ptr<bool, u8"isBinary">(); }
+  auto OverrideBlinkString() const
+  {
+    return m_string<u8"overrideBlinkString">();
+  }
+  auto OverrideLookAtString() const { return m_string<u8"overrideLookAt">(); }
+  auto OverrideMouthString() const { return m_string<u8"overrideMouth">(); }
+};
+
 struct ExpressionPreset : JsonObject
 {
   using JsonObject::JsonObject;
 
-  auto Happy() { return m_ptr<tree::ObjectValue, u8"happy">(); }
-  auto Angry() { return m_ptr<tree::ObjectValue, u8"angry">(); }
-  auto Sad() { return m_ptr<tree::ObjectValue, u8"sad">(); }
-  auto Relaxed() { return m_ptr<tree::ObjectValue, u8"relaxed">(); }
-  auto Surprised() { return m_ptr<tree::ObjectValue, u8"surprised">(); }
-  auto Aa() { return m_ptr<tree::ObjectValue, u8"aa">(); }
-  auto Ih() { return m_ptr<tree::ObjectValue, u8"ih">(); }
-  auto Ou() { return m_ptr<tree::ObjectValue, u8"ou">(); }
-  auto Ee() { return m_ptr<tree::ObjectValue, u8"ee">(); }
-  auto Oh() { return m_ptr<tree::ObjectValue, u8"oh">(); }
-  auto Blink() { return m_ptr<tree::ObjectValue, u8"blink">(); }
-  auto BlinkLeft() { return m_ptr<tree::ObjectValue, u8"blinkLeft">(); }
-  auto BlinkRight() { return m_ptr<tree::ObjectValue, u8"blinkRight">(); }
-  auto LookUp() { return m_ptr<tree::ObjectValue, u8"lookUp">(); }
-  auto LookDown() { return m_ptr<tree::ObjectValue, u8"lookDown">(); }
-  auto LookLeft() { return m_ptr<tree::ObjectValue, u8"lookLeft">(); }
-  auto LookRight() { return m_ptr<tree::ObjectValue, u8"lookRight">(); }
-  auto Neutral() { return m_ptr<tree::ObjectValue, u8"neutral">(); }
+  auto Happy() { return m_object<Expression, u8"happy">(); }
+  auto Angry() { return m_object<Expression, u8"angry">(); }
+  auto Sad() { return m_object<Expression, u8"sad">(); }
+  auto Relaxed() { return m_object<Expression, u8"relaxed">(); }
+  auto Surprised() { return m_object<Expression, u8"surprised">(); }
+  auto Aa() { return m_object<Expression, u8"aa">(); }
+  auto Ih() { return m_object<Expression, u8"ih">(); }
+  auto Ou() { return m_object<Expression, u8"ou">(); }
+  auto Ee() { return m_object<Expression, u8"ee">(); }
+  auto Oh() { return m_object<Expression, u8"oh">(); }
+  auto Blink() { return m_object<Expression, u8"blink">(); }
+  auto BlinkLeft() { return m_object<Expression, u8"blinkLeft">(); }
+  auto BlinkRight() { return m_object<Expression, u8"blinkRight">(); }
+  auto LookUp() { return m_object<Expression, u8"lookUp">(); }
+  auto LookDown() { return m_object<Expression, u8"lookDown">(); }
+  auto LookLeft() { return m_object<Expression, u8"lookLeft">(); }
+  auto LookRight() { return m_object<Expression, u8"lookRight">(); }
+  auto Neutral() { return m_object<Expression, u8"neutral">(); }
 };
 
 // https://github.com/vrm-c/vrm-specification/blob/master/specification/VRMC_vrm-1.0/schema/VRMC_vrm.lookAt.schema.json

@@ -188,4 +188,16 @@ inline std::tuple<MeshPrimitiveTopology, const char*>
     { MeshPrimitiveTopology::TRIANGLE_FAN, "TRIANGLE_FAN" },
   };
 
+enum class AnimationInterpolationModes
+{
+  LINEAR,
+  STEP,
+  CUBICSPLINE,
+};
+inline const char* AnimationInterpolationModeNames[]{
+  "LINEAR",
+  "STEP",
+  "CUBICSPLINE",
+};
+
 } // namespace
