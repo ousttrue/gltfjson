@@ -15,7 +15,9 @@ ReadAllBytes(const std::filesystem::path& path)
 {
   std::ifstream ifs(path, std::ios::binary | std::ios::ate);
   if (!ifs) {
-    return std::unexpected{ std::string("fail to open: ") + path.string() };
+    auto u8 = path.u8string();
+    return std::unexpected{ std::string("fail to open: ") +
+                            std::string((const char*)u8.data(), u8.size()) };
   }
 
   auto pos = ifs.tellg();
@@ -36,7 +38,7 @@ struct Directory
   std::unordered_map<std::string, std::vector<uint8_t>> FileCaches;
 
   std::expected<std::span<const uint8_t>, std::string> GetBuffer(
-    std::string_view uri)
+    std::u8string_view uri)
   {
     auto found = FileCaches.find({ uri.begin(), uri.end() });
     if (found != FileCaches.end()) {
@@ -44,11 +46,12 @@ struct Directory
       return found->second;
     }
 
-    if (uri.starts_with("data:")) {
+    if (gltfjson::from_u8(uri).starts_with("data:")) {
       // return std::unexpected{"base64 not implemented"};
       for (auto& prefix : BASE64_PREFIX) {
-        if (uri.starts_with(prefix)) {
-          auto decoded = base64::Decode(uri.substr(std::size(prefix)));
+        if (gltfjson::from_u8(uri).starts_with(prefix)) {
+          auto decoded =
+            base64::Decode(gltfjson::from_u8(uri).substr(std::size(prefix)));
           std::string key{ uri.begin(), uri.end() };
           FileCaches.insert({ key, decoded });
           return FileCaches[key];
@@ -65,13 +68,6 @@ struct Directory
     } else {
       return bytes;
     }
-  }
-
-  std::expected<std::span<const uint8_t>, std::string> GetBuffer(
-    std::u8string_view uri)
-  {
-    return GetBuffer(std::string_view{ (const char*)uri.data(),
-                                       (const char*)uri.data() + uri.size() });
   }
 };
 
