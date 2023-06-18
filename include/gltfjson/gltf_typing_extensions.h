@@ -14,7 +14,7 @@ struct PunctualLight : JsonObject
 {
   using JsonObject::JsonObject;
   auto NameString() const { return m_string<u8"name">(); }
-  auto Color() const { return m_float3<u8"color">(); }
+  auto ColorVec3() const { return m_float3<u8"color">(); }
   auto Intensity() const { return m_ptr<float, u8"intensity">(); }
   auto Spot() const { return m_object<PunctualLightSpot, u8"spot">(); }
   auto TypeString() const { return m_string<u8"type">(); }

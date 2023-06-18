@@ -146,15 +146,6 @@ struct JsonObject
   }
 
   template<StringLiteral lit>
-  std::optional<float> m_float() const
-  {
-    if (auto node = m_node<lit>()) {
-      return *node->template Ptr<float>();
-    }
-    return std::nullopt;
-  }
-
-  template<StringLiteral lit>
   std::optional<std::array<float, 2>> m_float2() const
   {
     if (auto node = m_node<lit>()) {

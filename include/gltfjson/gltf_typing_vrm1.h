@@ -434,7 +434,7 @@ struct ConstraintRoll : JsonObject
   using JsonObject::JsonObject;
   auto SourceId() { return m_id<u8"source">(); }
   auto RollAxisString() { return m_string<u8"rollAxis">(); }
-  auto Weight() { return m_float<u8"weight">(); }
+  auto Weight() { return m_ptr<float, u8"weight">(); }
 };
 
 // https://github.com/vrm-c/vrm-specification/blob/master/specification/VRMC_node_constraint-1.0/schema/VRMC_node_constraint.aimConstraint.schema.json
@@ -443,7 +443,7 @@ struct ConstraintAim : JsonObject
   using JsonObject::JsonObject;
   auto SourceId() { return m_id<u8"source">(); }
   auto AimAxisString() { return m_string<u8"AimAxis">(); }
-  auto Weight() { return m_float<u8"weight">(); }
+  auto Weight() { return m_ptr<float, u8"weight">(); }
 };
 
 // https://github.com/vrm-c/vrm-specification/blob/master/specification/VRMC_node_constraint-1.0/schema/VRMC_node_constraint.rotationConstraint.schema.json
@@ -451,7 +451,7 @@ struct ConstraintRotation : JsonObject
 {
   using JsonObject::JsonObject;
   auto SourceId() { return m_id<u8"source">(); }
-  auto Weight() { return m_float<u8"weight">(); }
+  auto Weight() { return m_ptr<float, u8"weight">(); }
 };
 
 // https://github.com/vrm-c/vrm-specification/blob/master/specification/VRMC_node_constraint-1.0/schema/VRMC_node_constraint.constraint.schema.json
