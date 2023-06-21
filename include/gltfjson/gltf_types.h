@@ -10,16 +10,16 @@ inline const auto VERTEX_POSITION = "POSITION";
 inline const auto VERTEX_NORMAL = "NORMAL";
 inline const auto VERTEX_UV = "TEXCOORD_0";
 
-enum class Targets
+enum class TargetTypes
 {
   NONE = 0,
   ARRAY_BUFFER = 34962,
   ELEMENT_ARRAY_BUFFER = 34963,
 };
-inline std::tuple<Targets, const char*> TargetsCombo[] = {
-  { Targets::NONE, "NONE" },
-  { Targets::ARRAY_BUFFER, "ARRAY_BUFFER" },
-  { Targets::ELEMENT_ARRAY_BUFFER, "ELEMENT_ARRAY_BUFFER" },
+inline std::tuple<TargetTypes, const char*> TargetsCombo[] = {
+  { TargetTypes::NONE, "NONE" },
+  { TargetTypes::ARRAY_BUFFER, "ARRAY_BUFFER" },
+  { TargetTypes::ELEMENT_ARRAY_BUFFER, "ELEMENT_ARRAY_BUFFER" },
 };
 
 enum class ComponentTypes

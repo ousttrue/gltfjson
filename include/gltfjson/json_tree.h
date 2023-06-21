@@ -78,6 +78,14 @@ struct Node
   }
 
   template<typename T>
+  static NodePtr Create(const T& t)
+  {
+    auto ptr = std::make_shared<Node>();
+    ptr->Var = t;
+    return ptr;
+  }
+
+  template<typename T>
   const T* Ptr() const
   {
     if (std::holds_alternative<T>(Var)) {
@@ -167,6 +175,19 @@ struct Node
     return p;
   }
 
+  template<typename T>
+  NodePtr Add(const T& value)
+  {
+    auto array = Array();
+    if (!array) {
+      return nullptr;
+    }
+
+    array->push_back(Create(value));
+
+    return array->back();
+  }
+
   // array or object size
   size_t Size() const
   {
@@ -182,6 +203,7 @@ struct Node
   void Set(bool b) { Var = b; }
   void Set(float f) { Var = f; }
   void Set(const std::u8string& s) { Var = s; }
+  void Set(const char8_t* s) { Var = std::u8string(s); }
   void Set(const ArrayValue& a) { Var = a; }
   void Set(const ObjectValue& o) { Var = o; }
 

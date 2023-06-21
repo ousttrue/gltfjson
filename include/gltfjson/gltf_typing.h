@@ -5,6 +5,7 @@
 #include <optional>
 #include <string>
 #include <string_view>
+#include <tuple>
 #include <vector>
 
 namespace gltfjson {
@@ -60,6 +61,15 @@ struct JsonArrayBase
   Iterator end() const
   {
     return m_json ? Iterator{ m_json->Array()->end() } : Iterator{};
+  }
+
+  void push_back(const T& t)
+  {
+    if (t.m_json) {
+      if (auto array = m_json->Array()) {
+        array->push_back(t.m_json);
+      }
+    }
   }
 };
 
@@ -251,6 +261,21 @@ struct GltfProperty : JsonObject
       }
     }
     return std::nullopt;
+  }
+
+  template<typename T>
+  T GetOrCreateExtension()
+  {
+    auto extensions = Extensions();
+    if (extensions) {
+      if (auto extension = extensions->Get(T::EXTENSION_NAME)) {
+        return T(extension);
+      }
+    }
+    if (!extensions) {
+      extensions = m_json->Add(u8"extensions", tree::ObjectValue());
+    }
+    return extensions->Add(T::EXTENSION_NAME, tree::ObjectValue());
   }
 };
 

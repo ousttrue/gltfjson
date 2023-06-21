@@ -15,19 +15,19 @@ using WriteFunc = std::function<void(std::string_view)>;
 
 enum StackFlags
 {
-  None = 0,
-  Root = 0x01,
-  Array = 0x02,
-  Object = 0x04,
-  Comma = 0x08,
-  Collon = 0x10,
+  STACKFLAG_None = 0,
+  STACKFLAG_Root = 0x01,
+  STACKFLAG_Array = 0x02,
+  STACKFLAG_Object = 0x04,
+  STACKFLAG_Comma = 0x08,
+  STACKFLAG_Collon = 0x10,
 };
 
 class Writer
 {
   WriteFunc m_writer;
   char m_buf[1024];
-  StackFlags m_stack[124] = { StackFlags::Root };
+  StackFlags m_stack[124] = { STACKFLAG_Root };
   int m_depth = 1;
 
 public:
@@ -43,18 +43,18 @@ public:
 
   void push(std::string_view str)
   {
-    if (m_stack[m_depth - 1] & StackFlags::Comma) {
-      assert((m_stack[m_depth - 1] & StackFlags::Root) == 0);
-      if (m_stack[m_depth - 1] & StackFlags::Collon) {
+    if (m_stack[m_depth - 1] & STACKFLAG_Comma) {
+      assert((m_stack[m_depth - 1] & STACKFLAG_Root) == 0);
+      if (m_stack[m_depth - 1] & STACKFLAG_Collon) {
         m_writer(":");
         m_stack[m_depth - 1] =
-          static_cast<StackFlags>(m_stack[m_depth - 1] & ~StackFlags::Collon);
+          static_cast<StackFlags>(m_stack[m_depth - 1] & ~STACKFLAG_Collon);
       } else {
         m_writer(",");
       }
     } else {
       m_stack[m_depth - 1] =
-        static_cast<StackFlags>(m_stack[m_depth - 1] | StackFlags::Comma);
+        static_cast<StackFlags>(m_stack[m_depth - 1] | STACKFLAG_Comma);
     }
     m_writer(str);
   }
@@ -62,13 +62,13 @@ public:
   void array_open()
   {
     push("[");
-    m_stack[m_depth++] = StackFlags::Array;
+    m_stack[m_depth++] = STACKFLAG_Array;
   }
 
   void array_close()
   {
     assert(m_depth > 0);
-    assert(m_stack[m_depth - 1] & StackFlags::Array);
+    assert(m_stack[m_depth - 1] & STACKFLAG_Array);
     --m_depth;
     m_writer("]");
   }
@@ -76,13 +76,13 @@ public:
   void object_open()
   {
     push("{");
-    m_stack[m_depth++] = StackFlags::Object;
+    m_stack[m_depth++] = STACKFLAG_Object;
   }
 
   void object_close()
   {
     assert(m_depth > 0);
-    assert(m_stack[m_depth - 1] & StackFlags::Object);
+    assert(m_stack[m_depth - 1] & STACKFLAG_Object);
     --m_depth;
     m_writer("}");
   }
@@ -149,7 +149,7 @@ public:
   {
     value(str);
     m_stack[m_depth - 1] =
-      static_cast<StackFlags>(m_stack[m_depth - 1] | StackFlags::Collon);
+      static_cast<StackFlags>(m_stack[m_depth - 1] | STACKFLAG_Collon);
   }
   void key(std::u8string_view str)
   {
