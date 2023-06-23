@@ -678,6 +678,7 @@ struct Root : GltfProperty
   auto Scene() const { return m_ptr<float, u8"scene">(); }
   JsonArray<gltfjson::Scene, u8"scenes"> Scenes;
   JsonArray<Skin, u8"skins"> Skins;
+  auto ExtensionsUsed() const { return m_json->Get(u8"extensionsUsed"); }
 };
 
 } // namespace
