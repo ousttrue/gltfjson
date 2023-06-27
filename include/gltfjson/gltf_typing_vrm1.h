@@ -9,7 +9,7 @@ struct Meta : JsonObject
 {
   using JsonObject::JsonObject;
 
-  auto Name() { return m_string<u8"name">(); }
+  auto NameString() { return m_string<u8"name">(); }
   auto VersionString() { return m_string<u8"version">(); }
   auto Authors() { return m_ptr<tree::ArrayValue, u8"authors">(); }
   auto CopyrightInformationString()
@@ -245,7 +245,13 @@ struct Expression : JsonObject
   JsonArray<MaterialColorBind, u8"materialColorBinds"> MaterialColorBinds;
   JsonArray<TextureTransformBind, u8"textureTransformBinds">
     TextureTransformBinds;
-  auto IsBinary() const { return m_ptr<bool, u8"isBinary">(); }
+  bool IsBinaryOrFalse() const
+  {
+    if (auto p = m_ptr<bool, u8"isBinary">()) {
+      return *p;
+    }
+    return false;
+  }
   auto OverrideBlinkString() const
   {
     return m_string<u8"overrideBlinkString">();

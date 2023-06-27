@@ -12,14 +12,23 @@ struct Meta : JsonObject
   auto TitleString() const { return m_string<u8"title">(); }
   auto VersionString() const { return m_string<u8"version">(); }
   auto AuthorString() const { return m_string<u8"author">(); }
-  auto ContactInformationString() const { return m_string<u8"contactInformation">(); }
+  auto ContactInformationString() const
+  {
+    return m_string<u8"contactInformation">();
+  }
   auto ReferenceString() const { return m_string<u8"reference">(); }
   auto TextureId() const { return m_id<u8"texture">(); }
   auto AllowedUserString() const { return m_string<u8"allowedUserName">(); }
   auto ViolentUsageString() const { return m_string<u8"violentUssageName">(); }
   auto SexualUsageString() const { return m_string<u8"sexualUssageName">(); }
-  auto CommercialUsageString() const { return m_string<u8"commercialUssageName">(); }
-  auto OtherPermissionUrlString() const { return m_string<u8"otherPermissionUrl">(); }
+  auto CommercialUsageString() const
+  {
+    return m_string<u8"commercialUssageName">();
+  }
+  auto OtherPermissionUrlString() const
+  {
+    return m_string<u8"otherPermissionUrl">();
+  }
   auto LicenseString() const { return m_string<u8"licenseName">(); }
   auto OtherLicenseUrlString() const { return m_string<u8"otherLicenseUrl">(); }
 };
@@ -120,7 +129,13 @@ struct BlendShapeGroup : JsonObject
   const auto PresetString() const { return m_string<u8"presetName">(); }
   JsonArray<MorphBind, u8"binds"> MorphBinds;
   JsonArray<MaterialBind, u8"materialValues"> MaterialBinds;
-  const auto IsBinary() const { return m_ptr<bool, u8"isBinary">(); }
+  bool IsBinaryOrFalse() const
+  {
+    if (auto p = m_ptr<bool, u8"isBinary">()) {
+      return *p;
+    }
+    return false;
+  }
 };
 
 // https://github.com/vrm-c/vrm-specification/blob/master/specification/0.0/schema/vrm.blendshape.schema.json
