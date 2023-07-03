@@ -500,6 +500,14 @@ GetHumanBoneName(Root root, uint32_t i)
   return {};
 }
 
+struct VRMC_vrm_pose : Extension<u8"VRMC_vrm_pose">
+{
+  auto SpecVersionString() { return m_string<u8"specVersion">(); }
+  auto Humanoid() { return m_ptr<tree::ObjectValue, u8"humanoid">(); }
+  auto Expressions() { return m_ptr<tree::ObjectValue, u8"expressions">(); }
+  auto LookAt() { return m_ptr<tree::ObjectValue, u8"tree">(); }
+};
+
 // https://github.com/vrm-c/vrm-specification/blob/master/specification/VRMC_vrm_animation-1.0/schema/VRMC_vrm_animation.schema.json
 struct VRMC_vrm_animation : Extension<u8"VRMC_vrm_animation">
 {
