@@ -29,7 +29,7 @@ struct MemoryBlock
     if (stride) {
       Stride = (uint32_t)*stride;
     }
-    Span = span;
+    Span = span.subspan(offset);
     // assert(Span.size() == Count * Stride);
   }
 };
