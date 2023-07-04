@@ -15,8 +15,12 @@ namespace gltfjson {
 
 struct MemoryBlock
 {
-  uint32_t Count;
+  // Accessor ItemSize(type x element)
+  uint32_t ItemSize;
+  uint32_t ItemCount;
+  uint32_t RequiredSize() const { return ItemSize * ItemCount; }
   std::span<const uint8_t> Span;
+  // BufferView stride
   uint32_t Stride;
   void SetSpan(std::span<const uint8_t> span,
                uint32_t offset,
@@ -26,9 +30,8 @@ struct MemoryBlock
       Stride = (uint32_t)*stride;
     }
     Span = span;
-    assert(Span.size() == Count * Stride);
+    // assert(Span.size() == Count * Stride);
   }
-  uint32_t ByteSize() const { return Count * Stride; }
 };
 
 struct Bin
@@ -92,14 +95,15 @@ struct Bin
   {
     auto accessor = gltf.Accessors[accessor_index];
     MemoryBlock block{
-      .Count = (uint32_t)*accessor.Count(),
+      .ItemSize = accessor.Stride(),
+      .ItemCount = (uint32_t)*accessor.Count(),
       .Stride = accessor.Stride(),
     };
     if (auto sparse = accessor.Sparse()) {
-      m_sparseBuffer.resize(block.Count * block.Stride);
+      m_sparseBuffer.resize(block.RequiredSize());
       auto begin = m_sparseBuffer.data();
       auto sparse_span =
-        std::span<uint8_t>(begin, begin + block.Count * block.Stride);
+        std::span<uint8_t>(begin, begin + block.RequiredSize());
       if (accessor.BufferViewId()) {
         // non zero sparse
         return std::unexpected{ "non zero sparse not implemented" };
