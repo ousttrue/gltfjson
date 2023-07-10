@@ -6,6 +6,7 @@ executable(
         'test_json_string.cpp',
         'test_base64.cpp',
         'test_tree.cpp',
+        'test_tree_string.cpp',
         'test_tree_gltf.cpp',
         'test_jsonpath.cpp',
         'gltf_samples.cpp',

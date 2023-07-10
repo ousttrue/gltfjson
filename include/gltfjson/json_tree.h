@@ -1,4 +1,5 @@
 #pragma once
+#include "json_string_escape.h"
 #include <array>
 #include <assert.h>
 #include <charconv>

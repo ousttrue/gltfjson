@@ -135,31 +135,10 @@ struct Parser
     }
   }
 
-  std::u8string m_dst;
-  std::u8string_view UnEscape(std::u8string_view src)
-  {
-    m_dst.clear();
-    for (auto it = src.begin(); it != src.end();) {
-      if (*it == '\\') {
-        auto peek = it + 1;
-        if (peek != src.end() && *peek == '/') {
-          m_dst.push_back('/');
-          ++it;
-          ++it;
-          continue;
-        }
-      }
-
-      m_dst.push_back(*it);
-      ++it;
-    }
-    return m_dst;
-  }
-
   std::expected<NodePtr, std::u8string> ParseString()
   {
     if (auto str = m_token.GetString()) {
-      auto unescaped = UnEscape(str->substr(1, str->size() - 2));
+      auto unescaped = unescape(str->substr(1, str->size() - 2));
       return Push(std::u8string{ unescaped.data(), unescaped.size() });
     } else {
       return std::unexpected{ str.error() };

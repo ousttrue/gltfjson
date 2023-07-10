@@ -1,5 +1,6 @@
 #pragma once
 #include "json_token.h"
+#include "json_string_escape.h"
 #include <algorithm>
 #include <assert.h>
 #include <charconv>
@@ -112,10 +113,11 @@ struct Value
   bool IsTrue() const { return Range == u8"true"; }
 
   // get unquoted string
-  std::optional<std::u8string_view> U8String() const
+  std::optional<std::u8string> U8String() const
   {
     if (Range.size() >= 2 && Range.front() == '"' && Range.back() == '"') {
-      return Range.substr(1, Range.size() - 2);
+      auto view = Range.substr(1, Range.size() - 2);
+      return unescape(view);
     }
 
     return std::nullopt;

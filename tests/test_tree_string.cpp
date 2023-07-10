@@ -1,17 +1,17 @@
-#include <gltfjson/json_parser.h>
+#include <gltfjson/json_tree_parser.h>
 #include <gtest/gtest.h>
 
-TEST(TestJson, ParseString)
+TEST(TestJsonTree, ParseString)
 {
   {
     auto SRC = u8R"(
 "abc"
 )";
-    gltfjson::Parser parser(SRC);
+    gltfjson::tree::Parser parser(SRC);
     auto result = parser.Parse();
     EXPECT_TRUE(result);
     if (result) {
-      EXPECT_EQ(*result, gltfjson::Value(u8"\"abc\""));
+      EXPECT_EQ(result->U8String(), u8"abc");
     }
   }
 }
@@ -25,13 +25,14 @@ TEST(TestJson, ParseString)
 // 'r'
 // 't'
 // 'u' hex hex hex hex
-TEST(TestJson, ParseStringUnescape)
+TEST(TestJsonTree, ParseStringUnescape)
 {
   {
+    // unescape slash
     auto SRC = u8R"(
 "\""
 )";
-    gltfjson::Parser parser(SRC);
+    gltfjson::tree::Parser parser(SRC);
     auto result = parser.Parse();
     EXPECT_TRUE(result);
     if (result) {
@@ -39,10 +40,11 @@ TEST(TestJson, ParseStringUnescape)
     }
   }
   {
+    // unescape slash
     auto SRC = u8R"(
 "\\"
 )";
-    gltfjson::Parser parser(SRC);
+    gltfjson::tree::Parser parser(SRC);
     auto result = parser.Parse();
     EXPECT_TRUE(result);
     if (result) {
@@ -50,10 +52,11 @@ TEST(TestJson, ParseStringUnescape)
     }
   }
   {
+    // unescape slash
     auto SRC = u8R"(
 "\/"
 )";
-    gltfjson::Parser parser(SRC);
+    gltfjson::tree::Parser parser(SRC);
     auto result = parser.Parse();
     EXPECT_TRUE(result);
     if (result) {
@@ -61,10 +64,11 @@ TEST(TestJson, ParseStringUnescape)
     }
   }
   //   {
+  //     // unescape slash
   //     auto SRC = u8R"(
   // "\b"
   // )";
-  //     gltfjson::Parser parser(SRC);
+  //     gltfjson::tree::Parser parser(SRC);
   //     auto result = parser.Parse();
   //     EXPECT_TRUE(result);
   //     if (result) {
@@ -72,10 +76,11 @@ TEST(TestJson, ParseStringUnescape)
   //     }
   //   }
   //   {
+  //     // unescape slash
   //     auto SRC = u8R"(
   // "\f"
   // )";
-  //     gltfjson::Parser parser(SRC);
+  //     gltfjson::tree::Parser parser(SRC);
   //     auto result = parser.Parse();
   //     EXPECT_TRUE(result);
   //     if (result) {
@@ -83,10 +88,11 @@ TEST(TestJson, ParseStringUnescape)
   //     }
   //   }
   {
+    // unescape slash
     auto SRC = u8R"(
 "\n"
 )";
-    gltfjson::Parser parser(SRC);
+    gltfjson::tree::Parser parser(SRC);
     auto result = parser.Parse();
     EXPECT_TRUE(result);
     if (result) {
@@ -94,10 +100,11 @@ TEST(TestJson, ParseStringUnescape)
     }
   }
   {
+    // unescape slash
     auto SRC = u8R"(
 "\r"
 )";
-    gltfjson::Parser parser(SRC);
+    gltfjson::tree::Parser parser(SRC);
     auto result = parser.Parse();
     EXPECT_TRUE(result);
     if (result) {
@@ -105,10 +112,11 @@ TEST(TestJson, ParseStringUnescape)
     }
   }
   {
+    // unescape slash
     auto SRC = u8R"(
 "\t"
 )";
-    gltfjson::Parser parser(SRC);
+    gltfjson::tree::Parser parser(SRC);
     auto result = parser.Parse();
     EXPECT_TRUE(result);
     if (result) {
@@ -116,10 +124,11 @@ TEST(TestJson, ParseStringUnescape)
     }
   }
   {
+    // unescape slash
     auto SRC = u8R"(
 "\u304b"
 )";
-    gltfjson::Parser parser(SRC);
+    gltfjson::tree::Parser parser(SRC);
     auto result = parser.Parse();
     EXPECT_TRUE(result);
     if (result) {

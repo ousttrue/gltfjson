@@ -107,11 +107,16 @@ struct Tokenizer
     }
 
     auto close = Pos + 1;
+    bool escaping = false;
     for (; close < Src.size(); ++close) {
-      // TODO: escape
-      // TODO: utf-8 multibyte
-      if (Src[close] == '"') {
-        break;
+      if (escaping) {
+        escaping = false;
+      } else {
+        if (Src[close] == '\\') {
+          escaping = true;
+        } else if (Src[close] == '"') {
+          break;
+        }
       }
     }
 

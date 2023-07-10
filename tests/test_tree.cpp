@@ -72,33 +72,6 @@ TEST(TestJsonTree, ParseNumber)
   }
 }
 
-TEST(TestJsonTree, ParseString)
-{
-  {
-    auto SRC = u8R"(
-"abc"
-)";
-    gltfjson::tree::Parser parser(SRC);
-    auto result = parser.Parse();
-    EXPECT_TRUE(result);
-    if (result) {
-      EXPECT_EQ(result->U8String(), u8"abc");
-    }
-  }
-  {
-    // unescape slash
-    auto SRC = u8R"(
-"a\/b"
-)";
-    gltfjson::tree::Parser parser(SRC);
-    auto result = parser.Parse();
-    EXPECT_TRUE(result);
-    if (result) {
-      EXPECT_EQ(result->U8String(), u8"a/b");
-    }
-  }
-}
-
 TEST(TestJsonTree, ParseArray)
 {
   {
