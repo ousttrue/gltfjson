@@ -58,7 +58,7 @@ TEST(Vrm1, SeedSan)
     // meta
     auto meta = vrm.Meta();
     EXPECT_TRUE(meta);
-    EXPECT_EQ(u8"Seed-san", meta->Name());
+    EXPECT_EQ(u8"Seed-san", meta->NameString());
 
     // humanoid
     auto humanoid = vrm.Humanoid();

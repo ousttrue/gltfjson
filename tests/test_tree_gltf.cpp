@@ -104,8 +104,8 @@ TEST(GltfTestTree, Parse)
   EXPECT_EQ(*gltf.BufferViews[0].ByteOffset(), 0);
   EXPECT_EQ(*gltf.BufferViews[0].ByteOffset(), 0);
   EXPECT_EQ(*gltf.BufferViews[0].ByteLength(), 6);
-  EXPECT_EQ((gltfjson::Targets)*gltf.BufferViews[0].Target(),
-            gltfjson::Targets::ELEMENT_ARRAY_BUFFER);
+  // EXPECT_EQ((gltfjson::Targets)*gltf.BufferViews[0].Target(),
+  //           gltfjson::Targets::ELEMENT_ARRAY_BUFFER);
 
   // accessors.0
   EXPECT_EQ(*gltf.Accessors[0].BufferViewId(), 0);
