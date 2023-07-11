@@ -68,6 +68,11 @@ public:
         // use new
       } else {
         // use old
+        if (auto span = m_bin.GetImageBytes(m_root, i)) {
+          span = *span;
+        } else {
+          throw std::runtime_error(span.error());
+        }
       }
       // push bin
       auto [offset, length] = m_writer.PushBufferView(bytes);

@@ -88,6 +88,22 @@ struct Bin
     }
   }
 
+  std::expected<std::span<const uint8_t>, std::string> GetImageBytes(
+    const Root& gltf,
+    int image_index) const
+  {
+    auto image = gltf.Images[image_index];
+    if (auto bufferViewId = image.BufferViewId()) {
+      if (auto span = GetBufferViewBytes(gltf, *bufferViewId)) {
+        return *span;
+      } else {
+        return std::unexpected{ "invalid bufferView" };
+      }
+    } else {
+      return std::unexpected{ "no bufferview" };
+    }
+  }
+
   mutable std::vector<uint8_t> m_sparseBuffer;
   std::expected<MemoryBlock, std::string> GetAccessorBlock(
     const Root& gltf,
