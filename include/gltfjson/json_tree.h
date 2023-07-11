@@ -266,6 +266,7 @@ struct Node
     }
   }
 
+  void Set(std::monostate null) { Var = null; }
   void Set(bool b) { Var = b; }
   void Set(float f) { Var = f; }
   void Set(const std::u8string& s) { Var = s; }
@@ -289,7 +290,28 @@ struct Node
     }
   }
 
-  void Copy(const std::shared_ptr<Node>& dst) {}
+  void CopyTo(const std::shared_ptr<Node>& dst)
+  {
+    if (!dst) {
+      return;
+    }
+    if (auto array = Array()) {
+      dst->Set(ArrayValue{});
+      for (auto child : *array) {
+        auto dstChild = dst->Add(std::monostate{});
+        child->CopyTo(dstChild);
+      }
+    } else if (auto object = Object()) {
+      dst->Set(ObjectValue{});
+      for (auto [k, v] : *object) {
+        auto dstChild = dst->Add(k, std::monostate{});
+        v->CopyTo(dstChild);
+      }
+    } else {
+      // dst->Set(Var);
+      dst->Var = Var;
+    }
+  }
 };
 
 // inline std::ostream&
@@ -409,6 +431,9 @@ FindJsonPath(const NodePtr& root, std::u8string_view jsonpath)
 }
 
 } // namespace
+
+using ArrayValue = tree::ArrayValue;
+using ObjectValue = tree::ObjectValue;
 
 inline std::array<float, 3>
 Vec3(const tree::NodePtr& json, const std::array<float, 3>& defaultValue)

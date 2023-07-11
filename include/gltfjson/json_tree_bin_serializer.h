@@ -18,48 +18,48 @@ class BinSerializer
   Bin& m_bin;
   BinWriter m_writer;
 
+  NodePtr m_bufferViews;
+  NodePtr m_accessors;
+  NodePtr m_images;
+
 public:
   BinSerializer(const NodePtr& json, Bin& bin)
     : m_root(json)
     , m_bin(bin)
   {
+    m_bufferViews = std::make_shared<Node>(ArrayValue{});
+    m_accessors = std::make_shared<Node>(ArrayValue{});
+    m_images = std::make_shared<Node>(ArrayValue{});
   }
 
   std::vector<uint8_t> Serialize(const GetReplaceBytes& replaceImages,
                                  const GetReplaceBytes& replaceAccessors)
   {
-    auto bufferViews = m_root.m_json->Get(u8"bufferViews");
-    m_root.m_json->Remove(u8"bufferViews");
     SerializeImages(replaceImages);
     SerializeAccessors(replaceAccessors);
+
+    auto& o = *m_root.m_json->Object();
+    o[u8"bufferViews"] = m_bufferViews;
+    o[u8"images"] = m_images;
+    o[u8"accessors"] = m_accessors;
+
     return m_writer.m_buffer;
   }
 
-  uint32_t PushBufferView(uint32_t offset, uint32_t length)
+  uint32_t PushBufferView(uint32_t srcId, uint32_t offset, uint32_t length)
   {
-    auto bufferViews = m_root.m_json->Get(u8"bufferViews");
-    if (!bufferViews) {
-      bufferViews = m_root.m_json->Add(u8"bufferViews", ArrayValue{});
-    }
-    auto bufferViewId = bufferViews->Size();
-    auto bufferView = bufferViews->Add(ObjectValue{});
-    bufferView->Add(u8"bytesOffset", (float)offset);
-    bufferView->Add(u8"bytesLength", (float)length);
+    auto bufferViewId = m_bufferViews->Size();
+    auto bufferView = m_bufferViews->Add(ObjectValue{});
+    m_root.BufferViews[srcId].m_json->CopyTo(bufferView);
+    bufferView->Add(u8"byteOffset", (float)offset);
+    bufferView->Add(u8"byteLength", (float)length);
     return bufferViewId;
   }
 
   void SerializeImages(const GetReplaceBytes& replaceImages)
   {
-    auto images = m_root.m_json->Get(u8"images");
-    if (images) {
-      m_root.m_json->Remove(u8"images");
-    } else {
-      images = std::make_shared<Node>();
-      images->Set(ArrayValue{});
-    }
-    auto& src = *images->Array();
-    auto dst = m_root.m_json->Add(u8"images", ArrayValue{});
-    for (int i = 0; i < src.size(); ++i) {
+    for (int i = 0; i < m_root.Images.size(); ++i) {
+      auto image = m_root.Images[i];
       std::span<const uint8_t> bytes;
       if (replaceImages) {
         bytes = replaceImages(i);
@@ -68,30 +68,21 @@ public:
         // use new
       } else {
         // use old
-        auto image = src[i];
       }
       // push bin
       auto [offset, length] = m_writer.PushBufferView(bytes);
       // push bufferview
-      auto bufferViewId = PushBufferView(offset, length);
+      auto bufferViewId = PushBufferView(*image.BufferViewId(), offset, length);
       // push image
-      auto new_image = dst->Add(ObjectValue{});
+      auto new_image = m_images->Add(ObjectValue{});
       new_image->Add(u8"bufferView", (float)bufferViewId);
     }
   }
 
   void SerializeAccessors(const GetReplaceBytes& replaceAccessors)
   {
-    auto accessors = m_root.m_json->Get(u8"accessors");
-    if (accessors) {
-      m_root.m_json->Remove(u8"accessors");
-    } else {
-      accessors = std::make_shared<Node>();
-      accessors->Set(ArrayValue{});
-    }
-    auto& src = *accessors->Array();
-    auto dst = m_root.m_json->Add(u8"accessors", ArrayValue{});
-    for (int i = 0; i < src.size(); ++i) {
+    for (int i = 0; i < m_root.Accessors.size(); ++i) {
+      auto accessor = m_root.Accessors[i];
       std::span<const uint8_t> span;
       if (replaceAccessors) {
         span = replaceAccessors(i);
@@ -109,9 +100,10 @@ public:
       // push bin
       auto [offset, length] = m_writer.PushBufferView(span);
       // push bufferview
-      auto bufferViewId = PushBufferView(offset, length);
+      auto bufferViewId =
+        PushBufferView(*accessor.BufferViewId(), offset, length);
       // push accessor
-      auto new_accessor = dst->Add(ObjectValue{});
+      auto new_accessor = m_accessors->Add(ObjectValue{});
       new_accessor->Add(u8"bufferView", (float)bufferViewId);
     }
   }
