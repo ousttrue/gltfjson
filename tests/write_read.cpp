@@ -6,7 +6,7 @@
 TEST(WriteRead, Null)
 {
   std::stringstream ss;
-  gltfjson::WriteFunc write = [&ss](std::string_view src) mutable {
+  gltfjson::StringSink write = [&ss](std::string_view src) mutable {
     ss.write(src.data(), src.size());
   };
   gltfjson::tree::Exporter exporter{ write };
@@ -20,7 +20,7 @@ TEST(WriteRead, Bool)
 {
   {
     std::stringstream ss;
-    gltfjson::WriteFunc write = [&ss](std::string_view src) mutable {
+    gltfjson::StringSink write = [&ss](std::string_view src) mutable {
       ss.write(src.data(), src.size());
     };
     gltfjson::tree::Exporter exporter{ write };
@@ -31,7 +31,7 @@ TEST(WriteRead, Bool)
   }
   {
     std::stringstream ss;
-    gltfjson::WriteFunc write = [&ss](std::string_view src) mutable {
+    gltfjson::StringSink write = [&ss](std::string_view src) mutable {
       ss.write(src.data(), src.size());
     };
     gltfjson::tree::Exporter exporter{ write };
@@ -46,7 +46,7 @@ TEST(WriteRead, Number)
 {
   {
     std::stringstream ss;
-    gltfjson::WriteFunc write = [&ss](std::string_view src) mutable {
+    gltfjson::StringSink write = [&ss](std::string_view src) mutable {
       ss.write(src.data(), src.size());
     };
     gltfjson::tree::Exporter exporter{ write };
@@ -57,7 +57,7 @@ TEST(WriteRead, Number)
   }
   {
     std::stringstream ss;
-    gltfjson::WriteFunc write = [&ss](std::string_view src) mutable {
+    gltfjson::StringSink write = [&ss](std::string_view src) mutable {
       ss.write(src.data(), src.size());
     };
     gltfjson::tree::Exporter exporter{ write };
@@ -72,7 +72,7 @@ TEST(WriteRead, Array)
 {
   {
     std::stringstream ss;
-    gltfjson::WriteFunc write = [&ss](std::string_view src) mutable {
+    gltfjson::StringSink write = [&ss](std::string_view src) mutable {
       ss.write(src.data(), src.size());
     };
     gltfjson::tree::Exporter exporter{ write };
@@ -92,7 +92,7 @@ TEST(WriteRead, Object)
 {
   {
     std::stringstream ss;
-    gltfjson::WriteFunc write = [&ss](std::string_view src) mutable {
+    gltfjson::StringSink write = [&ss](std::string_view src) mutable {
       ss.write(src.data(), src.size());
     };
     gltfjson::tree::Exporter exporter{ write };

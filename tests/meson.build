@@ -8,6 +8,7 @@ executable(
         'test_tree.cpp',
         'test_tree_string.cpp',
         'test_tree_gltf.cpp',
+        'test_tree_writer.cpp',
         'test_jsonpath.cpp',
         'gltf_samples.cpp',
         'glb_export.cpp',

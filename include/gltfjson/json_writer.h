@@ -11,7 +11,7 @@
 //
 namespace gltfjson {
 
-using WriteFunc = std::function<void(std::string_view)>;
+using StringSink = std::function<void(std::string_view)>;
 
 enum StackFlags
 {
@@ -23,23 +23,23 @@ enum StackFlags
   STACKFLAG_Collon = 0x10,
 };
 
-class Writer
+class JsonWriter
 {
-  WriteFunc m_writer;
+  StringSink m_writer;
   char m_buf[1024];
   StackFlags m_stack[124] = { STACKFLAG_Root };
   int m_depth = 1;
 
 public:
-  Writer(const WriteFunc& writer)
-    : m_writer(writer)
+  JsonWriter(const StringSink& sink)
+    : m_writer(sink)
   {
   }
 
-  ~Writer() { assert(m_depth == 1); }
+  ~JsonWriter() { assert(m_depth == 1); }
 
-  Writer(const Writer&) = delete;
-  Writer& operator=(const Writer&) = delete;
+  JsonWriter(const JsonWriter&) = delete;
+  JsonWriter& operator=(const JsonWriter&) = delete;
 
   void push(std::string_view str)
   {

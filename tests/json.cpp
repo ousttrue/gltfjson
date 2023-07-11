@@ -8,8 +8,8 @@ static void
 EQ(T value)
 {
   std::stringstream ss;
-  gltfjson::WriteFunc callback = [&ss](std::string_view str) { ss << str; };
-  gltfjson::Writer writer(callback);
+  gltfjson::StringSink callback = [&ss](std::string_view str) { ss << str; };
+  gltfjson::JsonWriter writer(callback);
   writer.value(value);
   auto str = ss.str();
   // auto parsed = nlohmann::json::parse(str);
@@ -22,8 +22,8 @@ EQ(T value)
 TEST(JsonStream, write_null)
 {
   std::stringstream ss;
-  gltfjson::WriteFunc callback = [&ss](std::string_view str) { ss << str; };
-  gltfjson::Writer writer(callback);
+  gltfjson::StringSink callback = [&ss](std::string_view str) { ss << str; };
+  gltfjson::JsonWriter writer(callback);
   writer.null();
   auto str = ss.str();
 
@@ -54,8 +54,8 @@ TEST(JsonStream, write_string)
 TEST(JsonStream, write_array_0)
 {
   std::stringstream ss;
-  gltfjson::WriteFunc callback = [&ss](std::string_view str) { ss << str; };
-  gltfjson::Writer writer(callback);
+  gltfjson::StringSink callback = [&ss](std::string_view str) { ss << str; };
+  gltfjson::JsonWriter writer(callback);
 
   writer.array_open();
   writer.array_close();
@@ -66,8 +66,8 @@ TEST(JsonStream, write_array_0)
 TEST(JsonStream, write_array_1)
 {
   std::stringstream ss;
-  gltfjson::WriteFunc callback = [&ss](std::string_view str) { ss << str; };
-  gltfjson::Writer writer(callback);
+  gltfjson::StringSink callback = [&ss](std::string_view str) { ss << str; };
+  gltfjson::JsonWriter writer(callback);
 
   writer.array_open();
   writer.value(1);
@@ -79,8 +79,8 @@ TEST(JsonStream, write_array_1)
 TEST(JsonStream, write_array_2)
 {
   std::stringstream ss;
-  gltfjson::WriteFunc callback = [&ss](std::string_view str) { ss << str; };
-  gltfjson::Writer writer(callback);
+  gltfjson::StringSink callback = [&ss](std::string_view str) { ss << str; };
+  gltfjson::JsonWriter writer(callback);
 
   writer.array_open();
   writer.value(1);
@@ -93,8 +93,8 @@ TEST(JsonStream, write_array_2)
 TEST(JsonStream, write_object_2)
 {
   std::stringstream ss;
-  gltfjson::WriteFunc callback = [&ss](std::string_view str) { ss << str; };
-  gltfjson::Writer writer(callback);
+  gltfjson::StringSink callback = [&ss](std::string_view str) { ss << str; };
+  gltfjson::JsonWriter writer(callback);
 
   writer.object_open();
   writer.key("some");
@@ -109,8 +109,8 @@ TEST(JsonStream, write_object_2)
 TEST(JsonStream, write_object_nested)
 {
   std::stringstream ss;
-  gltfjson::WriteFunc callback = [&ss](std::string_view str) { ss << str; };
-  gltfjson::Writer writer(callback);
+  gltfjson::StringSink callback = [&ss](std::string_view str) { ss << str; };
+  gltfjson::JsonWriter writer(callback);
 
   writer.object_open();
   writer.key("some");

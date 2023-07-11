@@ -6,7 +6,12 @@ namespace gltfjson {
 namespace tree {
 struct Exporter
 {
-  Writer m_writer;
+  JsonWriter m_writer;
+
+  Exporter(const StringSink& sink)
+    : m_writer(sink)
+  {
+  }
 
   void Export(const NodePtr& node)
   {
