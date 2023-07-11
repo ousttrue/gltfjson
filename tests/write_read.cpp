@@ -11,7 +11,7 @@ TEST(WriteRead, Null)
   };
   gltfjson::tree::Exporter exporter{ write };
 
-  auto json = std::make_shared<gltfjson::tree::Node>();
+  gltfjson::tree::Node json;
   exporter.Export(json);
   EXPECT_EQ(ss.str(), "null");
 }
@@ -25,7 +25,7 @@ TEST(WriteRead, Bool)
     };
     gltfjson::tree::Exporter exporter{ write };
 
-    auto json = std::make_shared<gltfjson::tree::Node>(true);
+    gltfjson::tree::Node json(true);
     exporter.Export(json);
     EXPECT_EQ(ss.str(), "true");
   }
@@ -36,7 +36,7 @@ TEST(WriteRead, Bool)
     };
     gltfjson::tree::Exporter exporter{ write };
 
-    auto json = std::make_shared<gltfjson::tree::Node>(false);
+    gltfjson::tree::Node json(false);
     exporter.Export(json);
     EXPECT_EQ(ss.str(), "false");
   }
@@ -51,7 +51,7 @@ TEST(WriteRead, Number)
     };
     gltfjson::tree::Exporter exporter{ write };
 
-    auto json = std::make_shared<gltfjson::tree::Node>(1.0f);
+    gltfjson::tree::Node json(1.0f);
     exporter.Export(json);
     EXPECT_EQ(ss.str(), "1");
   }
@@ -62,7 +62,7 @@ TEST(WriteRead, Number)
     };
     gltfjson::tree::Exporter exporter{ write };
 
-    auto json = std::make_shared<gltfjson::tree::Node>(1.1f);
+    gltfjson::tree::Node json(1.1f);
     exporter.Export(json);
     EXPECT_EQ(ss.str(), "1.1");
   }
@@ -77,12 +77,11 @@ TEST(WriteRead, Array)
     };
     gltfjson::tree::Exporter exporter{ write };
 
-    auto json =
-      std::make_shared<gltfjson::tree::Node>(gltfjson::tree::ArrayValue{
-        std::make_shared<gltfjson::tree::Node>(),
-        std::make_shared<gltfjson::tree::Node>(false),
-        std::make_shared<gltfjson::tree::Node>(-1.5f),
-      });
+    gltfjson::tree::Node json = gltfjson::tree::ArrayValue{
+      std::make_shared<gltfjson::tree::Node>(),
+      std::make_shared<gltfjson::tree::Node>(false),
+      std::make_shared<gltfjson::tree::Node>(-1.5f),
+    };
     exporter.Export(json);
     EXPECT_EQ(ss.str(), "[null,false,-1.5]");
   }
@@ -103,8 +102,8 @@ TEST(WriteRead, Object)
         std::make_shared<gltfjson::tree::Node>(false),
         std::make_shared<gltfjson::tree::Node>(-1.5f),
       });
-    auto json = std::make_shared<gltfjson::tree::Node>(
-      gltfjson::tree::ObjectValue{ { u8"key", array } });
+    gltfjson::tree::Node json =
+      gltfjson::tree::ObjectValue{ { u8"key", array } };
     exporter.Export(json);
     EXPECT_EQ(ss.str(), "{\"key\":[null,false,-1.5]}");
   }

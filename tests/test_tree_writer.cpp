@@ -24,7 +24,7 @@ TEST(TestTreeWriter, BinWriter)
     ss << view;
   };
   gltfjson::tree::Exporter exporter(sink);
-  exporter.Export(result);
+  exporter.Export(*result);
   auto jsonchunk = ss.str();
 
   std::cout << jsonchunk << std::endl;
@@ -41,8 +41,10 @@ TEST(TestTreeWriter, BinWriter)
   auto result2 = parser2.Parse();
   EXPECT_TRUE(result2);
 
-  auto bufferView0 = result->Get(u8"bufferViews")->Get(0);
-  auto bufferView1 = result2->Get(u8"bufferViews")->Get(0);
-  EXPECT_EQ(*bufferView0->Get(u8"bytesLength")->Ptr<float>(),
-            *bufferView1->Get(u8"bytesLength")->Ptr<float>());
+  gltfjson::tree::Parser parser3(MINIMUM);
+  auto result3 = parser3.Parse();
+
+  auto bufferView3 = result3->Get(u8"bufferViews")->Get(0);
+  auto bufferView2 = result2->Get(u8"bufferViews")->Get(0);
+  EXPECT_EQ(*bufferView3, *bufferView2);
 }

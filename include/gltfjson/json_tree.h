@@ -78,6 +78,71 @@ struct Node
   {
   }
 
+  bool operator==(const Node& dst) const
+  {
+    if (auto array = Array()) {
+      if (auto dstArray = dst.Array()) {
+        if (array->size() == dstArray->size()) {
+          for (int i = 0; i < array->size(); ++i) {
+            auto lhs = (*array)[i];
+            auto rhs = (*dstArray)[i];
+            if (lhs) {
+              if (rhs) {
+                if (*lhs == *rhs) {
+                  continue;
+                }
+                return false;
+              } else {
+                return false;
+              }
+            } else {
+              if (rhs) {
+                return false;
+              }
+            }
+          }
+          return true;
+        } else {
+          return false;
+        }
+      } else {
+        return false;
+      }
+    } else if (auto object = Object()) {
+      if (auto dstObject = dst.Object()) {
+        if (object->size() == dstObject->size()) {
+          for (auto [k, v] : *object) {
+            auto found = dstObject->find(k);
+            if (found == dstObject->end()) {
+              return false;
+            }
+            if (v) {
+              if (found->second) {
+                if (*v == *found->second) {
+                  continue;
+                }
+                return false;
+              } else {
+                return false;
+              }
+            } else {
+              if (found->second) {
+                return false;
+              }
+            }
+          }
+          return true;
+        } else {
+          return false;
+        }
+      } else {
+        return false;
+      }
+    } else {
+      return Var == dst.Var;
+    }
+  }
+
   template<typename T>
   static NodePtr Create(const T& t)
   {
@@ -223,44 +288,46 @@ struct Node
       (*p)[i]->Var = values[i];
     }
   }
+
+  void Copy(const std::shared_ptr<Node>& dst) {}
 };
 
-inline std::ostream&
-operator<<(std::ostream& os, const Node& node)
-{
-  struct Visitor
-  {
-    std::ostream& m_os;
-    Visitor(std::ostream& os)
-      : m_os(os)
-    {
-    }
-    void operator()(std::monostate) { m_os << "null"; }
-    void operator()(bool value)
-    {
-      if (value) {
-        m_os << "true";
-      } else {
-        m_os << "false";
-      }
-    }
-    void operator()(float value) { m_os << std::setprecision(9) << value; }
-    void operator()(const std::u8string& value)
-    {
-      m_os << '"' << from_u8(value) << '"';
-    }
-    void operator()(const ArrayValue& value)
-    {
-      m_os << '[' << value.size() << ']';
-    }
-    void operator()(const ObjectValue& value)
-    {
-      m_os << '{' << value.size() << '}';
-    }
-  };
-  std::visit(Visitor(os), node.Var);
-  return os;
-}
+// inline std::ostream&
+// operator<<(std::ostream& os, const Node& node)
+// {
+//   struct Visitor
+//   {
+//     std::ostream& m_os;
+//     Visitor(std::ostream& os)
+//       : m_os(os)
+//     {
+//     }
+//     void operator()(std::monostate) { m_os << "null"; }
+//     void operator()(bool value)
+//     {
+//       if (value) {
+//         m_os << "true";
+//       } else {
+//         m_os << "false";
+//       }
+//     }
+//     void operator()(float value) { m_os << std::setprecision(9) << value; }
+//     void operator()(const std::u8string& value)
+//     {
+//       m_os << '"' << from_u8(value) << '"';
+//     }
+//     void operator()(const ArrayValue& value)
+//     {
+//       m_os << '[' << value.size() << ']';
+//     }
+//     void operator()(const ObjectValue& value)
+//     {
+//       m_os << '{' << value.size() << '}';
+//     }
+//   };
+//   std::visit(Visitor(os), node.Var);
+//   return os;
+// }
 
 inline void
 AddDelimiter(std::u8string& jsonpath)
