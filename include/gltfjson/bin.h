@@ -56,9 +56,9 @@ struct Bin
     if (uri.size()) {
       // external file
       if (auto bytes = Dir->GetBuffer(uri)) {
-        return bytes->subspan(
-          (uint32_t)gltfjson::deref_or(buffer_view.ByteOffset(), 0),
-          (uint32_t)*buffer_view.ByteLength());
+        auto offset = gltfjson::deref_or(buffer_view.ByteOffset(), 0);
+        auto length = buffer_view.ByteLength();
+        return bytes->subspan((uint32_t)offset, (uint32_t)*length);
       } else {
         return bytes;
       }

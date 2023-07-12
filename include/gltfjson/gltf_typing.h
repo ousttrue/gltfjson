@@ -273,9 +273,9 @@ struct GltfProperty : JsonObject
       }
     }
     if (!extensions) {
-      extensions = m_json->Add(u8"extensions", tree::ObjectValue());
+      extensions = m_json->SetProperty(u8"extensions", tree::ObjectValue());
     }
-    return extensions->Add(T::EXTENSION_NAME, tree::ObjectValue());
+    return extensions->SetProperty(T::EXTENSION_NAME, tree::ObjectValue());
   }
 };
 
@@ -679,7 +679,10 @@ struct Root : GltfProperty
   JsonArray<gltfjson::Scene, u8"scenes"> Scenes;
   JsonArray<Skin, u8"skins"> Skins;
   auto ExtensionsUsed() const { return m_json->Get(u8"extensionsUsed"); }
-  auto ExtensionsRequired() const { return m_json->Get(u8"extensionsRequired"); }
+  auto ExtensionsRequired() const
+  {
+    return m_json->Get(u8"extensionsRequired");
+  }
 };
 
 } // namespace

@@ -37,4 +37,11 @@ struct KHR_materials_unlit : Extension<u8"KHR_materials_unlit">
   using Extension::Extension;
 };
 
+// https://github.com/KhronosGroup/glTF/blob/main/extensions/2.0/Khronos/KHR_texture_basisu/schema/texture.KHR_texture_basisu.schema.json
+struct KHR_texture_basisu : Extension<u8"KHR_texture_basisu">
+{
+  using Extension::Extension;
+  auto SourceId() const { return m_id<u8"source">(); }
+};
+
 } // namespace gltfjson
