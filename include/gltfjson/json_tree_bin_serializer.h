@@ -32,8 +32,8 @@ public:
     m_images = std::make_shared<Node>(ArrayValue{});
   }
 
-  std::vector<uint8_t> Serialize(const GetReplaceBytes& replaceImages,
-                                 const GetReplaceBytes& replaceAccessors)
+  std::vector<uint8_t>& Serialize(const GetReplaceBytes& replaceImages,
+                                  const GetReplaceBytes& replaceAccessors)
   {
     SerializeImages(replaceImages);
     SerializeAccessors(replaceAccessors);
@@ -60,27 +60,26 @@ public:
   {
     for (int i = 0; i < m_root.Images.size(); ++i) {
       auto image = m_root.Images[i];
-      std::span<const uint8_t> bytes;
+      std::span<const uint8_t> span;
       if (replaceImages) {
-        bytes = replaceImages(i);
+        span = replaceImages(i);
       }
-      if (bytes.size()) {
-        // use new
-      } else {
+      if (span.empty()) {
         // use old
-        if (auto span = m_bin.GetImageBytes(m_root, i)) {
-          span = *span;
+        if (auto image_span = m_bin.GetImageBytes(m_root, i)) {
+          span = *image_span;
         } else {
-          throw std::runtime_error(span.error());
+          throw std::runtime_error(image_span.error());
         }
       }
       // push bin
-      auto [offset, length] = m_writer.PushBufferView(bytes);
+      auto [offset, length] = m_writer.PushBufferView(span);
       // push bufferview
       auto bufferViewId = PushBufferView(*image.BufferViewId(), offset, length);
       // push image
       auto new_image = m_images->Add(ObjectValue{});
-      new_image->Add(u8"bufferView", (float)bufferViewId);
+      image.m_json->CopyTo(new_image);
+      new_image->Get(u8"bufferView")->Set((float)bufferViewId);
     }
   }
 
@@ -92,9 +91,7 @@ public:
       if (replaceAccessors) {
         span = replaceAccessors(i);
       }
-      if (span.size()) {
-        // use new
-      } else {
+      if (span.empty()) {
         // use old
         if (auto block = m_bin.GetAccessorBlock(m_root, i)) {
           span = block->Span;
@@ -109,7 +106,8 @@ public:
         PushBufferView(*accessor.BufferViewId(), offset, length);
       // push accessor
       auto new_accessor = m_accessors->Add(ObjectValue{});
-      new_accessor->Add(u8"bufferView", (float)bufferViewId);
+      accessor.m_json->CopyTo(new_accessor);
+      new_accessor->Get(u8"bufferView")->Set((float)bufferViewId);
     }
   }
 };
