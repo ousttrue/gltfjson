@@ -224,7 +224,7 @@ struct Node
   }
 
   template<typename T>
-  NodePtr Add(std::u8string_view target, const T& value)
+  NodePtr SetProperty(std::u8string_view target, const T& value)
   {
     auto object = Object();
     if (!object) {
@@ -304,7 +304,7 @@ struct Node
     } else if (auto object = Object()) {
       dst->Set(ObjectValue{});
       for (auto [k, v] : *object) {
-        auto dstChild = dst->Add(k, std::monostate{});
+        auto dstChild = dst->SetProperty(k, std::monostate{});
         v->CopyTo(dstChild);
       }
     } else {

@@ -14,7 +14,7 @@ using GetReplaceBytes = std::function<std::span<const uint8_t>(uint32_t)>;
 
 class BinSerializer
 {
-  Root m_root;
+  Root& m_root;
   Bin& m_bin;
   BinWriter m_writer;
 
@@ -23,8 +23,8 @@ class BinSerializer
   NodePtr m_images;
 
 public:
-  BinSerializer(const NodePtr& json, Bin& bin)
-    : m_root(json)
+  BinSerializer(Root& root, Bin& bin)
+    : m_root(root)
     , m_bin(bin)
   {
     m_bufferViews = std::make_shared<Node>(ArrayValue{});
@@ -42,6 +42,7 @@ public:
     o[u8"bufferViews"] = m_bufferViews;
     o[u8"images"] = m_images;
     o[u8"accessors"] = m_accessors;
+    m_root = Root(m_root.m_json);
 
     return m_writer.m_buffer;
   }
@@ -51,8 +52,8 @@ public:
     auto bufferViewId = m_bufferViews->Size();
     auto bufferView = m_bufferViews->Add(ObjectValue{});
     m_root.BufferViews[srcId].m_json->CopyTo(bufferView);
-    bufferView->Add(u8"byteOffset", (float)offset);
-    bufferView->Add(u8"byteLength", (float)length);
+    bufferView->SetProperty(u8"byteOffset", (float)offset);
+    bufferView->SetProperty(u8"byteLength", (float)length);
     return bufferViewId;
   }
 
