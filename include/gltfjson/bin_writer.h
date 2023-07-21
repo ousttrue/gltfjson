@@ -5,50 +5,9 @@
 
 namespace gltfjson {
 
-//
-// template<typename T>
-// inline Accessor
-// CreateAccessor();
-//
-// template<>
-// inline Accessor
-// CreateAccessor<uint8_t>()
-// {
-//   return Accessor{
-//     .ComponentType = ComponentTypes::UNSIGNED_BYTE,
-//     .Type = Types::SCALAR,
-//   };
-// }
-// template<>
-// inline Accessor
-// CreateAccessor<uint16_t>()
-// {
-//   return Accessor{
-//     .ComponentType = ComponentTypes::UNSIGNED_SHORT,
-//     .Type = Types::SCALAR,
-//   };
-// }
-// template<>
-// inline Accessor
-// CreateAccessor<uint32_t>()
-// {
-//   return Accessor{
-//     .ComponentType = ComponentTypes::UNSIGNED_INT,
-//     .Type = Types::SCALAR,
-//   };
-// }
-// template<>
-// inline Accessor
-// CreateAccessor<float>()
-// {
-//   return Accessor{
-//     .ComponentType = ComponentTypes::FLOAT,
-//     .Type = Types::SCALAR,
-//   };
-// }
 struct BinWriter
 {
-  std::vector<uint8_t> m_buffer;
+  std::vector<uint8_t>& m_buffer;
 
   struct BufferView
   {
@@ -79,25 +38,12 @@ struct BinWriter
     return bufferView;
   }
 
-  // template<typename T>
-  // uint32_t PushAccessor(std::span<const T> values)
-  // {
-  //   auto p = (const uint8_t*)values.data();
-  //   auto bufferViewIndex = PushBufferView({ p, p + values.size() * sizeof(T)
-  //   }); auto index = Accessors.size();
-  //
-  //   using TT = std::remove_const<T>::type;
-  //   Accessors.push_back(CreateAccessor<TT>());
-  //   Accessors.back().BufferView = bufferViewIndex,
-  //   Accessors.back().Count = static_cast<uint32_t>(values.size());
-  //   return index;
-  // }
-  //
-  // template<typename T>
-  // uint32_t PushAccessor(const std::vector<T> values)
-  // {
-  //   return PushAccessor(std::span(values.data(), values.size()));
-  // }
+  template<typename T>
+  BufferView PushBufferView(const T* p, size_t size)
+  {
+    auto byteSize = sizeof(T) * size;
+    return PushBufferView(std::span((const uint8_t*)p, byteSize));
+  }
 };
 
 } // namespace
