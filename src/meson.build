@@ -6,5 +6,5 @@ executable(
         'main.cpp',
     ],
     install: true,
-    dependencies: [fxtui_dep],
+    dependencies: [gltfjson_dep, fxtui_dep],
 )
