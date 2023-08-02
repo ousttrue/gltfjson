@@ -14,8 +14,11 @@ TEST(TestTreeWriter, BinWriter)
   // regenerate bin. update bufferviews, images, accessors
   auto dir = std::make_shared<gltfjson::Directory>();
   gltfjson::Bin bin{ dir, {} };
-  auto serializer = gltfjson::tree::BinSerializer(result, bin);
-  auto bytes = serializer.Serialize({}, {});
+  std::vector<uint8_t> bytes;
+
+  gltfjson::Root root(result);
+  gltfjson::tree::BinSerializer serializer(root, bin, bytes);
+  serializer.Serialize({}, {});
   EXPECT_TRUE(bytes.size());
 
   // tree to json

@@ -23,16 +23,17 @@ class BinSerializer
   NodePtr m_images;
 
 public:
-  BinSerializer(Root& root, Bin& bin)
+  BinSerializer(Root& root, Bin& bin, std::vector<uint8_t>& buf)
     : m_root(root)
     , m_bin(bin)
+    , m_writer(buf)
   {
     m_bufferViews = std::make_shared<Node>(ArrayValue{});
     m_accessors = std::make_shared<Node>(ArrayValue{});
     m_images = std::make_shared<Node>(ArrayValue{});
   }
 
-  std::vector<uint8_t>& Serialize(const GetReplaceBytes& replaceImages,
+  void Serialize(const GetReplaceBytes& replaceImages,
                                   const GetReplaceBytes& replaceAccessors)
   {
     SerializeImages(replaceImages);
@@ -43,8 +44,6 @@ public:
     o[u8"images"] = m_images;
     o[u8"accessors"] = m_accessors;
     m_root = Root(m_root.m_json);
-
-    return m_writer.m_buffer;
   }
 
   uint32_t PushBufferView(uint32_t srcId, uint32_t offset, uint32_t length)
