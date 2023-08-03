@@ -42,7 +42,7 @@ Node(const std::string& name)
   return ftxui::Renderer([name](bool focused) {
     auto element = ftxui::text(name);
     if (focused) {
-      element = element | ftxui::inverted;
+      element = element | ftxui::inverted | ftxui::focus;
     }
     return element;
   });
@@ -116,7 +116,11 @@ main(int argc, char** argv)
   auto list = ftxui::Container::Vertical({});
   Build(list, result);
 
-  Tui(list);
+  auto scroll = ftxui::Renderer(
+    list, [list]() { return list->Render() | ftxui::frame | ftxui::border; });
+  scroll->Add(list);
+
+  Tui(scroll);
 
   return 0;
 }
