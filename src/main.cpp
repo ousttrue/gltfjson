@@ -37,35 +37,58 @@ Print(const std::array<const char*, N>& array)
 }
 
 ftxui::Component
-Node(const std::string& name)
+jsonComponent(const std::string& key,
+              const gltfjson::tree::NodePtr& value,
+              int level = 0)
 {
-  return ftxui::Renderer([name](bool focused) {
-    auto element = ftxui::text(name);
-    if (focused) {
-      element = element | ftxui::inverted | ftxui::focus;
-    }
-    return element;
-  });
-}
 
-void
-Build(const std::shared_ptr<ftxui::ComponentBase>& c,
-      const gltfjson::tree::NodePtr& json)
-{
-  if (auto a = json->Array()) {
-    for (auto i = 0; i < a->size(); ++i) {
-      std::stringstream ss;
-      ss << i;
-      c->Add(Node(ss.str()));
-      Build(c, (*a)[i]);
+  struct JsonComponent : ftxui::ComponentBase
+  {
+    ftxui::Component m_children;
+    std::string m_key;
+    gltfjson::tree::NodePtr m_json;
+    int m_level;
+
+    JsonComponent(const std::string& key,
+                  const gltfjson::tree::NodePtr& value,
+                  int level = 0)
+      : m_key(key)
+      , m_json(value)
+      , m_level(level)
+    {
+      m_children = ftxui::Container::Vertical({});
+      Add(m_children);
+
+      m_children->Add(ftxui::Renderer([=](bool focused) {
+        std::stringstream ss;
+        for (int i = 0; i < m_level; ++i) {
+          ss << "  ";
+        }
+        ss << m_key;
+        auto element = ftxui::text(ss.str());
+
+        if (focused) {
+          element = element | ftxui::inverted | ftxui::focus;
+        }
+        return element;
+      }));
+
+      if (auto a = value->Array()) {
+        for (auto i = 0; i < a->size(); ++i) {
+          std::stringstream ss;
+          ss << i;
+          m_children->Add(jsonComponent(ss.str(), (*a)[i], level + 1));
+        }
+      } else if (auto o = value->Object()) {
+        for (auto kv : *o) {
+          std::string name{ (const char*)kv.first.data(), kv.first.size() };
+          m_children->Add(jsonComponent(name, kv.second, level + 1));
+        }
+      }
     }
-  } else if (auto o = json->Object()) {
-    for (auto kv : *o) {
-      std::string name{ (const char*)kv.first.data(), kv.first.size() };
-      c->Add(Node(name));
-      Build(c, kv.second);
-    }
-  }
+  };
+
+  return std::make_shared<JsonComponent>(key, value, level);
 }
 
 void
@@ -113,12 +136,9 @@ main(int argc, char** argv)
     return 3;
   }
 
-  auto list = ftxui::Container::Vertical({});
-  Build(list, result);
-
-  auto scroll = ftxui::Renderer(
-    list, [list]() { return list->Render() | ftxui::frame | ftxui::border; });
-  scroll->Add(list);
+  auto root = jsonComponent("/", result, 0);
+  auto scroll =
+    ftxui::Renderer(root, [root]() { return root->Render() | ftxui::frame; });
 
   Tui(scroll);
 
