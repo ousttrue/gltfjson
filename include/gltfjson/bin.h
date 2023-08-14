@@ -50,23 +50,24 @@ struct Bin
     auto buffer_view = gltf.BufferViews[buffer_view_index];
     // std::cout << buffer_view << std::endl;
 
+    auto offset = gltfjson::deref_or(buffer_view.ByteOffset(), 0);
+    auto length = buffer_view.ByteLength();
+
     int buffer_index = *buffer_view.BufferId();
     auto buffer = gltf.Buffers[buffer_index];
     auto uri = buffer.UriString();
     if (uri.size()) {
       // external file
       if (auto bytes = Dir->GetBuffer(uri)) {
-        auto offset = gltfjson::deref_or(buffer_view.ByteOffset(), 0);
-        auto length = buffer_view.ByteLength();
         return bytes->subspan((uint32_t)offset, (uint32_t)*length);
       } else {
+        // error
         return bytes;
       }
     } else {
       // glb
-      return Bytes.subspan(
-        (uint32_t)gltfjson::deref_or(buffer_view.ByteOffset(), 0),
-        (uint32_t)*buffer_view.ByteLength());
+      assert(buffer_index==0);
+      return Bytes.subspan((uint32_t)offset, (uint32_t)*length);
     }
   }
 

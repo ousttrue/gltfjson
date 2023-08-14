@@ -1,6 +1,7 @@
 #pragma once
 #include "bin.h"
 #include "bin_writer.h"
+#include "gltf_typing.h"
 #include "json_tree.h"
 #include <functional>
 #include <span>
@@ -8,11 +9,38 @@
 #include <vector>
 
 namespace gltfjson {
+
+struct Float4
+{
+  float X;
+  float Y;
+  float Z;
+  float W;
+};
+struct Float3
+{
+  float X;
+  float Y;
+  float Z;
+};
+struct Float2
+{
+  float X;
+  float Y;
+};
+struct UShort4
+{
+  uint16_t X;
+  uint16_t Y;
+  uint16_t Z;
+  uint16_t W;
+};
+
 namespace tree {
 
 using GetReplaceBytes = std::function<std::span<const uint8_t>(uint32_t)>;
 
-class BinSerializer
+struct BinSerializer
 {
   Root& m_root;
   Bin& m_bin;
@@ -34,7 +62,7 @@ public:
   }
 
   void Serialize(const GetReplaceBytes& replaceImages,
-                                  const GetReplaceBytes& replaceAccessors)
+                 const GetReplaceBytes& replaceAccessors)
   {
     SerializeImages(replaceImages);
     SerializeAccessors(replaceAccessors);
@@ -46,14 +74,80 @@ public:
     m_root = Root(m_root.m_json);
   }
 
-  uint32_t PushBufferView(uint32_t srcId, uint32_t offset, uint32_t length)
+  uint32_t PushBufferView(uint32_t offset,
+                          uint32_t length,
+                          std::optional<uint32_t> srcId = {})
   {
     auto bufferViewId = m_bufferViews->Size();
     auto bufferView = m_bufferViews->Add(ObjectValue{});
-    m_root.BufferViews[srcId].m_json->CopyTo(bufferView);
+    if (srcId) {
+      m_root.BufferViews[*srcId].m_json->CopyTo(bufferView);
+    } else {
+      bufferView->SetProperty(u8"buffer", 0.0f);
+    }
     bufferView->SetProperty(u8"byteOffset", (float)offset);
     bufferView->SetProperty(u8"byteLength", (float)length);
     return bufferViewId;
+  }
+
+  uint32_t PushAccessorFloat2(std::span<const Float2> values)
+  {
+    auto [offset, length] = m_writer.PushBufferView(values);
+    auto bufferView = PushBufferView(offset, length);
+
+    auto index = m_root.Accessors.size();
+    auto gltfAccessor = m_root.Accessors.m_json->Add(ObjectValue{});
+    gltfAccessor->SetProperty(u8"bufferView", (float)bufferView);
+    gltfAccessor->SetProperty(u8"type", u8"VEC2");
+    gltfAccessor->SetProperty(u8"componentType", (float)ComponentTypes::FLOAT);
+    gltfAccessor->SetProperty(u8"count", (float)values.size());
+    return index;
+  }
+
+  uint32_t PushAccessorFloat3(std::span<const Float3> values)
+  {
+    auto [offset, length] = m_writer.PushBufferView(values);
+    auto bufferView = PushBufferView(offset, length);
+
+    auto index = m_root.Accessors.size();
+    auto gltfAccessor = m_root.Accessors.m_json->Add(ObjectValue{});
+    gltfAccessor->SetProperty(u8"bufferView", (float)bufferView);
+    gltfAccessor->SetProperty(u8"type", u8"VEC3");
+    gltfAccessor->SetProperty(u8"componentType", (float)ComponentTypes::FLOAT);
+    gltfAccessor->SetProperty(u8"count", (float)values.size());
+    return index;
+  }
+
+  uint32_t PushIndices(std::span<const uint32_t> values)
+  {
+    auto [offset, length] = m_writer.PushBufferView(values);
+    auto bufferView = PushBufferView(offset, length);
+
+    auto index = m_root.Accessors.size();
+    auto gltfAccessor = m_root.Accessors.m_json->Add(ObjectValue{});
+    gltfAccessor->SetProperty(u8"bufferView", (float)bufferView);
+    gltfAccessor->SetProperty(u8"type", u8"SCALAR");
+    gltfAccessor->SetProperty(u8"componentType",
+                              (float)ComponentTypes::UNSIGNED_INT);
+    gltfAccessor->SetProperty(u8"count", (float)values.size());
+    return index;
+  }
+
+  void PushPrim(const MeshPrimitive& prim,
+                uint32_t materialIndex,
+                std::span<const Float3> positions,
+                std::span<const Float3> normal,
+                std::span<const Float2> uv,
+                std::span<const uint32_t> indices)
+  {
+    // auto prim = mesh.Primitives.m_json->Add(ObjectValue{});
+    auto attr = prim.m_json->SetProperty(u8"attributes", ObjectValue{});
+    attr->SetProperty(u8"POSITION", (float)PushAccessorFloat3(positions));
+    attr->SetProperty(u8"NORMAL", (float)PushAccessorFloat3(normal));
+    attr->SetProperty(u8"TEXCOORD_0", (float)PushAccessorFloat2(uv));
+    prim.m_json->SetProperty(u8"indices", (float)PushIndices(indices));
+    prim.m_json->SetProperty(u8"material", (float)materialIndex);
+    prim.m_json->SetProperty(u8"mode", 4.0f);
   }
 
   void SerializeImages(const GetReplaceBytes& replaceImages)
@@ -75,7 +169,7 @@ public:
       // push bin
       auto [offset, length] = m_writer.PushBufferView(span);
       // push bufferview
-      auto bufferViewId = PushBufferView(*image.BufferViewId(), offset, length);
+      auto bufferViewId = PushBufferView(offset, length, *image.BufferViewId());
       // push image
       auto new_image = m_images->Add(ObjectValue{});
       image.m_json->CopyTo(new_image);
@@ -103,7 +197,7 @@ public:
       auto [offset, length] = m_writer.PushBufferView(span);
       // push bufferview
       auto bufferViewId =
-        PushBufferView(*accessor.BufferViewId(), offset, length);
+        PushBufferView(offset, length, *accessor.BufferViewId());
       // push accessor
       auto new_accessor = m_accessors->Add(ObjectValue{});
       accessor.m_json->CopyTo(new_accessor);

@@ -44,6 +44,13 @@ struct BinWriter
     auto byteSize = sizeof(T) * size;
     return PushBufferView(std::span((const uint8_t*)p, byteSize));
   }
+
+  template<typename T>
+  BufferView PushBufferView(std::span<const T> values)
+  {
+    auto byteSize = sizeof(T) * values.size();
+    return PushBufferView(std::span((const uint8_t*)values.data(), byteSize));
+  }
 };
 
 } // namespace
