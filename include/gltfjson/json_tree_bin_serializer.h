@@ -10,6 +10,13 @@
 
 namespace gltfjson {
 
+struct Float16
+{
+  float _11, _12, _13, _14;
+  float _21, _22, _23, _24;
+  float _31, _32, _33, _34;
+  float _41, _42, _43, _44;
+};
 struct Float4
 {
   float X;
@@ -118,6 +125,35 @@ public:
     return index;
   }
 
+  uint32_t PushAccessorFloat4(std::span<const Float4> values)
+  {
+    auto [offset, length] = m_writer.PushBufferView(values);
+    auto bufferView = PushBufferView(offset, length);
+
+    auto index = m_root.Accessors.size();
+    auto gltfAccessor = m_root.Accessors.m_json->Add(ObjectValue{});
+    gltfAccessor->SetProperty(u8"bufferView", (float)bufferView);
+    gltfAccessor->SetProperty(u8"type", u8"VEC4");
+    gltfAccessor->SetProperty(u8"componentType", (float)ComponentTypes::FLOAT);
+    gltfAccessor->SetProperty(u8"count", (float)values.size());
+    return index;
+  }
+
+  uint32_t PushAccessorUShort4(std::span<const UShort4> values)
+  {
+    auto [offset, length] = m_writer.PushBufferView(values);
+    auto bufferView = PushBufferView(offset, length);
+
+    auto index = m_root.Accessors.size();
+    auto gltfAccessor = m_root.Accessors.m_json->Add(ObjectValue{});
+    gltfAccessor->SetProperty(u8"bufferView", (float)bufferView);
+    gltfAccessor->SetProperty(u8"type", u8"VEC4");
+    gltfAccessor->SetProperty(u8"componentType",
+                              (float)ComponentTypes::UNSIGNED_SHORT);
+    gltfAccessor->SetProperty(u8"count", (float)values.size());
+    return index;
+  }
+
   uint32_t PushIndices(std::span<const uint32_t> values)
   {
     auto [offset, length] = m_writer.PushBufferView(values);
@@ -133,18 +169,39 @@ public:
     return index;
   }
 
+  uint32_t PushAccessorFloat16(std::span<const Float16> values)
+  {
+    auto [offset, length] = m_writer.PushBufferView(values);
+    auto bufferView = PushBufferView(offset, length);
+
+    auto index = m_root.Accessors.size();
+    auto gltfAccessor = m_root.Accessors.m_json->Add(ObjectValue{});
+    gltfAccessor->SetProperty(u8"bufferView", (float)bufferView);
+    gltfAccessor->SetProperty(u8"type", u8"MAT4");
+    gltfAccessor->SetProperty(u8"componentType", (float)ComponentTypes::FLOAT);
+    gltfAccessor->SetProperty(u8"count", (float)values.size());
+    return index;
+  }
+
   void PushPrim(const MeshPrimitive& prim,
                 uint32_t materialIndex,
                 std::span<const Float3> positions,
                 std::span<const Float3> normal,
                 std::span<const Float2> uv,
-                std::span<const uint32_t> indices)
+                std::span<const uint32_t> indices,
+                std::span<const UShort4> joints,
+                std::span<const Float4> weights)
   {
     // auto prim = mesh.Primitives.m_json->Add(ObjectValue{});
     auto attr = prim.m_json->SetProperty(u8"attributes", ObjectValue{});
     attr->SetProperty(u8"POSITION", (float)PushAccessorFloat3(positions));
     attr->SetProperty(u8"NORMAL", (float)PushAccessorFloat3(normal));
     attr->SetProperty(u8"TEXCOORD_0", (float)PushAccessorFloat2(uv));
+    if (weights.size() == positions.size() &&
+        joints.size() == positions.size()) {
+      attr->SetProperty(u8"JOINTS_0", (float)PushAccessorUShort4(joints));
+      attr->SetProperty(u8"WEIGHTS_0", (float)PushAccessorFloat4(weights));
+    }
     prim.m_json->SetProperty(u8"indices", (float)PushIndices(indices));
     prim.m_json->SetProperty(u8"material", (float)materialIndex);
     prim.m_json->SetProperty(u8"mode", 4.0f);
@@ -175,6 +232,12 @@ public:
       image.m_json->CopyTo(new_image);
       new_image->Get(u8"bufferView")->Set((float)bufferViewId);
     }
+  }
+
+  void PushSkin(const Skin& skin, std::span<const Float16> values)
+  {
+    skin.m_json->SetProperty(u8"inverseBindMatrices",
+                             (float)PushAccessorFloat16(values));
   }
 
   void SerializeAccessors(const GetReplaceBytes& replaceAccessors)
