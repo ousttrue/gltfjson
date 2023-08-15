@@ -161,8 +161,8 @@ struct JsonObject
     if (auto node = m_node<lit>()) {
       if (auto array = node->template Ptr<tree::ArrayValue>()) {
         if (array->size() == 2) {
-          if (auto x = (*array)[0]->Ptr<float>()) {
-            if (auto y = (*array)[1]->Ptr<float>()) {
+          if (auto x = (*array)[0]->template Ptr<float>()) {
+            if (auto y = (*array)[1]->template Ptr<float>()) {
               return std::array<float, 2>{ *x, *y };
             }
           }
@@ -178,9 +178,9 @@ struct JsonObject
     if (auto node = m_node<lit>()) {
       if (auto array = node->template Ptr<tree::ArrayValue>()) {
         if (array->size() == 3) {
-          if (auto x = (*array)[0]->Ptr<float>()) {
-            if (auto y = (*array)[1]->Ptr<float>()) {
-              if (auto z = (*array)[2]->Ptr<float>()) {
+          if (auto x = (*array)[0]->template Ptr<float>()) {
+            if (auto y = (*array)[1]->template Ptr<float>()) {
+              if (auto z = (*array)[2]->template Ptr<float>()) {
                 return std::array<float, 3>{ *x, *y, *z };
               }
             }
@@ -197,10 +197,10 @@ struct JsonObject
     if (auto node = m_node<lit>()) {
       if (auto array = node->template Ptr<tree::ArrayValue>()) {
         if (array->size() == 4) {
-          if (auto x = (*array)[0]->Ptr<float>()) {
-            if (auto y = (*array)[1]->Ptr<float>()) {
-              if (auto z = (*array)[2]->Ptr<float>()) {
-                if (auto w = (*array)[3]->Ptr<float>()) {
+          if (auto x = (*array)[0]->template Ptr<float>()) {
+            if (auto y = (*array)[1]->template Ptr<float>()) {
+              if (auto z = (*array)[2]->template Ptr<float>()) {
+                if (auto w = (*array)[3]->template Ptr<float>()) {
                   return std::array<float, 4>{ *x, *y, *z, *w };
                 }
               }
