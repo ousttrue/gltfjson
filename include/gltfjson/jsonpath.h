@@ -107,7 +107,7 @@ public:
     for (auto jp : m_str | std::views::split(DELIMITER)) {
       ++size;
       if (size == 2) {
-        childOfRoot = { jp };
+        childOfRoot = { std::u8string_view(jp) };
       } else if (size == 3) {
         if (auto i = GetInt(std::u8string_view{ jp })) {
           return { childOfRoot, *i };
