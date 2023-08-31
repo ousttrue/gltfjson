@@ -90,7 +90,7 @@ struct NumberArray
     std::vector<tree::NodePtr>::iterator m_it;
     T operator*()
     {
-      auto p = (*m_it)->template Ptr<float>();
+      auto p = (*m_it)->Ptr<float>();
       return (T)*p;
     }
     Iterator& operator++()
@@ -109,7 +109,7 @@ struct NumberArray
   uint32_t size() const { return m_json ? m_json->Size() : 0; }
   T operator[](size_t index) const
   {
-    return (T)*m_json->Get(index)->template Ptr<float>();
+    return (T)*m_json->Get(index)->Ptr<float>();
   }
   Iterator begin() const
   {
@@ -161,8 +161,8 @@ struct JsonObject
     if (auto node = m_node<lit>()) {
       if (auto array = node->template Ptr<tree::ArrayValue>()) {
         if (array->size() == 2) {
-          if (auto x = (*array)[0]->template Ptr<float>()) {
-            if (auto y = (*array)[1]->template Ptr<float>()) {
+          if (auto x = (*array)[0]->Ptr<float>()) {
+            if (auto y = (*array)[1]->Ptr<float>()) {
               return std::array<float, 2>{ *x, *y };
             }
           }
@@ -178,9 +178,9 @@ struct JsonObject
     if (auto node = m_node<lit>()) {
       if (auto array = node->template Ptr<tree::ArrayValue>()) {
         if (array->size() == 3) {
-          if (auto x = (*array)[0]->template Ptr<float>()) {
-            if (auto y = (*array)[1]->template Ptr<float>()) {
-              if (auto z = (*array)[2]->template Ptr<float>()) {
+          if (auto x = (*array)[0]->Ptr<float>()) {
+            if (auto y = (*array)[1]->Ptr<float>()) {
+              if (auto z = (*array)[2]->Ptr<float>()) {
                 return std::array<float, 3>{ *x, *y, *z };
               }
             }
@@ -197,10 +197,10 @@ struct JsonObject
     if (auto node = m_node<lit>()) {
       if (auto array = node->template Ptr<tree::ArrayValue>()) {
         if (array->size() == 4) {
-          if (auto x = (*array)[0]->template Ptr<float>()) {
-            if (auto y = (*array)[1]->template Ptr<float>()) {
-              if (auto z = (*array)[2]->template Ptr<float>()) {
-                if (auto w = (*array)[3]->template Ptr<float>()) {
+          if (auto x = (*array)[0]->Ptr<float>()) {
+            if (auto y = (*array)[1]->Ptr<float>()) {
+              if (auto z = (*array)[2]->Ptr<float>()) {
+                if (auto w = (*array)[3]->Ptr<float>()) {
                   return std::array<float, 4>{ *x, *y, *z, *w };
                 }
               }
@@ -682,6 +682,37 @@ struct Root : GltfProperty
   auto ExtensionsRequired() const
   {
     return m_json->Get(u8"extensionsRequired");
+  }
+
+  std::u8string GetTargetName(uint32_t meshIndex,
+                              uint32_t primIndex,
+                              uint32_t targetIndex) const
+  {
+    if (meshIndex >= Meshes.size()) {
+      return {};
+    }
+    auto mesh = Meshes[meshIndex];
+    if (auto extras = mesh.Extras()) {
+      if (auto targetNames = extras->Get(u8"targetNames")) {
+        if (auto name = targetNames->Get(targetIndex)) {
+          return name->U8String();
+        }
+      }
+    }
+
+    if (primIndex >= mesh.Primitives.size()) {
+      return {};
+    }
+    auto prim = mesh.Primitives[primIndex];
+    if (auto extras = prim.m_json->Get(u8"extras")) {
+      if (auto targetNames = extras->Get(u8"targetNames")) {
+        if (auto name = targetNames->Get(targetIndex)) {
+          return name->U8String();
+        }
+      }
+    }
+
+    return {};
   }
 };
 

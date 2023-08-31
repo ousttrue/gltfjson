@@ -207,6 +207,21 @@ public:
     prim.m_json->SetProperty(u8"mode", 4.0f);
   }
 
+  void PushMorph(const MeshPrimitive& prim,
+                 std::span<const Float3> positions,
+                 std::span<const Float3> normal,
+                 std::span<const Float2> uv)
+  {
+    auto targets = prim.m_json->Get(u8"targets");
+    if (!targets) {
+      targets = prim.m_json->SetProperty(u8"targets", gltfjson::ArrayValue{});
+    }
+    auto target = targets->Add(gltfjson::ObjectValue{});
+    target->SetProperty(u8"POSITION", (float)PushAccessorFloat3(positions));
+    target->SetProperty(u8"NORMAL", (float)PushAccessorFloat3(normal));
+    target->SetProperty(u8"TEXCOORD_0", (float)PushAccessorFloat2(uv));
+  }
+
   void SerializeImages(const GetReplaceBytes& replaceImages)
   {
     for (int i = 0; i < m_root.Images.size(); ++i) {
