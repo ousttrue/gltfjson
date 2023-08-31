@@ -548,6 +548,31 @@ struct Mesh : ChildOfRootProperty
   }
   JsonArray<MeshPrimitive, u8"primitives"> Primitives;
   NumberArray<float, u8"weights"> Weights;
+
+  void SetTargetNames(const std::vector<std::string>& names)
+  {
+
+    auto extras = Extras();
+    if (!extras) {
+      extras = m_json->SetProperty(u8"extras", ObjectValue{});
+    }
+
+    auto targetNames = extras->Get(u8"targetNames");
+    if (!targetNames) {
+      targetNames = extras->SetProperty(u8"targetNames", ArrayValue{});
+    }
+
+    if (auto array = targetNames->Array()) {
+      array->clear();
+    } else {
+      targetNames->Set(ArrayValue{});
+    }
+
+    for (auto& name : names) {
+      auto u8 = to_u8(name);
+      targetNames->Add(std::u8string{ u8.begin(), u8.end() });
+    }
+  }
 };
 
 // https://github.com/KhronosGroup/glTF/blob/main/specification/2.0/schema/node.schema.json
@@ -703,11 +728,13 @@ struct Root : GltfProperty
     if (primIndex >= mesh.Primitives.size()) {
       return {};
     }
-    auto prim = mesh.Primitives[primIndex];
-    if (auto extras = prim.m_json->Get(u8"extras")) {
-      if (auto targetNames = extras->Get(u8"targetNames")) {
-        if (auto name = targetNames->Get(targetIndex)) {
-          return name->U8String();
+    {
+      auto prim = mesh.Primitives[primIndex];
+      if (auto extras = prim.m_json->Get(u8"extras")) {
+        if (auto targetNames = extras->Get(u8"targetNames")) {
+          if (auto name = targetNames->Get(targetIndex)) {
+            return name->U8String();
+          }
         }
       }
     }

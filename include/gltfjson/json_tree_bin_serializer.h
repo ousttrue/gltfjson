@@ -222,6 +222,20 @@ public:
     target->SetProperty(u8"TEXCOORD_0", (float)PushAccessorFloat2(uv));
   }
 
+  void PushMorphEmpty(const MeshPrimitive& prim, uint32_t vertex_count)
+  {
+    auto targets = prim.m_json->Get(u8"targets");
+    if (!targets) {
+      targets = prim.m_json->SetProperty(u8"targets", gltfjson::ArrayValue{});
+    }
+    auto target = targets->Add(gltfjson::ObjectValue{});
+    std::vector<Float3> positions(vertex_count, Float3{ 0, 0, 0 });
+    target->SetProperty(u8"POSITION", (float)PushAccessorFloat3(positions));
+    target->SetProperty(u8"NORMAL", (float)PushAccessorFloat3(positions));
+    std::vector<Float2> uv(vertex_count, Float2{ 0, 0 });
+    target->SetProperty(u8"TEXCOORD_0", (float)PushAccessorFloat2(uv));
+  }
+
   void SerializeImages(const GetReplaceBytes& replaceImages)
   {
     for (int i = 0; i < m_root.Images.size(); ++i) {
