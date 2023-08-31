@@ -5,6 +5,20 @@
     "version": "0.2.0",
     "configurations": [
         {
+            "name": "gltfjson.exe",
+            "type": "cppvsdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}/prefix/bin/gltfjson.exe",
+            "args": [
+                "${env:GLTF_SAMPLE_MODELS}/2.0/BoomBox/glTF-Binary/BoomBox.glb"
+            ],
+            "stopAtEntry": false,
+            "cwd": "${workspaceFolder}",
+            "environment": [],
+            "console": "integratedTerminal",
+            "visualizerFile": "${workspaceRoot}/.vscode/gltfjson.natvis",
+        },
+        {
             "name": "tests.exe",
             "type": "cppvsdbg",
             "request": "launch",
