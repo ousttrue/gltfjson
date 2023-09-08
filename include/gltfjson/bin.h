@@ -3,13 +3,13 @@
 #include "directory.h"
 #include "gltf_typing.h"
 #include <algorithm>
-#include <expected>
 #include <filesystem>
 #include <iostream>
 #include <span>
 #include <stdint.h>
 #include <string_view>
 #include <unordered_map>
+#include <optional>
 
 namespace gltfjson {
 
@@ -39,12 +39,13 @@ struct Bin
   std::shared_ptr<Directory> Dir;
   std::span<const uint8_t> Bytes;
 
-  std::expected<std::span<const uint8_t>, std::string> GetBufferViewBytes(
+  std::optional<std::span<const uint8_t>> GetBufferViewBytes(
     const Root& gltf,
     int buffer_view_index) const
   {
     if (buffer_view_index < 0 || buffer_view_index >= gltf.BufferViews.size()) {
-      return std::unexpected{ "buffer_view_index is out of range" };
+      // return std::unexpected{ "buffer_view_index is out of range" };
+      return {};
     }
 
     auto buffer_view = gltf.BufferViews[buffer_view_index];
@@ -62,7 +63,7 @@ struct Bin
         return bytes->subspan((uint32_t)offset, (uint32_t)*length);
       } else {
         // error
-        return bytes;
+        return {};
       }
     } else {
       // glb
@@ -72,7 +73,7 @@ struct Bin
   }
 
   template<typename S, typename T>
-  std::expected<bool, std::string> GetSparseValue(const Root& gltf,
+  bool GetSparseValue(const Root& gltf,
                                                   std::span<const S> indices,
                                                   uint32_t buffer_view_index,
                                                   std::span<T> dst) const
@@ -85,11 +86,12 @@ struct Bin
       }
       return true;
     } else {
-      return std::unexpected{ span.error() };
+      // return std::unexpected{ span.error() };
+      return false;
     }
   }
 
-  std::expected<std::span<const uint8_t>, std::string> GetImageBytes(
+  std::optional<std::span<const uint8_t>> GetImageBytes(
     const Root& gltf,
     int image_index) const
   {
@@ -98,15 +100,17 @@ struct Bin
       if (auto span = GetBufferViewBytes(gltf, *bufferViewId)) {
         return *span;
       } else {
-        return std::unexpected{ "invalid bufferView" };
+        // return std::unexpected{ "invalid bufferView" };
+        return {};
       }
     } else {
-      return std::unexpected{ "no bufferview" };
+      // return std::unexpected{ "no bufferview" };
+      return {};
     }
   }
 
   mutable std::vector<uint8_t> m_sparseBuffer;
-  std::expected<MemoryBlock, std::string> GetAccessorBlock(
+  std::optional<MemoryBlock> GetAccessorBlock(
     const Root& gltf,
     int accessor_index) const
   {
@@ -123,7 +127,8 @@ struct Bin
         std::span<uint8_t>(begin, begin + block.RequiredSize());
       if (accessor.BufferViewId()) {
         // non zero sparse
-        return std::unexpected{ "non zero sparse not implemented" };
+        // return std::unexpected{ "non zero sparse not implemented" };
+        return {};
       } else {
         // zero fill
         std::fill(sparse_span.begin(), sparse_span.end(), 0);
@@ -145,10 +150,12 @@ struct Bin
               block.SetSpan(sparse_span, 0);
               return block;
             } else {
-              return std::unexpected{ result.error() };
+              // return std::unexpected{ result.error() };
+              return {};
             }
           } else {
-            return std::unexpected{ sparse_indices_bytes.error() };
+            // return std::unexpected{ sparse_indices_bytes.error() };
+            return {};
           }
 
         case gltfjson::ComponentTypes::UNSIGNED_SHORT:
@@ -164,10 +171,12 @@ struct Bin
               block.SetSpan(sparse_span, 0);
               return block;
             } else {
-              return std::unexpected{ result.error() };
+              // return std::unexpected{ result.error() };
+              return {};
             }
           } else {
-            return std::unexpected{ sparse_indices_bytes.error() };
+            // return std::unexpected{ sparse_indices_bytes.error() };
+            return {};
           }
         case gltfjson::ComponentTypes::UNSIGNED_INT:
           if (auto sparse_indices_bytes =
@@ -181,13 +190,16 @@ struct Bin
               block.SetSpan(sparse_span, 0);
               return block;
             } else {
-              return std::unexpected{ result.error() };
+              // return std::unexpected{ result.error() };
+              return {};
             }
           } else {
-            return std::unexpected{ sparse_indices_bytes.error() };
+            // return std::unexpected{ sparse_indices_bytes.error() };
+            return {};
           }
         default:
-          return std::unexpected{ "sparse.indices: unknown" };
+          // return std::unexpected{ "sparse.indices: unknown" };
+          return {};
       }
       throw std::runtime_error("not implemented");
     } else if (auto bufferViewId = accessor.BufferViewId()) {
@@ -197,15 +209,17 @@ struct Bin
         block.SetSpan(*span, offset, bufferView.ByteStride());
         return block;
       } else {
-        return std::unexpected{ "invalid bufferView" };
+        // return std::unexpected{ "invalid bufferView" };
+        return {};
       }
     } else {
-      return std::unexpected{ "sparse nor bufferView" };
+      // return std::unexpected{ "sparse nor bufferView" };
+      return {};
     }
   }
 
   template<typename T>
-  std::expected<std::span<const T>, std::string> GetAccessorBytes(
+  std::optional<std::span<const T>> GetAccessorBytes(
     const Root& gltf,
     const Accessor& accessor) const
   {
@@ -218,7 +232,8 @@ struct Bin
       auto sparse_span = std::span<T>(begin, begin + count);
       if (accessor.BufferViewId()) {
         // non zero sparse
-        return std::unexpected{ "non zero sparse not implemented" };
+        // return std::unexpected{ "non zero sparse not implemented" };
+        return {};
       } else {
         // zero fill
         T zero = {};
@@ -239,10 +254,12 @@ struct Bin
                                              sparse_span)) {
               return sparse_span;
             } else {
-              return std::unexpected{ result.error() };
+              // return std::unexpected{ result.error() };
+              return {};
             }
           } else {
-            return std::unexpected{ sparse_indices_bytes.error() };
+            // return std::unexpected{ sparse_indices_bytes.error() };
+            return {};
           }
 
         case gltfjson::ComponentTypes::UNSIGNED_SHORT:
@@ -257,10 +274,12 @@ struct Bin
 
               return sparse_span;
             } else {
-              return std::unexpected{ result.error() };
+              // return std::unexpected{ result.error() };
+              return {};
             }
           } else {
-            return std::unexpected{ sparse_indices_bytes.error() };
+            // return std::unexpected{ sparse_indices_bytes.error() };
+            return {};
           }
         case gltfjson::ComponentTypes::UNSIGNED_INT:
           if (auto sparse_indices_bytes =
@@ -273,13 +292,16 @@ struct Bin
                                              sparse_span)) {
               return sparse_span;
             } else {
-              return std::unexpected{ result.error() };
+              // return std::unexpected{ result.error() };
+              return {};
             }
           } else {
-            return std::unexpected{ sparse_indices_bytes.error() };
+            // return std::unexpected{ sparse_indices_bytes.error() };
+            return {};
           }
         default:
-          return std::unexpected{ "sparse.indices: unknown" };
+          // return std::unexpected{ "sparse.indices: unknown" };
+          return {};
       }
       throw std::runtime_error("not implemented");
     } else if (auto bufferView = accessor.BufferViewId()) {
@@ -288,15 +310,17 @@ struct Bin
         return std::span<const T>((const T*)(span->data() + offset), count);
 
       } else {
-        return std::unexpected{ "invalid bufferView" };
+        // return std::unexpected{ "invalid bufferView" };
+        return {};
       }
     } else {
-      return std::unexpected{ "sparse nor bufferView" };
+      // return std::unexpected{ "sparse nor bufferView" };
+      return {};
     }
   }
 
   template<typename T>
-  std::expected<std::span<const T>, std::string> GetAccessorBytes(
+  std::optional<std::span<const T>> GetAccessorBytes(
     const Root& gltf,
     int accessor_index) const
   {
