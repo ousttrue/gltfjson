@@ -1,6 +1,6 @@
 #pragma once
-#include "json_token.h"
 #include "json_string_escape.h"
+#include "json_token.h"
 #include <algorithm>
 #include <assert.h>
 #include <charconv>
@@ -12,6 +12,9 @@
 #include <stdint.h>
 #include <string>
 #include <vector>
+#if !defined(_MSC_VER)
+#include <stdlib.h> // strtod
+#endif
 
 namespace gltfjson {
 
@@ -97,7 +100,9 @@ struct Value
   uint32_t m_stride = 1;
   std::optional<uint32_t> m_parentIndex;
 
-  bool operator==(const Value& rhs) const { return Range == rhs.Range; }
+  bool operator==(const Value& rhs) const { 
+    return Range == rhs.Range; 
+  }
 
   bool Contains(const Value& rhs) const
   {
@@ -138,10 +143,8 @@ struct Value
       return std::nullopt;
     }
 #else
-    std::string str((const char*)Range.data(),
-                    (const char*)Range.data() + Range.size());
-    size_t i;
-    return std::stod(str, &i);
+    char* end;
+    return strtod((const char*)Range.data(), &end);
 #endif
   }
 

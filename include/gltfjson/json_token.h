@@ -3,6 +3,7 @@
 #include <expected>
 #include <optional>
 #include <string>
+#include <stdlib.h>
 
 namespace gltfjson {
 
@@ -89,9 +90,9 @@ struct Tokenizer
       return std::unexpected{ u8"Invaild number" };
     }
 #else
-    std::string str((const char*)src.data(),
-                    (const char*)src.data() + src.size());
-    value = std::stod(str, &size);
+    char* end;
+    value = strtod((const char*)src.data(), &end);
+    size = (const char8_t*)end - src.data();
 #endif
 
     if (p) {
