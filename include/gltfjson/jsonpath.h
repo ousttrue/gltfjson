@@ -34,7 +34,7 @@ public:
     size_t size = 0;
     for (auto jp : m_str | std::views::split(DELIMITER)) {
       if (i == size) {
-        return std::u8string_view{ jp };
+        return std::u8string_view{ jp.begin(), jp.end() };
       }
       ++size;
     }
@@ -107,9 +107,9 @@ public:
     for (auto jp : m_str | std::views::split(DELIMITER)) {
       ++size;
       if (size == 2) {
-        childOfRoot = { std::u8string_view(jp) };
+        childOfRoot = { std::u8string_view(jp.begin(), jp.end()) };
       } else if (size == 3) {
-        if (auto i = GetInt(std::u8string_view{ jp })) {
+        if (auto i = GetInt(std::u8string_view{ jp.begin(), jp.end() })) {
           return { childOfRoot, *i };
         }
         break;

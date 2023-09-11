@@ -1,9 +1,8 @@
 #pragma once
 #include <charconv>
-#include <expected>
 #include <optional>
-#include <string>
 #include <stdlib.h>
+#include <string_view>
 
 namespace gltfjson {
 
@@ -61,22 +60,23 @@ struct Tokenizer
     return value;
   }
 
-  std::expected<std::u8string_view, std::u8string> GetSymbol(
-    std::u8string_view symbol)
+  std::optional<std::u8string_view> GetSymbol(std::u8string_view symbol)
   {
     if (auto src = Peek(symbol.size())) {
       if (src->starts_with(symbol)) {
         return *Get(symbol.size());
       } else {
-        return std::unexpected{ std::u8string(u8"Not match: ") +
-                                std::u8string{ src->begin(), src->end() } };
+        // return std::unexpected{ std::u8string(u8"Not match: ") +
+        //                         std::u8string{ src->begin(), src->end() } };
+        return {};
       }
     } else {
-      return std::unexpected{ u8"Not enough size" };
+      // return std::unexpected{ u8"Not enough size" };
+      return {};
     }
   }
 
-  std::expected<std::u8string_view, std::u8string> GetNumber(float* p = nullptr)
+  std::optional<std::u8string_view> GetNumber(float* p = nullptr)
   {
     auto src = Remain();
     size_t size = 0;
@@ -87,7 +87,8 @@ struct Tokenizer
         ec == std::errc{}) {
       size = (ptr - (const char*)src.data());
     } else {
-      return std::unexpected{ u8"Invaild number" };
+      // return std::unexpected{ u8"Invaild number" };
+      return {};
     }
 #else
     char* end;
@@ -101,10 +102,11 @@ struct Tokenizer
     return *Get(size);
   }
 
-  std::expected<std::u8string_view, std::u8string> GetString()
+  std::optional<std::u8string_view> GetString()
   {
     if (Src[Pos] != '"') {
-      return std::unexpected{ u8"Not starts with \"" };
+      // return std::unexpected{ u8"Not starts with \"" };
+      return {};
     }
 
     auto close = Pos + 1;
@@ -122,7 +124,8 @@ struct Tokenizer
     }
 
     if (Src[close] != '"') {
-      return std::unexpected{ u8"Unclosed string" };
+      // return std::unexpected{ u8"Unclosed string" };
+      return {};
     }
 
     return *Get(close - Pos + 1);

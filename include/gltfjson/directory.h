@@ -1,23 +1,21 @@
 #pragma once
-#include "base64.h"
-#include <expected>
 #include <filesystem>
 #include <fstream>
-#include <span>
 #include <stdint.h>
 #include <unordered_map>
 #include <vector>
 
 namespace gltfjson {
 
-inline std::expected<std::vector<uint8_t>, std::string>
+inline std::optional<std::vector<uint8_t>>
 ReadAllBytes(const std::filesystem::path& path)
 {
   std::ifstream ifs(path, std::ios::binary | std::ios::ate);
   if (!ifs) {
     auto u8 = path.u8string();
-    return std::unexpected{ std::string("fail to open: ") +
-                            std::string((const char*)u8.data(), u8.size()) };
+    // return std::unexpected{ std::string("fail to open: ") +
+    //                         std::string((const char*)u8.data(), u8.size()) };
+    return {};
   }
 
   auto pos = ifs.tellg();
@@ -37,8 +35,7 @@ struct Directory
   std::filesystem::path Base;
   std::unordered_map<std::string, std::vector<uint8_t>> FileCaches;
 
-  std::expected<std::span<const uint8_t>, std::string> GetBuffer(
-    std::u8string_view uri)
+  std::optional<std::span<const uint8_t>> GetBuffer(std::u8string_view uri)
   {
     auto found = FileCaches.find({ uri.begin(), uri.end() });
     if (found != FileCaches.end()) {
@@ -57,7 +54,8 @@ struct Directory
           return FileCaches[key];
         }
       }
-      return std::unexpected{ "not implemented base64" };
+      // return std::unexpected{ "not implemented base64" };
+      return {};
     }
 
     auto path = Base / uri;
@@ -66,7 +64,7 @@ struct Directory
       FileCaches.insert({ key, *bytes });
       return FileCaches[key];
     } else {
-      return bytes;
+      return {};
     }
   }
 };

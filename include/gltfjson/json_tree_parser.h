@@ -50,11 +50,12 @@ struct Parser
     return node;
   }
 
-  std::expected<NodePtr, std::u8string> ParseExpected()
+  NodePtr Parse()
   {
     m_token.SkipSpace();
     if (m_token.IsEnd()) {
-      return std::unexpected{ u8"empty" };
+      // return std::unexpected{ u8"empty" };
+      return {};
     }
 
     auto ch = *m_token;
@@ -96,19 +97,11 @@ struct Parser
       }
     }
 
-    return std::unexpected{ u8"invalid" };
+    // return std::unexpected{ u8"invalid" };
+    return {};
   }
 
-  NodePtr Parse()
-  {
-    if (auto result = ParseExpected()) {
-      return *result;
-    } else {
-      return nullptr;
-    }
-  }
-
-  std::expected<NodePtr, std::u8string> ParseSymbol(std::u8string_view target)
+  NodePtr ParseSymbol(std::u8string_view target)
   {
     if (auto src = m_token.GetSymbol(target)) {
       if (*src == u8"null") {
@@ -118,37 +111,42 @@ struct Parser
       } else if (*src == u8"false") {
         return Push(false);
       } else {
-        return std::unexpected{ u8"not reach here !" };
+        // return std::unexpected{ u8"not reach here !" };
+        return {};
       }
     } else {
-      return std::unexpected{ src.error() };
+      // return std::unexpected{ src.error() };
+      return {};
     }
   }
 
-  std::expected<NodePtr, std::u8string> ParseNumber()
+  NodePtr ParseNumber()
   {
     float value;
     if (auto n = m_token.GetNumber(&value)) {
       return Push(value);
     } else {
-      return std::unexpected{ n.error() };
+      // return std::unexpected{ n.error() };
+      return {};
     }
   }
 
-  std::expected<NodePtr, std::u8string> ParseString()
+  NodePtr ParseString()
   {
     if (auto str = m_token.GetString()) {
       auto unescaped = unescape(str->substr(1, str->size() - 2));
       return Push(std::u8string{ unescaped.data(), unescaped.size() });
     } else {
-      return std::unexpected{ str.error() };
+      // return std::unexpected{ str.error() };
+      return {};
     }
   }
 
-  std::expected<NodePtr, std::u8string> ParseArray()
+  NodePtr ParseArray()
   {
     if (*m_token != '[') {
-      return std::unexpected{ u8"Not starts with array open" };
+      // return std::unexpected{ u8"Not starts with array open" };
+      return {};
     }
     m_token.Get(1);
     Stack.push(Push(ArrayValue()));
@@ -161,7 +159,8 @@ struct Parser
         m_token.Get(1);
         // auto node = Stack.top();
         if (node != Stack.top()) {
-          return std::unexpected{ u8"open close mismatch" };
+          // return std::unexpected{ u8"open close mismatch" };
+          return {};
         }
         Stack.pop();
         return node;
@@ -170,7 +169,8 @@ struct Parser
       if (i) {
         // must comma
         if (*m_token != ',') {
-          return std::unexpected{ u8"comma required" };
+          // return std::unexpected{ u8"comma required" };
+          return {};
         }
         m_token.Get(1);
         m_token.SkipSpace();
@@ -179,13 +179,15 @@ struct Parser
       Parse();
     }
 
-    return std::unexpected{ u8"Unclosed array" };
+    // return std::unexpected{ u8"Unclosed array" };
+    return {};
   }
 
-  std::expected<NodePtr, std::u8string> ParseObject()
+  NodePtr ParseObject()
   {
     if (*m_token != '{') {
-      return std::unexpected{ u8"Not starts with object open" };
+      // return std::unexpected{ u8"Not starts with object open" };
+      return {};
     }
     m_token.Get(1);
     Stack.push(Push(ObjectValue{}));
@@ -197,7 +199,8 @@ struct Parser
         // closed
         m_token.Get(1);
         if (node != Stack.top()) {
-          return std::unexpected{ u8"open close mismatch" };
+          // return std::unexpected{ u8"open close mismatch" };
+          return {};
         }
         Stack.pop();
         return node;
@@ -206,7 +209,8 @@ struct Parser
       if (i) {
         // must comma
         if (*m_token != ',') {
-          return std::unexpected{ u8"comma required" };
+          // return std::unexpected{ u8"comma required" };
+          return {};
         }
         m_token.Get(1);
         m_token.SkipSpace();
@@ -219,7 +223,8 @@ struct Parser
         m_token.SkipSpace();
         // must colon
         if (*m_token != ':') {
-          return std::unexpected{ u8"colon required" };
+          // return std::unexpected{ u8"colon required" };
+          return {};
         }
         m_token.Get(1);
         m_token.SkipSpace();
@@ -229,7 +234,8 @@ struct Parser
       Parse();
     }
 
-    return std::unexpected{ u8"Unclosed array" };
+    // return std::unexpected{ u8"Unclosed array" };
+    return {};
   }
 };
 
