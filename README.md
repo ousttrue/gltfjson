@@ -3,7 +3,14 @@
 A json manipulation library for glTF.
 It focuses on usability of glTF editing, not on performance.
 
-`c++20(std::expected)` required.
+- `c++20` required.
+- `c++21(std::expected)` removed
+
+msvc19, clang-16 OK.
+
+```
+> meson setup builddir -Dcpp_std=c++20 --native-file zig.ini -Dexecutables=true -Dtests=true
+```
 
 ## JSON DOM
 

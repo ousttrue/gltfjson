@@ -27,7 +27,8 @@
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}",
             "environment": [],
-            "console": "integratedTerminal"
+            "console": "integratedTerminal",
+            "visualizerFile": "${workspaceFolder}/.vscode/Microsoft.Android.natvis",
         },
         {
             "name": "tests",
