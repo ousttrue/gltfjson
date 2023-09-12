@@ -27,7 +27,7 @@ TEST(TestTreeWriter, BinWriter)
     ss << view;
   };
   gltfjson::tree::Exporter exporter(sink);
-  exporter.Export(*result);
+  exporter.Export(result);
   auto jsonchunk = ss.str();
 
   std::cout << jsonchunk << std::endl;

@@ -73,14 +73,16 @@ jsonComponent(const std::string& key,
         return element;
       }));
 
-      if (auto a = value->Array()) {
-        for (auto i = 0; i < a->size(); ++i) {
+      if (auto a =
+            std::dynamic_pointer_cast<gltfjson::tree::ArrayNode>(value)) {
+        for (auto i = 0; i < a->Value.size(); ++i) {
           std::stringstream ss;
           ss << i;
-          m_children->Add(jsonComponent(ss.str(), (*a)[i], level + 1));
+          m_children->Add(jsonComponent(ss.str(), a->Value[i], level + 1));
         }
-      } else if (auto o = value->Object()) {
-        for (auto kv : *o) {
+      } else if (auto o = std::dynamic_pointer_cast<gltfjson::tree::ObjectNode>(
+                   value)) {
+        for (auto kv : o->Value) {
           std::string name{ (const char*)kv.first.data(), kv.first.size() };
           m_children->Add(jsonComponent(name, kv.second, level + 1));
         }

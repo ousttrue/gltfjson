@@ -483,8 +483,9 @@ GetHumanBoneName(Root root, uint32_t i)
   if (auto vrm = root.GetExtension<VRMC_vrm>()) {
     if (auto humanoid = vrm->Humanoid()) {
       if (auto humanbones = humanoid->HumanBones()) {
-        if (auto obj = humanbones->m_json->Object()) {
-          for (auto kv : *obj) {
+        if (auto obj =
+              std::dynamic_pointer_cast<tree::ObjectNode>(humanbones->m_json)) {
+          for (auto kv : obj->Value) {
             if (auto node = kv.second->Get(u8"node")) {
               if (auto p = node->Ptr<float>()) {
                 if (*p == i) {

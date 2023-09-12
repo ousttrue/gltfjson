@@ -46,29 +46,27 @@ struct JsonArrayBase
     bool operator!=(const Iterator& rhs) const { return rhs.m_it != m_it; }
   };
 
-  tree::NodePtr m_json;
+  std::shared_ptr<tree::ArrayNode> m_json;
   JsonArrayBase(const tree::NodePtr& json)
-    : m_json(json)
+    : m_json(std::dynamic_pointer_cast<tree::ArrayNode>(json))
   {
     // assert(m_json);
   }
-  uint32_t size() const { return m_json ? m_json->Size() : 0; }
-  T operator[](size_t index) const { return T{ m_json->Get(index) }; }
+  uint32_t size() const { return m_json ? m_json->Value.size() : 0; }
+  T operator[](size_t index) const { return T{ m_json->Value[index] }; }
   Iterator begin() const
   {
-    return m_json ? Iterator{ m_json->Array()->begin() } : Iterator{};
+    return m_json ? Iterator{ m_json->Value.begin() } : Iterator{};
   }
   Iterator end() const
   {
-    return m_json ? Iterator{ m_json->Array()->end() } : Iterator{};
+    return m_json ? Iterator{ m_json->Value.end() } : Iterator{};
   }
 
   void push_back(const T& t)
   {
     if (t.m_json) {
-      if (auto array = m_json->Array()) {
-        array->push_back(t.m_json);
-      }
+      m_json->Value.push_back(t.m_json);
     }
   }
 };
@@ -101,23 +99,23 @@ struct NumberArray
     bool operator!=(const Iterator& rhs) const { return rhs.m_it != m_it; }
   };
 
-  tree::NodePtr m_json;
+  std::shared_ptr<tree::ArrayNode> m_json;
   NumberArray(tree::NodePtr parent)
-    : m_json(parent->Get(lit.value))
+    : m_json(std::dynamic_pointer_cast<tree::ArrayNode>(parent->Get(lit.value)))
   {
   }
-  uint32_t size() const { return m_json ? m_json->Size() : 0; }
+  uint32_t size() const { return m_json ? m_json->Value.size() : 0; }
   T operator[](size_t index) const
   {
-    return (T)*m_json->Get(index)->Ptr<float>();
+    return (T)*m_json->Value[index]->Ptr<float>();
   }
   Iterator begin() const
   {
-    return m_json ? Iterator{ m_json->Array()->begin() } : Iterator{};
+    return m_json ? Iterator{ m_json->Value.begin() } : Iterator{};
   }
   Iterator end() const
   {
-    return m_json ? Iterator{ m_json->Array()->end() } : Iterator{};
+    return m_json ? Iterator{ m_json->Value.end() } : Iterator{};
   }
 };
 
@@ -554,18 +552,18 @@ struct Mesh : ChildOfRootProperty
 
     auto extras = Extras();
     if (!extras) {
-      extras = m_json->SetProperty(u8"extras", ObjectValue{});
+      extras = m_json->SetProperty(u8"extras", tree::ObjectValue{});
     }
 
     auto targetNames = extras->Get(u8"targetNames");
     if (!targetNames) {
-      targetNames = extras->SetProperty(u8"targetNames", ArrayValue{});
+      targetNames = extras->SetProperty(u8"targetNames", tree::ArrayValue{});
     }
 
-    if (auto array = targetNames->Array()) {
-      array->clear();
+    if (auto array = std::dynamic_pointer_cast<tree::ArrayNode>(targetNames)) {
+      array->Value.clear();
     } else {
-      targetNames->Set(ArrayValue{});
+      targetNames = tree::NewNode(tree::ArrayValue{});
     }
 
     for (auto& name : names) {

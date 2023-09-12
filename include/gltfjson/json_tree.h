@@ -14,7 +14,6 @@
 #include <stack>
 #include <string>
 #include <unordered_map>
-#include <variant>
 #include <vector>
 
 namespace gltfjson {
@@ -40,315 +39,380 @@ to_u8(std::string_view src)
 
 namespace tree {
 
-struct Node;
-using NodePtr = std::shared_ptr<Node>;
-using ArrayValue = std::vector<NodePtr>;
-using ObjectValue = std::unordered_map<std::u8string, NodePtr>;
 struct Node
 {
-  std::
-    variant<std::monostate, bool, float, std::u8string, ArrayValue, ObjectValue>
-      Var;
-
-  Node() {}
-
-  Node(bool b)
-    : Var(b)
-  {
-  }
-
-  Node(float n)
-    : Var(n)
-  {
-  }
-
-  Node(std::u8string_view str)
-    : Var(std::u8string{ str.begin(), str.end() })
-  {
-  }
-
-  Node(const ArrayValue& a)
-    : Var(a)
-  {
-  }
-
-  Node(const ObjectValue& o)
-    : Var(o)
-  {
-  }
-
-  bool operator==(const Node& dst) const
-  {
-    if (auto array = Array()) {
-      if (auto dstArray = dst.Array()) {
-        if (array->size() == dstArray->size()) {
-          for (int i = 0; i < array->size(); ++i) {
-            auto lhs = (*array)[i];
-            auto rhs = (*dstArray)[i];
-            if (lhs) {
-              if (rhs) {
-                if (*lhs == *rhs) {
-                  continue;
-                }
-                return false;
-              } else {
-                return false;
-              }
-            } else {
-              if (rhs) {
-                return false;
-              }
-            }
-          }
-          return true;
-        } else {
-          return false;
-        }
-      } else {
-        return false;
-      }
-    } else if (auto object = Object()) {
-      if (auto dstObject = dst.Object()) {
-        if (object->size() == dstObject->size()) {
-          for (auto [k, v] : *object) {
-            auto found = dstObject->find(k);
-            if (found == dstObject->end()) {
-              return false;
-            }
-            if (v) {
-              if (found->second) {
-                if (*v == *found->second) {
-                  continue;
-                }
-                return false;
-              } else {
-                return false;
-              }
-            } else {
-              if (found->second) {
-                return false;
-              }
-            }
-          }
-          return true;
-        } else {
-          return false;
-        }
-      } else {
-        return false;
-      }
-    } else {
-      return Var == dst.Var;
-    }
-  }
+  virtual ~Node() {}
+  virtual bool operator==(const Node& rhs) const = 0;
 
   template<typename T>
-  static NodePtr Create(const T& t)
-  {
-    auto ptr = std::make_shared<Node>();
-    ptr->Var = t;
-    return ptr;
-  }
+  T* Ptr();
 
   template<typename T>
-  const T* Ptr() const
-  {
-    if (std::holds_alternative<T>(Var)) {
-      return &std::get<T>(Var);
-    } else {
-      return nullptr;
-    }
-  }
+  const T* Ptr() const;
+
+  std::shared_ptr<Node> Get(std::u8string_view key) const;
+  std::shared_ptr<Node> Get(size_t) const;
+
+  bool IsNull() const;
+  std::u8string U8String() const;
+  size_t Size() const;
   template<typename T>
-  T* Ptr()
-  {
-    if (std::holds_alternative<T>(Var)) {
-      return &std::get<T>(Var);
-    } else {
-      return nullptr;
-    }
-  }
-
-  bool IsNull() const { return std::holds_alternative<std::monostate>(Var); }
-
-  std::u8string U8String() const
-  {
-    if (auto str = Ptr<std::u8string>()) {
-      return *str;
-    } else {
-      return u8"";
-    }
-  }
-
-  // array
-  const ArrayValue* Array() const { return Ptr<ArrayValue>(); }
-
-  // array
-  ArrayValue* Array() { return Ptr<ArrayValue>(); }
-
-  // array member
-  NodePtr Get(size_t index) const
-  {
-    if (auto array = Array()) {
-      return (*array)[index];
-    }
-
-    return nullptr;
-  }
-
-  // object
-  const ObjectValue* Object() const { return Ptr<ObjectValue>(); }
-
-  // object
-  ObjectValue* Object() { return Ptr<ObjectValue>(); }
-
-  // object member
-  NodePtr Get(std::u8string_view target) const
-  {
-    if (auto object = Object()) {
-      auto found = object->find({ target.begin(), target.end() });
-      if (found != object->end()) {
-        return found->second;
-      }
-    }
-
-    return nullptr;
-  }
-
-  void Remove(std::u8string_view target)
-  {
-    if (auto object = Object()) {
-      object->erase({ target.begin(), target.end() });
-    }
-  }
-
+  std::shared_ptr<Node> SetProperty(std::u8string_view key, const T& value);
   template<typename T>
-  NodePtr SetProperty(std::u8string_view target, const T& value)
+  std::shared_ptr<Node> Add(const T& value);
+};
+
+using NodePtr = std::shared_ptr<Node>;
+
+struct NullNode : Node
+{
+  bool operator==(const Node& rhs) const override
   {
-    auto object = Object();
-    if (!object) {
-      return nullptr;
+    if (dynamic_cast<const NullNode*>(&rhs)) {
+      return true;
     }
-
-    auto p = Get(target);
-    if (!p) {
-      p = std::make_shared<Node>();
-      object->insert({ { target.begin(), target.end() }, p });
-    }
-    p->Set(value);
-
-    return p;
-  }
-
-  template<typename T>
-  NodePtr Add(const T& value)
-  {
-    auto array = Array();
-    if (!array) {
-      return nullptr;
-    }
-
-    array->push_back(Create(value));
-
-    return array->back();
-  }
-
-  // array or object size
-  size_t Size() const
-  {
-    if (auto array = Ptr<ArrayValue>()) {
-      return array->size();
-    } else if (auto object = Ptr<ObjectValue>()) {
-      return object->size();
-    } else {
-      return 0;
-    }
-  }
-
-  void Set(std::monostate null) { Var = null; }
-  void Set(bool b) { Var = b; }
-  void Set(float f) { Var = f; }
-  void Set(const std::u8string& s) { Var = s; }
-  void Set(const char8_t* s) { Var = std::u8string(s); }
-  void Set(const ArrayValue& a) { Var = a; }
-  void Set(const ObjectValue& o) { Var = o; }
-
-  template<size_t N>
-  void Set(const std::array<float, N>& values)
-  {
-    auto p = Array();
-    if (!p) {
-      Var = ArrayValue{};
-      p = Array();
-    }
-    for (int i = 0; i < N; ++i) {
-      if (i >= p->size()) {
-        p->push_back(std::make_shared<Node>());
-      }
-      (*p)[i]->Var = values[i];
-    }
-  }
-
-  void CopyTo(const std::shared_ptr<Node>& dst)
-  {
-    if (!dst) {
-      return;
-    }
-    if (auto array = Array()) {
-      dst->Set(ArrayValue{});
-      for (auto child : *array) {
-        auto dstChild = dst->Add(std::monostate{});
-        child->CopyTo(dstChild);
-      }
-    } else if (auto object = Object()) {
-      dst->Set(ObjectValue{});
-      for (auto [k, v] : *object) {
-        auto dstChild = dst->SetProperty(k, std::monostate{});
-        v->CopyTo(dstChild);
-      }
-    } else {
-      // dst->Set(Var);
-      dst->Var = Var;
-    }
+    return false;
   }
 };
 
-// inline std::ostream&
-// operator<<(std::ostream& os, const Node& node)
-// {
-//   struct Visitor
-//   {
-//     std::ostream& m_os;
-//     Visitor(std::ostream& os)
-//       : m_os(os)
-//     {
-//     }
-//     void operator()(std::monostate) { m_os << "null"; }
-//     void operator()(bool value)
-//     {
-//       if (value) {
-//         m_os << "true";
-//       } else {
-//         m_os << "false";
-//       }
-//     }
-//     void operator()(float value) { m_os << std::setprecision(9) << value; }
-//     void operator()(const std::u8string& value)
-//     {
-//       m_os << '"' << from_u8(value) << '"';
-//     }
-//     void operator()(const ArrayValue& value)
-//     {
-//       m_os << '[' << value.size() << ']';
-//     }
-//     void operator()(const ObjectValue& value)
-//     {
-//       m_os << '{' << value.size() << '}';
-//     }
-//   };
-//   std::visit(Visitor(os), node.Var);
-//   return os;
-// }
+struct BoolNode : Node
+{
+  bool Value = false;
+
+  BoolNode(bool value)
+    : Value(value)
+  {
+  }
+
+  bool operator==(const Node& rhs) const override
+  {
+    if (auto r = dynamic_cast<const BoolNode*>(&rhs)) {
+      return Value == r->Value;
+    }
+    return false;
+  }
+};
+
+struct NumberNode : Node
+{
+  float Value = 0;
+
+  NumberNode(float value)
+    : Value(value)
+  {
+  }
+
+  bool operator==(const Node& rhs) const override
+  {
+    if (auto r = dynamic_cast<const NumberNode*>(&rhs)) {
+      return Value == r->Value;
+    }
+    return false;
+  }
+};
+
+struct StringNode : Node
+{
+  std::u8string Value;
+
+  StringNode(const std::u8string& value)
+    : Value(value)
+  {
+  }
+
+  StringNode(std::u8string_view& value)
+    : Value(value)
+  {
+  }
+
+  bool operator==(const Node& rhs) const override
+  {
+    if (auto r = dynamic_cast<const StringNode*>(&rhs)) {
+      return Value == r->Value;
+    }
+    return false;
+  }
+};
+
+using ArrayValue = std::vector<NodePtr>;
+struct ArrayNode : Node
+{
+  ArrayValue Value;
+
+  ArrayNode(const ArrayValue& value)
+    : Value(value)
+  {
+  }
+
+  bool operator==(const Node& rhs) const override
+  {
+    auto r = dynamic_cast<const ArrayNode*>(&rhs);
+    if (!r) {
+      return false;
+    }
+    auto& ra = r->Value;
+    if (Value.size() != ra.size()) {
+      return false;
+    }
+    for (int i = 0; i < Value.size(); ++i) {
+      if (Value[i] != ra[i]) {
+        return false;
+      }
+    }
+    return true;
+  }
+};
+
+using ObjectValue = std::unordered_map<std::u8string, NodePtr>;
+struct ObjectNode : Node
+{
+  ObjectValue Value;
+
+  ObjectNode(const ObjectValue& value)
+    : Value(value)
+  {
+  }
+
+  bool operator==(const Node& rhs) const override
+  {
+    auto r = dynamic_cast<const ObjectNode*>(&rhs);
+    if (!r) {
+      return false;
+    }
+    auto& ra = r->Value;
+    if (Value.size() != ra.size()) {
+      return false;
+    }
+    for (auto l = Value.begin(); l != Value.end(); ++l) {
+      auto found = ra.find(l->first);
+      if (found == ra.end()) {
+        return false;
+      }
+      if (l->second) {
+        if (found->second) {
+          if (*l->second != *found->second) {
+            return false;
+          }
+        } else {
+          return false;
+        }
+      } else {
+        if (found->second) {
+          return false;
+        }
+      }
+    }
+    return true;
+  }
+};
+
+inline std::shared_ptr<NullNode>
+NewNode()
+{
+  return std::make_shared<NullNode>();
+}
+inline std::shared_ptr<NullNode>
+NewNode(std::monostate)
+{
+  return std::make_shared<NullNode>();
+}
+inline std::shared_ptr<BoolNode>
+NewNode(bool value)
+{
+  return std::make_shared<BoolNode>(value);
+}
+inline std::shared_ptr<NumberNode>
+NewNode(float value)
+{
+  return std::make_shared<NumberNode>(value);
+}
+inline std::shared_ptr<StringNode>
+NewNode(const std::u8string& value)
+{
+  return std::make_shared<StringNode>(value);
+}
+inline std::shared_ptr<StringNode>
+NewNode(std::u8string_view value)
+{
+  return std::make_shared<StringNode>(value);
+}
+inline std::shared_ptr<ArrayNode>
+NewNode(const ArrayValue& value)
+{
+  return std::make_shared<ArrayNode>(value);
+}
+inline std::shared_ptr<ObjectNode>
+NewNode(const ObjectValue& value)
+{
+  return std::make_shared<ObjectNode>(value);
+}
+
+template<>
+inline bool*
+Node::Ptr<bool>()
+{
+  if (auto n = dynamic_cast<BoolNode*>(this)) {
+    return &n->Value;
+  }
+  return {};
+}
+template<>
+inline const bool*
+Node::Ptr<bool>() const
+{
+  if (auto n = dynamic_cast<const BoolNode*>(this)) {
+    return &n->Value;
+  }
+  return {};
+}
+template<>
+inline float*
+Node::Ptr<float>()
+{
+  if (auto n = dynamic_cast<NumberNode*>(this)) {
+    return &n->Value;
+  }
+  return {};
+}
+template<>
+inline const float*
+Node::Ptr<float>() const
+{
+  if (auto n = dynamic_cast<const NumberNode*>(this)) {
+    return &n->Value;
+  }
+  return {};
+}
+template<>
+inline std::u8string*
+Node::Ptr<std::u8string>()
+{
+  if (auto n = dynamic_cast<StringNode*>(this)) {
+    return &n->Value;
+  }
+  return {};
+}
+template<>
+inline const std::u8string*
+Node::Ptr<std::u8string>() const
+{
+  if (auto n = dynamic_cast<const StringNode*>(this)) {
+    return &n->Value;
+  }
+  return {};
+}
+template<>
+inline ArrayValue*
+Node::Ptr<ArrayValue>()
+{
+  if (auto n = dynamic_cast<ArrayNode*>(this)) {
+    return &n->Value;
+  }
+  return {};
+}
+template<>
+inline const ArrayValue*
+Node::Ptr<ArrayValue>() const
+{
+  if (auto n = dynamic_cast<const ArrayNode*>(this)) {
+    return &n->Value;
+  }
+  return {};
+}
+template<>
+inline ObjectValue*
+Node::Ptr<ObjectValue>()
+{
+  if (auto n = dynamic_cast<ObjectNode*>(this)) {
+    return &n->Value;
+  }
+  return {};
+}
+template<>
+inline const ObjectValue*
+Node::Ptr<ObjectValue>() const
+{
+  if (auto n = dynamic_cast<const ObjectNode*>(this)) {
+    return &n->Value;
+  }
+  return {};
+}
+
+inline bool
+Node::IsNull() const
+{
+  if (dynamic_cast<const NullNode*>(this)) {
+    return true;
+  }
+  return false;
+}
+
+inline std::u8string
+Node::U8String() const
+{
+  if (auto s = dynamic_cast<const StringNode*>(this)) {
+    return s->Value;
+  }
+  return {};
+}
+
+inline size_t
+Node::Size() const
+{
+  if (auto a = dynamic_cast<const ArrayNode*>(this)) {
+    return a->Value.size();
+  } else if (auto o = dynamic_cast<const ObjectNode*>(this)) {
+    return o->Value.size();
+  }
+  return 0;
+}
+
+inline std::shared_ptr<Node>
+Node::Get(std::u8string_view key) const
+{
+  if (auto o = dynamic_cast<const ObjectNode*>(this)) {
+    auto found = o->Value.find(std::u8string{ key.begin(), key.end() });
+    if (found != o->Value.end()) {
+      return found->second;
+    }
+  }
+  return {};
+}
+
+inline std::shared_ptr<Node>
+Node::Get(size_t index) const
+{
+  if (auto a = dynamic_cast<const ArrayNode*>(this)) {
+    if (index < a->Value.size()) {
+      return a->Value[index];
+    }
+  }
+  return {};
+}
+
+template<typename T>
+std::shared_ptr<Node>
+Node::SetProperty(std::u8string_view key, const T& value)
+{
+  if (auto o = dynamic_cast<ObjectNode*>(this)) {
+    auto n = NewNode(value);
+    o->Value.insert({ { key.begin(), key.end() }, n });
+    return n;
+  }
+  return {};
+}
+
+template<typename T>
+std::shared_ptr<Node>
+Node::Add(const T& value)
+{
+  if (auto a = dynamic_cast<ArrayNode*>(this)) {
+    auto n = NewNode(value);
+    a->Value.push_back(n);
+    return n;
+  }
+  return {};
+}
 
 inline void
 AddDelimiter(std::u8string& jsonpath)
@@ -381,15 +445,15 @@ TraverseJsonRecursive(const EnterJson& enter,
   if (enter(item, jsonpath)) {
     AddDelimiter(jsonpath);
     auto size = jsonpath.size();
-    if (auto object = item->Object()) {
-      for (auto [k, v] : *object) {
+    if (auto object = std::dynamic_pointer_cast<ObjectNode>(item)) {
+      for (auto [k, v] : object->Value) {
         jsonpath += k;
         TraverseJsonRecursive(enter, leave, v, jsonpath);
         jsonpath.resize(size);
       }
-    } else if (auto array = item->Array()) {
+    } else if (auto array = std::dynamic_pointer_cast<ArrayNode>(item)) {
       int i = 0;
-      for (auto& v : *array) {
+      for (auto& v : array->Value) {
         concat_int(jsonpath, i++);
         TraverseJsonRecursive(enter, leave, v, jsonpath);
         jsonpath.resize(size);
@@ -431,20 +495,17 @@ FindJsonPath(const NodePtr& root, std::u8string_view jsonpath)
 
 } // namespace
 
-using ArrayValue = tree::ArrayValue;
-using ObjectValue = tree::ObjectValue;
-
 inline std::array<float, 3>
 Vec3(const tree::NodePtr& json, const std::array<float, 3>& defaultValue)
 {
   if (json) {
-    if (auto a = json->Array()) {
-      if (a->size() == 3) {
-        if (auto a0 = (*a)[0]) {
+    if (auto a = std::dynamic_pointer_cast<tree::ArrayNode>(json)) {
+      if (a->Value.size() == 3) {
+        if (auto a0 = a->Value[0]) {
           if (auto p0 = a0->Ptr<float>()) {
-            if (auto a1 = (*a)[1]) {
+            if (auto a1 = a->Value[1]) {
               if (auto p1 = a1->Ptr<float>()) {
-                if (auto a2 = (*a)[2]) {
+                if (auto a2 = a->Value[2]) {
                   if (auto p2 = a2->Ptr<float>()) {
                     return { *p0, *p1, *p2 };
                   }
@@ -463,15 +524,15 @@ inline std::array<float, 4>
 Vec4(const tree::NodePtr& json, const std::array<float, 4>& defaultValue)
 {
   if (json) {
-    if (auto a = json->Array()) {
-      if (a->size() == 4) {
-        if (auto a0 = (*a)[0]) {
+    if (auto a = std::dynamic_pointer_cast<tree::ArrayNode>(json)) {
+      if (a->Value.size() == 4) {
+        if (auto a0 = a->Value[0]) {
           if (auto p0 = a0->Ptr<float>()) {
-            if (auto a1 = (*a)[1]) {
+            if (auto a1 = a->Value[1]) {
               if (auto p1 = a1->Ptr<float>()) {
-                if (auto a2 = (*a)[2]) {
+                if (auto a2 = a->Value[2]) {
                   if (auto p2 = a2->Ptr<float>()) {
-                    if (auto a3 = (*a)[3]) {
+                    if (auto a3 = a->Value[3]) {
                       if (auto p3 = a3->Ptr<float>()) {
                         return { *p0, *p1, *p2, *p3 };
                       }

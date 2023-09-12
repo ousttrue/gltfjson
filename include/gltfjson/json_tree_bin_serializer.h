@@ -63,9 +63,9 @@ public:
     , m_bin(bin)
     , m_writer(buf)
   {
-    m_bufferViews = std::make_shared<Node>(ArrayValue{});
-    m_accessors = std::make_shared<Node>(ArrayValue{});
-    m_images = std::make_shared<Node>(ArrayValue{});
+    m_bufferViews = NewNode(ArrayValue{});
+    m_accessors = NewNode(ArrayValue{});
+    m_images = NewNode(ArrayValue{});
   }
 
   void Serialize(const GetReplaceBytes& replaceImages,
@@ -74,10 +74,10 @@ public:
     SerializeImages(replaceImages);
     SerializeAccessors(replaceAccessors);
 
-    auto& o = *m_root.m_json->Object();
-    o[u8"bufferViews"] = m_bufferViews;
-    o[u8"images"] = m_images;
-    o[u8"accessors"] = m_accessors;
+    auto o = std::dynamic_pointer_cast<ObjectNode>(m_root.m_json);
+    o->Value[u8"bufferViews"] = m_bufferViews;
+    o->Value[u8"images"] = m_images;
+    o->Value[u8"accessors"] = m_accessors;
     m_root = Root(m_root.m_json);
   }
 
@@ -88,7 +88,7 @@ public:
     auto bufferViewId = m_bufferViews->Size();
     auto bufferView = m_bufferViews->Add(ObjectValue{});
     if (srcId) {
-      m_root.BufferViews[*srcId].m_json->CopyTo(bufferView);
+      m_root.BufferViews[*srcId].m_json = bufferView;
     } else {
       bufferView->SetProperty(u8"buffer", 0.0f);
     }
@@ -214,9 +214,10 @@ public:
   {
     auto targets = prim.m_json->Get(u8"targets");
     if (!targets) {
-      targets = prim.m_json->SetProperty(u8"targets", gltfjson::ArrayValue{});
+      targets =
+        prim.m_json->SetProperty(u8"targets", gltfjson::tree::ArrayValue{});
     }
-    auto target = targets->Add(gltfjson::ObjectValue{});
+    auto target = targets->Add(gltfjson::tree::ObjectValue{});
     target->SetProperty(u8"POSITION", (float)PushAccessorFloat3(positions));
     target->SetProperty(u8"NORMAL", (float)PushAccessorFloat3(normal));
     target->SetProperty(u8"TEXCOORD_0", (float)PushAccessorFloat2(uv));
@@ -226,9 +227,10 @@ public:
   {
     auto targets = prim.m_json->Get(u8"targets");
     if (!targets) {
-      targets = prim.m_json->SetProperty(u8"targets", gltfjson::ArrayValue{});
+      targets =
+        prim.m_json->SetProperty(u8"targets", gltfjson::tree::ArrayValue{});
     }
-    auto target = targets->Add(gltfjson::ObjectValue{});
+    auto target = targets->Add(gltfjson::tree::ObjectValue{});
     std::vector<Float3> positions(vertex_count, Float3{ 0, 0, 0 });
     target->SetProperty(u8"POSITION", (float)PushAccessorFloat3(positions));
     target->SetProperty(u8"NORMAL", (float)PushAccessorFloat3(positions));
@@ -258,8 +260,8 @@ public:
       auto bufferViewId = PushBufferView(offset, length, *image.BufferViewId());
       // push image
       auto new_image = m_images->Add(ObjectValue{});
-      image.m_json->CopyTo(new_image);
-      new_image->Get(u8"bufferView")->Set((float)bufferViewId);
+      image.m_json = new_image;
+      new_image->SetProperty(u8"bufferView", (float)bufferViewId);
     }
   }
 
@@ -292,8 +294,8 @@ public:
         PushBufferView(offset, length, *accessor.BufferViewId());
       // push accessor
       auto new_accessor = m_accessors->Add(ObjectValue{});
-      accessor.m_json->CopyTo(new_accessor);
-      new_accessor->Get(u8"bufferView")->Set((float)bufferViewId);
+      accessor.m_json = new_accessor;
+      new_accessor->SetProperty(u8"bufferView", (float)bufferViewId);
     }
   }
 };

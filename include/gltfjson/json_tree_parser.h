@@ -31,14 +31,16 @@ struct Parser
   template<typename T>
   NodePtr Push(const T& value)
   {
-    auto node = std::make_shared<Node>();
-    node->Var = value;
+    auto node = NewNode(value);
+
     if (Stack.size()) {
-      if (auto array = Stack.top()->Array()) {
-        array->push_back(node);
-      } else if (auto object = Stack.top()->Object()) {
+      if (auto array =
+            std::dynamic_pointer_cast<tree::ArrayNode>(Stack.top())) {
+        array->Value.push_back(node);
+      } else if (auto object =
+                   std::dynamic_pointer_cast<tree::ObjectNode>(Stack.top())) {
         if (m_key) {
-          object->insert({ m_key->U8String(), node });
+          object->Value.insert({ m_key->U8String(), node });
           m_key = nullptr;
         } else {
           m_key = node;

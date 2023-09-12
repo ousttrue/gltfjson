@@ -79,8 +79,9 @@ TEST(TestJsonTree, ParseArray)
     gltfjson::tree::Parser parser(SRC);
     auto result = parser.Parse();
     EXPECT_TRUE(result);
-    if (auto array = result->Array()) {
-      EXPECT_TRUE(array->empty());
+    if (auto array =
+          std::dynamic_pointer_cast<gltfjson::tree::ArrayNode>(result)) {
+      EXPECT_TRUE(array->Value.empty());
     }
   }
   {
@@ -93,18 +94,21 @@ TEST(TestJsonTree, ParseArray)
     auto SRC = u8"[1, 2, 3]";
     gltfjson::tree::Parser parser(SRC);
     auto result = parser.Parse();
-    if (auto array = result->Array()) {
-      EXPECT_EQ(array->size(), 3);
-      EXPECT_EQ(*(*array)[0]->Ptr<float>(), 1);
+    if (auto array =
+          std::dynamic_pointer_cast<gltfjson::tree::ArrayNode>(result)) {
+      EXPECT_EQ(array->Value.size(), 3);
+      EXPECT_EQ(*array->Value[0]->Ptr<float>(), 1);
     }
   }
   {
     auto SRC = u8"[1, [2, 3]]";
     gltfjson::tree::Parser parser(SRC);
     auto result = parser.Parse();
-    if (auto array = result->Array()) {
-      auto inner = (*array)[1]->Array();
-      EXPECT_EQ(*(*inner)[1]->Ptr<float>(), 3);
+    if (auto array =
+          std::dynamic_pointer_cast<gltfjson::tree::ArrayNode>(result)) {
+      auto inner =
+        std::dynamic_pointer_cast<gltfjson::tree::ArrayNode>(array->Value[1]);
+      EXPECT_EQ(*inner->Value[1]->Ptr<float>(), 3);
     }
   }
 }
@@ -120,8 +124,9 @@ TEST(TestJsonTree, ParseObject)
       EXPECT_EQ(result->Size(), 0);
     }
 
-    if (auto object = result->Object()) {
-      EXPECT_TRUE(object->empty());
+    if (auto object =
+          std::dynamic_pointer_cast<gltfjson::tree::ObjectNode>(result)) {
+      EXPECT_TRUE(object->Value.empty());
     }
   }
   {

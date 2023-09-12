@@ -1,4 +1,4 @@
-#pragma
+#pragma once
 
 // https://github.com/KhronosGroup/glTF-Tutorials/blob/master/gltfTutorial/gltfTutorial_003_MinimalGltfFile.md
 static auto MINIMUM = u8R"(
