@@ -249,7 +249,7 @@ public:
         if (auto image_span = m_bin.GetImageBytes(m_root, i)) {
           span = *image_span;
         } else {
-          throw std::runtime_error(image_span.error());
+          throw std::runtime_error("GetImageBytes");
         }
       }
       // push bin
@@ -282,7 +282,7 @@ public:
         if (auto block = m_bin.GetAccessorBlock(m_root, i)) {
           span = block->Span;
         } else {
-          throw std::runtime_error(block.error());
+          throw std::runtime_error("GetAccessorBlock");
         }
       }
       // push bin
