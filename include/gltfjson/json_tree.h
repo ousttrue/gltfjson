@@ -51,6 +51,8 @@ struct Node
   const T* Ptr() const;
 
   std::shared_ptr<Node> Get(std::u8string_view key) const;
+  std::shared_ptr<Node> Remove(std::u8string_view key);
+
   std::shared_ptr<Node> Get(size_t) const;
 
   bool IsNull() const;
@@ -380,6 +382,19 @@ Node::Get(std::u8string_view key) const
 }
 
 inline std::shared_ptr<Node>
+Node::Remove(std::u8string_view key)
+{
+  if (auto o = dynamic_cast<ObjectNode*>(this)) {
+    auto found = o->Value.find(std::u8string{ key.begin(), key.end() });
+    if (found != o->Value.end()) {
+      o->Value.erase(found);
+      return found->second;
+    }
+  }
+  return {};
+}
+
+inline std::shared_ptr<Node>
 Node::Get(size_t index) const
 {
   if (auto a = dynamic_cast<const ArrayNode*>(this)) {
@@ -401,8 +416,39 @@ Node::SetProperty(std::u8string_view key, const T& value)
   }
   return {};
 }
-
-template<typename T>
+template<>
+inline std::shared_ptr<Node>
+Node::SetProperty<std::array<float, 3>>(std::u8string_view key,
+                                        const std::array<float, 3>& value)
+{
+  if (auto o = dynamic_cast<ObjectNode*>(this)) {
+    auto n = NewNode(ArrayValue{
+      NewNode(value[0]),
+      NewNode(value[1]),
+      NewNode(value[2]),
+    });
+    o->Value.insert({ { key.begin(), key.end() }, n });
+    return n;
+  }
+  return {};
+}
+template<>
+inline std::shared_ptr<Node>
+Node::SetProperty<std::array<float, 4>>(std::u8string_view key,
+                                        const std::array<float, 4>& value)
+{
+  if (auto o = dynamic_cast<ObjectNode*>(this)) {
+    auto n = NewNode(ArrayValue{
+      NewNode(value[0]),
+      NewNode(value[1]),
+      NewNode(value[2]),
+      NewNode(value[3]),
+    });
+    o->Value.insert({ { key.begin(), key.end() }, n });
+    return n;
+  }
+  return {};
+}template<typename T>
 std::shared_ptr<Node>
 Node::Add(const T& value)
 {
