@@ -3,9 +3,6 @@
 A json manipulation library for glTF.
 It focuses on usability of glTF editing, not on performance.
 
-- `c++20` required.
-- `c++21(std::expected)` removed
-
 msvc19, clang-16 OK.
 
 ```
@@ -14,48 +11,38 @@ msvc19, clang-16 OK.
 
 ## JSON DOM
 
-structures.
+Simple inheritance.
 
 ```c++
-struct Node;
-using NodePtr = std::shared_ptr<Node>;
-using ArrayValue = std::vector<NodePtr>;
-using ObjectValue = std::unordered_map<std::u8string, NodePtr>;
 struct Node
 {
-  std::variant<std::monostate, bool, float, std::u8string, ArrayValue, ObjectValue>
-    Var;
-
-  // Get pointer for payload
+  virtual ~Node() {}
+  virtual bool operator==(const Node& rhs) const = 0;
   template<typename T>
-  const T* Ptr() const
-  {
-    if (std::holds_alternative<T>(Var)) {
-      return &std::get<T>(Var);
-    } else {
-      return nullptr;
-    }
-  }
- };
-```
+  T* Ptr();
+  template<typename T>
+  const T* Ptr() const;
+  std::shared_ptr<Node> Get(std::u8string_view key) const;
+  std::shared_ptr<Node> Get(size_t) const;
 
-```c++
-#include <gltfjson/json_tree.h>
+  bool IsNull() const;
+  std::u8string U8String() const;
+  size_t Size() const;
+  template<typename T>
+  std::shared_ptr<Node> SetProperty(std::u8string_view key, const T& value);
+  template<typename T>
+  std::shared_ptr<Node> Add(const T& value);
+};
+using NodePtr = std::shared_ptr<Node>;
 
-int main()
-{
-  auto SRC = u8"{\"key\": {\"key2\": 2}}";
-  gltfjson::tree::Parser parser(SRC);
-  auto result = parser.Parse();
-  if (result) {
-    // get json object property
-    auto inner = result->Get(u8"key");
-    // get pointer for leaf value
-    EXPECT_EQ(*inner->Get(u8"key2")->Ptr<float>(), 2);
-  }
-
-  return 0;
-}
+struct NullNode : Node;
+struct BoolNode : Node;
+struct NumberNode : Node;
+struct StringNode : Node;
+using ArrayValue = std::vector<NodePtr>;
+struct ArrayNode : Node;
+using ObjectValue = std::unordered_map<std::u8string, NodePtr>;
+struct ObjectNode : Node;
 ```
 
 ## Typed wrapper
@@ -70,3 +57,4 @@ int main()
   // asset
   EXPECT_EQ(gltf.Asset()->Version(), u8"2.0");
 ```
+

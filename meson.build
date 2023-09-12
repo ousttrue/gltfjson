@@ -1,7 +1,7 @@
 project(
     'gltfjson',
     'cpp',
-    version: '1.11.0',
+    version: '2.0',
     license: 'MIT',
 )
 
