@@ -44,7 +44,7 @@ struct Bin
     int buffer_view_index) const
   {
     if (buffer_view_index < 0 || buffer_view_index >= gltf.BufferViews.size()) {
-      // return std::unexpected{ "buffer_view_index is out of range" };
+      // { "buffer_view_index is out of range" };
       return {};
     }
 
@@ -86,7 +86,7 @@ struct Bin
       }
       return true;
     } else {
-      // return std::unexpected{ span.error() };
+      // { span.error() };
       return false;
     }
   }
@@ -100,11 +100,11 @@ struct Bin
       if (auto span = GetBufferViewBytes(gltf, *bufferViewId)) {
         return *span;
       } else {
-        // return std::unexpected{ "invalid bufferView" };
+        // { "invalid bufferView" };
         return {};
       }
     } else {
-      // return std::unexpected{ "no bufferview" };
+      // { "no bufferview" };
       return {};
     }
   }
@@ -127,7 +127,7 @@ struct Bin
         std::span<uint8_t>(begin, begin + block.RequiredSize());
       if (accessor.BufferViewId()) {
         // non zero sparse
-        // return std::unexpected{ "non zero sparse not implemented" };
+        // { "non zero sparse not implemented" };
         return {};
       } else {
         // zero fill
@@ -150,11 +150,11 @@ struct Bin
               block.SetSpan(sparse_span, 0);
               return block;
             } else {
-              // return std::unexpected{ result.error() };
+              // { result.error() };
               return {};
             }
           } else {
-            // return std::unexpected{ sparse_indices_bytes.error() };
+            // { sparse_indices_bytes.error() };
             return {};
           }
 
@@ -171,11 +171,11 @@ struct Bin
               block.SetSpan(sparse_span, 0);
               return block;
             } else {
-              // return std::unexpected{ result.error() };
+              // { result.error() };
               return {};
             }
           } else {
-            // return std::unexpected{ sparse_indices_bytes.error() };
+            // { sparse_indices_bytes.error() };
             return {};
           }
         case gltfjson::ComponentTypes::UNSIGNED_INT:
@@ -190,15 +190,15 @@ struct Bin
               block.SetSpan(sparse_span, 0);
               return block;
             } else {
-              // return std::unexpected{ result.error() };
+              // { result.error() };
               return {};
             }
           } else {
-            // return std::unexpected{ sparse_indices_bytes.error() };
+            // { sparse_indices_bytes.error() };
             return {};
           }
         default:
-          // return std::unexpected{ "sparse.indices: unknown" };
+          // { "sparse.indices: unknown" };
           return {};
       }
       throw std::runtime_error("not implemented");
@@ -209,11 +209,11 @@ struct Bin
         block.SetSpan(*span, offset, bufferView.ByteStride());
         return block;
       } else {
-        // return std::unexpected{ "invalid bufferView" };
+        // { "invalid bufferView" };
         return {};
       }
     } else {
-      // return std::unexpected{ "sparse nor bufferView" };
+      // { "sparse nor bufferView" };
       return {};
     }
   }
@@ -232,7 +232,7 @@ struct Bin
       auto sparse_span = std::span<T>(begin, begin + count);
       if (accessor.BufferViewId()) {
         // non zero sparse
-        // return std::unexpected{ "non zero sparse not implemented" };
+        // { "non zero sparse not implemented" };
         return {};
       } else {
         // zero fill
@@ -254,11 +254,11 @@ struct Bin
                                              sparse_span)) {
               return sparse_span;
             } else {
-              // return std::unexpected{ result.error() };
+              // { result.error() };
               return {};
             }
           } else {
-            // return std::unexpected{ sparse_indices_bytes.error() };
+            // { sparse_indices_bytes.error() };
             return {};
           }
 
@@ -274,11 +274,11 @@ struct Bin
 
               return sparse_span;
             } else {
-              // return std::unexpected{ result.error() };
+              // { result.error() };
               return {};
             }
           } else {
-            // return std::unexpected{ sparse_indices_bytes.error() };
+            // { sparse_indices_bytes.error() };
             return {};
           }
         case gltfjson::ComponentTypes::UNSIGNED_INT:
@@ -292,15 +292,15 @@ struct Bin
                                              sparse_span)) {
               return sparse_span;
             } else {
-              // return std::unexpected{ result.error() };
+              // { result.error() };
               return {};
             }
           } else {
-            // return std::unexpected{ sparse_indices_bytes.error() };
+            // { sparse_indices_bytes.error() };
             return {};
           }
         default:
-          // return std::unexpected{ "sparse.indices: unknown" };
+          // { "sparse.indices: unknown" };
           return {};
       }
       throw std::runtime_error("not implemented");
@@ -310,11 +310,11 @@ struct Bin
         return std::span<const T>((const T*)(span->data() + offset), count);
 
       } else {
-        // return std::unexpected{ "invalid bufferView" };
+        // { "invalid bufferView" };
         return {};
       }
     } else {
-      // return std::unexpected{ "sparse nor bufferView" };
+      // { "sparse nor bufferView" };
       return {};
     }
   }

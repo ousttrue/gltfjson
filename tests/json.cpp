@@ -28,8 +28,8 @@ TEST(JsonStream, write_null)
   auto str = ss.str();
 
   gltfjson::tree::Parser parser(str);
-  auto parsed = parser.ParseExpected();
-  EXPECT_TRUE((*parsed)->IsNull());
+  auto parsed = parser.Parse();
+  EXPECT_TRUE(parsed->IsNull());
 }
 
 TEST(JsonStream, write_bool)

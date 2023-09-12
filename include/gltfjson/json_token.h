@@ -66,12 +66,12 @@ struct Tokenizer
       if (src->starts_with(symbol)) {
         return *Get(symbol.size());
       } else {
-        // return std::unexpected{ std::u8string(u8"Not match: ") +
+        // { std::u8string(u8"Not match: ") +
         //                         std::u8string{ src->begin(), src->end() } };
         return {};
       }
     } else {
-      // return std::unexpected{ u8"Not enough size" };
+      // { u8"Not enough size" };
       return {};
     }
   }
@@ -87,7 +87,7 @@ struct Tokenizer
         ec == std::errc{}) {
       size = (ptr - (const char*)src.data());
     } else {
-      // return std::unexpected{ u8"Invaild number" };
+      // { u8"Invaild number" };
       return {};
     }
 #else
@@ -105,7 +105,7 @@ struct Tokenizer
   std::optional<std::u8string_view> GetString()
   {
     if (Src[Pos] != '"') {
-      // return std::unexpected{ u8"Not starts with \"" };
+      // { u8"Not starts with \"" };
       return {};
     }
 
@@ -124,7 +124,7 @@ struct Tokenizer
     }
 
     if (Src[close] != '"') {
-      // return std::unexpected{ u8"Unclosed string" };
+      // { u8"Unclosed string" };
       return {};
     }
 

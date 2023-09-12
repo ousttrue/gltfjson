@@ -4,7 +4,6 @@
 #include <algorithm>
 #include <assert.h>
 #include <charconv>
-#include <expected>
 #include <optional>
 #include <ostream>
 #include <span>
@@ -260,11 +259,12 @@ struct Parser
     // }
   }
 
-  std::expected<Value, std::u8string> Parse()
+  std::optional<Value> Parse()
   {
     m_token.SkipSpace();
     if (m_token.IsEnd()) {
-      return std::unexpected{ u8"empty" };
+      // { u8"empty" };
+      return {};
     }
 
     auto ch = *m_token;
@@ -302,42 +302,46 @@ struct Parser
           return ParseSymbol(u8"false");
 
         default:
-          return std::unexpected{ u8"invalid" };
+          // { u8"invalid" };
+          return {};
       }
     }
   }
 
-  std::expected<Value, std::u8string> ParseSymbol(std::u8string_view symbol)
+  std::optional<Value> ParseSymbol(std::u8string_view symbol)
   {
     if (auto read = m_token.GetSymbol(symbol)) {
       Push(*read);
       return Values.back();
     } else {
-      return std::unexpected{ read.error() };
+      // { read.error() };
+      return {};
     }
   }
 
-  std::expected<Value, std::u8string> ParseNumber()
+  std::optional<Value> ParseNumber()
   {
     if (auto read = m_token.GetNumber()) {
       Push(*read);
       return Values.back();
     } else {
-      return std::unexpected{ read.error() };
+      // { read.error() };
+      return {};
     }
   }
 
-  std::expected<Value, std::u8string> ParseString()
+  std::optional<Value> ParseString()
   {
     if (auto read = m_token.GetString()) {
       Push(*read);
       return Values.back();
     } else {
-      return std::unexpected{ read.error() };
+      // { read.error() };
+      return {};
     }
   }
 
-  std::expected<Value, std::u8string> ParseArray()
+  std::optional<Value> ParseArray()
   {
     assert(*m_token == '[');
     auto open = *m_token.Get(1);
@@ -361,7 +365,8 @@ struct Parser
       if (i) {
         // must comma
         if (*m_token != ',') {
-          return std::unexpected{ u8"comma required" };
+          // { u8"comma required" };
+          return {};
         }
         m_token.Get(1);
         m_token.SkipSpace();
@@ -370,10 +375,11 @@ struct Parser
       Parse();
     }
 
-    return std::unexpected{ u8"Unclosed array" };
+    // { u8"Unclosed array" };
+    return {};
   }
 
-  std::expected<Value, std::u8string> ParseObject()
+  std::optional<Value> ParseObject()
   {
     assert(*m_token == '{');
     auto objectIndex = Values.size();
@@ -397,7 +403,8 @@ struct Parser
       if (i) {
         // must comma
         if (*m_token != ',') {
-          return std::unexpected{ u8"comma required" };
+          // { u8"comma required" };
+          return {};
         }
         m_token.Get(1);
         m_token.SkipSpace();
@@ -412,7 +419,8 @@ struct Parser
         m_token.SkipSpace();
         // must colon
         if (*m_token != ':') {
-          return std::unexpected{ u8"colon required" };
+          // { u8"colon required" };
+          return {};
         }
         m_token.Get(1);
         m_token.SkipSpace();
@@ -422,7 +430,8 @@ struct Parser
       Parse();
     }
 
-    return std::unexpected{ u8"Unclosed array" };
+    // { u8"Unclosed array" };
+    return {};
   }
 };
 

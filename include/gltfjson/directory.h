@@ -13,7 +13,7 @@ ReadAllBytes(const std::filesystem::path& path)
   std::ifstream ifs(path, std::ios::binary | std::ios::ate);
   if (!ifs) {
     auto u8 = path.u8string();
-    // return std::unexpected{ std::string("fail to open: ") +
+    // { std::string("fail to open: ") +
     //                         std::string((const char*)u8.data(), u8.size()) };
     return {};
   }
@@ -44,7 +44,6 @@ struct Directory
     }
 
     if (gltfjson::from_u8(uri).starts_with("data:")) {
-      // return std::unexpected{"base64 not implemented"};
       for (auto& prefix : BASE64_PREFIX) {
         if (gltfjson::from_u8(uri).starts_with(prefix)) {
           auto decoded =
@@ -54,7 +53,7 @@ struct Directory
           return FileCaches[key];
         }
       }
-      // return std::unexpected{ "not implemented base64" };
+      // { "not implemented base64" };
       return {};
     }
 

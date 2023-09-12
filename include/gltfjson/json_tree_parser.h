@@ -54,7 +54,7 @@ struct Parser
   {
     m_token.SkipSpace();
     if (m_token.IsEnd()) {
-      // return std::unexpected{ u8"empty" };
+      // { u8"empty" };
       return {};
     }
 
@@ -97,7 +97,7 @@ struct Parser
       }
     }
 
-    // return std::unexpected{ u8"invalid" };
+    // { u8"invalid" };
     return {};
   }
 
@@ -111,11 +111,11 @@ struct Parser
       } else if (*src == u8"false") {
         return Push(false);
       } else {
-        // return std::unexpected{ u8"not reach here !" };
+        // { u8"not reach here !" };
         return {};
       }
     } else {
-      // return std::unexpected{ src.error() };
+      // { src.error() };
       return {};
     }
   }
@@ -126,7 +126,7 @@ struct Parser
     if (auto n = m_token.GetNumber(&value)) {
       return Push(value);
     } else {
-      // return std::unexpected{ n.error() };
+      // { n.error() };
       return {};
     }
   }
@@ -137,7 +137,7 @@ struct Parser
       auto unescaped = unescape(str->substr(1, str->size() - 2));
       return Push(std::u8string{ unescaped.data(), unescaped.size() });
     } else {
-      // return std::unexpected{ str.error() };
+      // { str.error() };
       return {};
     }
   }
@@ -145,7 +145,7 @@ struct Parser
   NodePtr ParseArray()
   {
     if (*m_token != '[') {
-      // return std::unexpected{ u8"Not starts with array open" };
+      // { u8"Not starts with array open" };
       return {};
     }
     m_token.Get(1);
@@ -159,7 +159,7 @@ struct Parser
         m_token.Get(1);
         // auto node = Stack.top();
         if (node != Stack.top()) {
-          // return std::unexpected{ u8"open close mismatch" };
+          // { u8"open close mismatch" };
           return {};
         }
         Stack.pop();
@@ -169,7 +169,7 @@ struct Parser
       if (i) {
         // must comma
         if (*m_token != ',') {
-          // return std::unexpected{ u8"comma required" };
+          // { u8"comma required" };
           return {};
         }
         m_token.Get(1);
@@ -179,14 +179,14 @@ struct Parser
       Parse();
     }
 
-    // return std::unexpected{ u8"Unclosed array" };
+    // { u8"Unclosed array" };
     return {};
   }
 
   NodePtr ParseObject()
   {
     if (*m_token != '{') {
-      // return std::unexpected{ u8"Not starts with object open" };
+      // { u8"Not starts with object open" };
       return {};
     }
     m_token.Get(1);
@@ -199,7 +199,7 @@ struct Parser
         // closed
         m_token.Get(1);
         if (node != Stack.top()) {
-          // return std::unexpected{ u8"open close mismatch" };
+          // { u8"open close mismatch" };
           return {};
         }
         Stack.pop();
@@ -209,7 +209,7 @@ struct Parser
       if (i) {
         // must comma
         if (*m_token != ',') {
-          // return std::unexpected{ u8"comma required" };
+          // { u8"comma required" };
           return {};
         }
         m_token.Get(1);
@@ -223,7 +223,7 @@ struct Parser
         m_token.SkipSpace();
         // must colon
         if (*m_token != ':') {
-          // return std::unexpected{ u8"colon required" };
+          // { u8"colon required" };
           return {};
         }
         m_token.Get(1);
@@ -234,7 +234,7 @@ struct Parser
       Parse();
     }
 
-    // return std::unexpected{ u8"Unclosed array" };
+    // { u8"Unclosed array" };
     return {};
   }
 };

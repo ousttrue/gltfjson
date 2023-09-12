@@ -1,7 +1,6 @@
 #pragma once
 #include "binary_reader.h"
 #include "binary_writer.h"
-#include <expected>
 #include <filesystem>
 #include <functional>
 #include <optional>
