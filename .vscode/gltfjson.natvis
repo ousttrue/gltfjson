@@ -1,47 +1,86 @@
 <?xml version="1.0" encoding="utf-8"?>
 <AutoVisualizer xmlns="http://schemas.microsoft.com/vstudio/debugger/natvis/2010">
-    <Type Name="std::basic_string&lt;char8_t,*&gt;" Priority="High">
-        <Intrinsic Name="size" Expression="_Mypair._Myval2._Mysize" />
-        <Intrinsic Name="capacity" Expression="_Mypair._Myval2._Myres" />
-        <!-- _BUF_SIZE = 16 / sizeof(char) &lt; 1 ? 1 : 16 / sizeof(char) == 16 -->
-        <Intrinsic Name="bufSize" Expression="16" />
-        <Intrinsic Name="isShortString" Expression="capacity() &lt; bufSize()" />
-        <Intrinsic Name="isLongString" Expression="capacity() &gt;= bufSize()" />
-        <DisplayString Condition="isShortString()">{_Mypair._Myval2._Bx._Buf,nas8}</DisplayString>
-        <DisplayString Condition="isLongString()">{_Mypair._Myval2._Bx._Ptr,nas8}</DisplayString>
-        <StringView Condition="isShortString()">_Mypair._Myval2._Bx._Buf,nas8</StringView>
-        <StringView Condition="isLongString()">_Mypair._Myval2._Bx._Ptr,nas8</StringView>
+    <Type Name="gltfjson::tree::Node">
+        <DisplayString Condition="Type==1" Optional="true">{{ null }}</DisplayString>
+        <DisplayString Condition="Type==2" Optional="true">{{ bool }}</DisplayString>
+        <DisplayString Condition="Type==3" Optional="true">{{ number }}</DisplayString>
+        <DisplayString Condition="Type==4" Optional="true">{{ string }}</DisplayString>
+        <DisplayString Condition="Type==5" Optional="true">{{ array }}</DisplayString>
+        <DisplayString Condition="Type==6" Optional="true">{{ object }}</DisplayString>
         <Expand>
-            <Item Name="[size]" ExcludeView="simple">size()</Item>
-            <Item Name="[capacity]" ExcludeView="simple">capacity()</Item>
-            <Item Name="[allocator]" ExcludeView="simple">_Mypair</Item>
+            <Item Name="ObjectValue"
+                Condition="Type==6"
+                Optional="true">dynamic_cast&lt;gltfjson::tree::ObjectNode*&gt;(this)</Item>
+        </Expand>
+    </Type>
+
+    <Type Name="std::__1::unordered_map&lt;*&gt;">
+        <Intrinsic Name="size" Expression="*(size_type*)&amp;__table_.__p2_" />
+        <Intrinsic Name="bucket_count"
+            Expression="*(size_type*)&amp;
+                        ((__table::__bucket_list_deleter*)
+                            ((void**)&amp;__table_.__bucket_list_ + 1))
+                            -&gt;__data_" />
+        <DisplayString>{{ size={size()} }}</DisplayString>
+        <Expand>
+            <Item Name="[bucket_count]">bucket_count()</Item>
+            <Item Name="[load_factor]">
+                bucket_count() != 0 ? (float)size() / bucket_count() : 0.f</Item>
+            <Item Name="[max_load_factor]">*(float*)&amp;__table_.__p3_</Item>
+            <!-- Use CustomListItems instead of LinkedListItems because we
+            need to cast to __table::__node_pointer and LinkedListItems
+            evaluates <Value> in the context of the node, not of the container,
+            so we'd have to say std::unordered_map<$T1,...>::__table::__node_pointer
+            and then we couldn't share this <Type> between unordered_(multi)map
+            and unordered_(multi)set. -->
+            <CustomListItems>
+                <Variable Name="node"
+                    InitialValue="*(__table::__next_pointer*)&amp;__table_.__p1_" />
+                <Size>size()</Size>
+                <Loop>
+                    <Item>(*(__table::__node_pointer*)&amp;node)-&gt;__value_</Item>
+                    <Exec>node = node-&gt;__next_</Exec>
+                </Loop>
+            </CustomListItems>
+        </Expand>
+    </Type>
+
+    <Type Name="std::__1::vector&lt;*&gt;">
+        <Intrinsic Name="size" Expression="__end_ - __begin_" />
+        <DisplayString>[ size={size()} ]</DisplayString>
+        <Expand>
             <ArrayItems>
-                <Size>_Mypair._Myval2._Mysize</Size>
-                <ValuePointer Condition="isShortString()">_Mypair._Myval2._Bx._Buf</ValuePointer>
-                <ValuePointer Condition="isLongString()">_Mypair._Myval2._Bx._Ptr</ValuePointer>
+                <Size>size()</Size>
+                <ValuePointer>__begin_</ValuePointer>
             </ArrayItems>
         </Expand>
     </Type>
 
-    <Type
-        Name="std::variant&lt;std::monostate,bool,float,*&gt;"
-        Priority="High">
-        <DisplayString Condition="_Which==0">{{null}}</DisplayString>
-        <DisplayString Condition="_Which==1" Optional="true">{{bool}}</DisplayString>
-        <DisplayString Condition="_Which==2" Optional="true">{{float}}</DisplayString>
-        <DisplayString Condition="_Which==3" Optional="true">{{u8string}}</DisplayString>
-        <DisplayString Condition="_Which==4" Optional="true">{{array}}</DisplayString>
-        <DisplayString Condition="_Which==5" Optional="true">{{object}}</DisplayString>
+    <Type Name="std::__1::basic_string&lt;char8_t,*&gt;">
+        <Intrinsic Name="is_long"
+            Expression="*(((char*)this)) &amp; 0x01" />
+        <DisplayString Condition="is_long()">{*(((char8_t**)this)+2),s8}</DisplayString>
+        <DisplayString Condition="!is_long()">{((char8_t*)this)+1,s8}</DisplayString>
         <Expand>
-            <Item Name="which">_Which</Item>
-            <Item Name="value0" Condition="_Which==0">null</Item>
-            <Item Name="value1" Condition="_Which==1" Optional="true">std::get&lt;bool&gt;(*this)</Item>
-            <Item Name="value2" Condition="_Which==2" Optional="true">std::get&lt;float&gt;()</Item>
-            <Item Name="value3" Condition="_Which==3" Optional="true">std::get&lt;std::u8string&gt;()</Item>
-            <Item Name="value4" Condition="_Which==4" Optional="true">[]</Item>
-            <Item Name="value5" Condition="_Which==5" Optional="true">{{}}</Item>
+            <Item Name="[is_long]">is_long()</Item>
+            <!-- <Item Name="[size]" Condition="is_long()" -->
+            <!--     ExcludeView="simple">((size_t*)this)[1]</Item> -->
+            <!-- <Item Name="[size]" Condition="!is_long()" -->
+            <!--     ExcludeView="simple">*(((char*)this))</Item> -->
+            <!-- <Item Name="[capacity]" Condition="is_long()" ExcludeView="simple"> -->
+            <!--   ((size_t*)this)[2] &amp; (~((size_t)0) &gt;&gt; 1) -->
+            <!-- </Item> -->
+            <!-- <Item Name="[capacity]" Condition="!is_long()" -->
+            <!--     ExcludeView="simple">22</Item> -->
+            <!-- <ArrayItems> -->
+            <!--   <Size Condition="is_long()">((size_t*)this)[1]</Size> -->
+            <!--   <Size Condition="!is_long()"> -->
+            <!--     *(((char*)this) + 3*sizeof(size_t) - 1) -->
+            <!--   </Size> -->
+            <!--   <ValuePointer Condition="is_long()">*(char**)this</ValuePointer> -->
+            <!--   <ValuePointer Condition="!is_long()">(char*)this</ValuePointer> -->
+            <!-- </ArrayItems> -->
         </Expand>
     </Type>
-
 
 </AutoVisualizer>

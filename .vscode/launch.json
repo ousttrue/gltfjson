@@ -5,6 +5,53 @@
     "version": "0.2.0",
     "configurations": [
         {
+            "name": "(gdb) Launch",
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}/prefix/bin/gltfjson.exe",
+            "args": [
+                "${env:GLTF_SAMPLE_MODELS}/2.0/BoomBox/glTF-Binary/BoomBox.glb"
+            ],
+            "stopAtEntry": false,
+            "cwd": "${workspaceFolder}",
+            "environment": [],
+            "externalConsole": false,
+            "MIMode": "gdb",
+            "miDebuggerPath": "D:/msys64/mingw64/bin/gdb.exe",
+            "setupCommands": [
+                {
+                    "description": "Enable pretty-printing for gdb",
+                    "text": "-enable-pretty-printing",
+                    "ignoreFailures": true
+                },
+                {
+                    "description": "Set Disassembly Flavor to Intel",
+                    "text": "-gdb-set disassembly-flavor intel",
+                    "ignoreFailures": true
+                }
+            ]
+        },
+        {
+            "type": "gdb",
+            "request": "launch",
+            "name": "gdb",
+            "target": "${workspaceFolder}/prefix/bin/gltfjson.exe",
+            "arguments": "${env:GLTF_SAMPLE_MODELS}/2.0/BoomBox/glTF-Binary/BoomBox.glb",
+            "cwd": "${workspaceRoot}",
+            "valuesFormatting": "parseText",
+            "gdbpath": "D:/msys64/mingw64/bin/gdb.exe",
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "lldb",
+            "program": "${workspaceFolder}/prefix/bin/gltfjson.exe",
+            "args": [
+                "${env:GLTF_SAMPLE_MODELS}/2.0/BoomBox/glTF-Binary/BoomBox.glb"
+            ],
+            "cwd": "${workspaceFolder}"
+        },
+        {
             "name": "gltfjson.exe",
             "type": "cppvsdbg",
             "request": "launch",
@@ -16,6 +63,7 @@
             "cwd": "${workspaceFolder}",
             "environment": [],
             "console": "integratedTerminal",
+            "preLaunchTask": "copy-pdb",
             "visualizerFile": "${workspaceRoot}/.vscode/gltfjson.natvis",
         },
         {

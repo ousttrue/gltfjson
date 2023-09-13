@@ -2,12 +2,10 @@
 #include "json_string_escape.h"
 #include <array>
 #include <assert.h>
-#include <charconv>
 #include <functional>
 #include <iomanip>
 #include <list>
 #include <memory>
-#include <optional>
 #include <ostream>
 #include <span>
 #include <sstream>
@@ -39,11 +37,30 @@ to_u8(std::string_view src)
 
 namespace tree {
 
+enum class NodeType : uint8_t
+{
+  None,
+  Null,
+  Bool,
+  Number,
+  String,
+  Array,
+  Object,
+};
+
 struct Node
 {
+  NodeType Type;
   virtual ~Node() {}
   virtual bool operator==(const Node& rhs) const = 0;
 
+protected:
+  Node(NodeType t)
+    : Type(t)
+  {
+  }
+
+public:
   template<typename T>
   T* Ptr();
 
@@ -68,6 +85,11 @@ using NodePtr = std::shared_ptr<Node>;
 
 struct NullNode : Node
 {
+  NullNode()
+    : Node(NodeType::Null)
+  {
+  }
+
   bool operator==(const Node& rhs) const override
   {
     if (dynamic_cast<const NullNode*>(&rhs)) {
@@ -82,7 +104,8 @@ struct BoolNode : Node
   bool Value = false;
 
   BoolNode(bool value)
-    : Value(value)
+    : Node(NodeType::Bool)
+    , Value(value)
   {
   }
 
@@ -100,7 +123,8 @@ struct NumberNode : Node
   float Value = 0;
 
   NumberNode(float value)
-    : Value(value)
+    : Node(NodeType::Number)
+    , Value(value)
   {
   }
 
@@ -118,12 +142,14 @@ struct StringNode : Node
   std::u8string Value;
 
   StringNode(const std::u8string& value)
-    : Value(value)
+    : Node(NodeType::String)
+    , Value(value)
   {
   }
 
   StringNode(std::u8string_view& value)
-    : Value(value)
+    : Node(NodeType::String)
+    , Value(value)
   {
   }
 
@@ -142,7 +168,8 @@ struct ArrayNode : Node
   ArrayValue Value;
 
   ArrayNode(const ArrayValue& value)
-    : Value(value)
+    : Node(NodeType::Array)
+    , Value(value)
   {
   }
 
@@ -171,7 +198,8 @@ struct ObjectNode : Node
   ObjectValue Value;
 
   ObjectNode(const ObjectValue& value)
-    : Value(value)
+    : Node(NodeType::Object)
+    , Value(value)
   {
   }
 
@@ -213,8 +241,12 @@ NewNode()
 {
   return std::make_shared<NullNode>();
 }
+
+struct NullValue
+{};
+
 inline std::shared_ptr<NullNode>
-NewNode(std::monostate)
+NewNode(NullValue)
 {
   return std::make_shared<NullNode>();
 }
@@ -448,7 +480,8 @@ Node::SetProperty<std::array<float, 4>>(std::u8string_view key,
     return n;
   }
   return {};
-}template<typename T>
+}
+template<typename T>
 std::shared_ptr<Node>
 Node::Add(const T& value)
 {

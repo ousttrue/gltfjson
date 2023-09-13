@@ -107,7 +107,7 @@ struct Parser
   {
     if (auto src = m_token.GetSymbol(target)) {
       if (*src == u8"null") {
-        return Push(std::monostate{});
+        return Push(NullValue{});
       } else if (*src == u8"true") {
         return Push(true);
       } else if (*src == u8"false") {
