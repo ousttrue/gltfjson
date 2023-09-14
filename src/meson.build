@@ -1,4 +1,4 @@
-fxtui_dep = dependency('ftxui-component')
+ftxui_dep = dependency('ftxui-component')
 
 executable(
     'gltfjson',
@@ -6,5 +6,5 @@ executable(
         'main.cpp',
     ],
     install: true,
-    dependencies: [gltfjson_dep, fxtui_dep],
+    dependencies: [gltfjson_dep, ftxui_dep],
 )

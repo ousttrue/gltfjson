@@ -1,5 +1,5 @@
 /prefix/
 /subprojects/*
 !/subprojects/gtest.wrap
-!/subprojects/fxtui.wrap
+!/subprojects/ftxui.wrap
 
