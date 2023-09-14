@@ -419,8 +419,9 @@ Node::Remove(std::u8string_view key)
   if (auto o = dynamic_cast<ObjectNode*>(this)) {
     auto found = o->Value.find(std::u8string{ key.begin(), key.end() });
     if (found != o->Value.end()) {
+      auto removed = found->second;
       o->Value.erase(found);
-      return found->second;
+      return removed;
     }
   }
   return {};
