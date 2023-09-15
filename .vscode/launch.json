@@ -73,7 +73,8 @@
             "request": "launch",
             "program": "${workspaceFolder}/prefix/bin/tests.exe",
             "args": [
-                "--gtest_filter=TestTreeWriter.BinWriter"
+                // "--gtest_filter=TestTreeWriter.BinWriter",
+                "--gtest_filter=TestBinSerializer.BinSerializer",
             ],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}",

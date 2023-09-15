@@ -261,6 +261,11 @@ NewNode(float value)
   return std::make_shared<NumberNode>(value);
 }
 inline std::shared_ptr<StringNode>
+NewNode(const char8_t* value)
+{
+  return std::make_shared<StringNode>(value);
+}
+inline std::shared_ptr<StringNode>
 NewNode(const std::u8string& value)
 {
   return std::make_shared<StringNode>(value);
