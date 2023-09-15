@@ -2,8 +2,10 @@
 #include "bin.h"
 #include "bin_writer.h"
 #include "gltf_typing.h"
+#include "gltfjson/json_tree.h"
 #include "json_tree.h"
 #include <functional>
+#include <memory>
 #include <span>
 #include <stdint.h>
 #include <vector>
@@ -293,7 +295,9 @@ public:
       auto bufferViewId =
         PushBufferView(offset, length, *accessor.BufferViewId());
       // push accessor
-      auto new_accessor = m_accessors->Add(ObjectValue{});
+      auto o =
+        std::dynamic_pointer_cast<gltfjson::tree::ObjectNode>(accessor.m_json);
+      auto new_accessor = m_accessors->Add(o ? o->Value : ObjectValue{});
       accessor.m_json = new_accessor;
       new_accessor->SetProperty(u8"bufferView", (float)bufferViewId);
     }
