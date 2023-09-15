@@ -1,4 +1,5 @@
 #include <array>
+#include <cxxopts.hpp>
 #include <filesystem>
 #include <fstream>
 #include <ftxui/component/component.hpp>
@@ -110,14 +111,9 @@ Tui(ftxui::Component root)
 }
 
 int
-main(int argc, char** argv)
+exec(char** argv, const cxxopts::ParseResult& opts)
 {
-  if (argc < 2) {
-    Print<3>({ "usage: ", argv[0], " file.{gltf,glb,vrm...}" });
-    return 1;
-  }
-
-  auto bytes = ReadAllBytes(argv[1]);
+  auto bytes = ReadAllBytes(opts["file"].as<std::string>());
   if (bytes.empty()) {
     Print<2>({ argv[1], " 0 bytes" });
     return 2;
@@ -126,10 +122,23 @@ main(int argc, char** argv)
   auto glb = gltfjson::Glb::Parse(bytes);
   gltfjson::tree::NodePtr result;
   if (glb) {
+    if (opts["json"].as<bool>()) {
+      std::cout << std::string{ (const char*)glb->JsonChunk.data(),
+                                glb->JsonChunk.size() }
+                << std::endl;
+      return 0;
+    }
+
     gltfjson::tree::Parser parser(glb->JsonChunk);
     result = parser.Parse();
   } else {
     // try gltf
+    if (opts["json"].as<bool>()) {
+      std::cout << std::string{ (const char*)bytes.data(), bytes.size() }
+                << std::endl;
+      return 0;
+    }
+
     gltfjson::tree::Parser parser(bytes);
     result = parser.Parse();
   }
@@ -145,4 +154,25 @@ main(int argc, char** argv)
   Tui(scroll);
 
   return 0;
+}
+
+int
+main(int argc, char** argv)
+{
+  cxxopts::Options options("gltfjson", "commandline gltf view");
+  options.add_options()("file", "glTF/glb", cxxopts::value<std::string>())(
+    "j,json", "print json") // a bool parameter
+    ;
+  options.parse_positional({ "file" });
+
+  try {
+    auto opts = options.parse(argc, argv);
+    exec(argv, opts);
+    return 0;
+  } catch (const cxxopts::exceptions::option_has_no_value &) {
+    options.help();
+    return 1;
+  }
+
+  return 2;
 }

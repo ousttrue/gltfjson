@@ -57,7 +57,8 @@
             "request": "launch",
             "program": "${workspaceFolder}/prefix/bin/gltfjson.exe",
             "args": [
-                "${env:GLTF_SAMPLE_MODELS}/2.0/BoomBox/glTF-Binary/BoomBox.glb"
+                "${env:GLTF_SAMPLE_MODELS}/2.0/BoomBox/glTF-Binary/BoomBox.glb",
+                "--json",
             ],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}",
