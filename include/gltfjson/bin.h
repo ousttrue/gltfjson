@@ -5,11 +5,11 @@
 #include <algorithm>
 #include <filesystem>
 #include <iostream>
+#include <optional>
 #include <span>
 #include <stdint.h>
 #include <string_view>
 #include <unordered_map>
-#include <optional>
 
 namespace gltfjson {
 
@@ -67,16 +67,16 @@ struct Bin
       }
     } else {
       // glb
-      assert(buffer_index==0);
+      assert(buffer_index == 0);
       return Bytes.subspan((uint32_t)offset, (uint32_t)*length);
     }
   }
 
   template<typename S, typename T>
   bool GetSparseValue(const Root& gltf,
-                                                  std::span<const S> indices,
-                                                  uint32_t buffer_view_index,
-                                                  std::span<T> dst) const
+                      std::span<const S> indices,
+                      uint32_t buffer_view_index,
+                      std::span<T> dst) const
   {
     if (auto span = GetBufferViewBytes(gltf, buffer_view_index)) {
       assert(indices.size() == span->size() / sizeof(T));
@@ -91,9 +91,8 @@ struct Bin
     }
   }
 
-  std::optional<std::span<const uint8_t>> GetImageBytes(
-    const Root& gltf,
-    int image_index) const
+  std::optional<std::span<const uint8_t>> GetImageBytes(const Root& gltf,
+                                                        int image_index) const
   {
     auto image = gltf.Images[image_index];
     if (auto bufferViewId = image.BufferViewId()) {
@@ -110,9 +109,8 @@ struct Bin
   }
 
   mutable std::vector<uint8_t> m_sparseBuffer;
-  std::optional<MemoryBlock> GetAccessorBlock(
-    const Root& gltf,
-    int accessor_index) const
+  std::optional<MemoryBlock> GetAccessorBlock(const Root& gltf,
+                                              int accessor_index) const
   {
     auto accessor = gltf.Accessors[accessor_index];
     MemoryBlock block{
@@ -320,9 +318,8 @@ struct Bin
   }
 
   template<typename T>
-  std::optional<std::span<const T>> GetAccessorBytes(
-    const Root& gltf,
-    int accessor_index) const
+  std::optional<std::span<const T>> GetAccessorBytes(const Root& gltf,
+                                                     int accessor_index) const
   {
     return GetAccessorBytes<T>(gltf, gltf.Accessors[accessor_index]);
   }

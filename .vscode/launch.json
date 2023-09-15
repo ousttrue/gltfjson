@@ -72,7 +72,9 @@
             "type": "cppvsdbg",
             "request": "launch",
             "program": "${workspaceFolder}/prefix/bin/tests.exe",
-            "args": [],
+            "args": [
+                "--gtest_filter=TestTreeWriter.BinWriter"
+            ],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}",
             "environment": [],

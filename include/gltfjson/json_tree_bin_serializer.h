@@ -88,10 +88,13 @@ public:
                           std::optional<uint32_t> srcId = {})
   {
     auto bufferViewId = m_bufferViews->Size();
-    auto bufferView = m_bufferViews->Add(ObjectValue{});
+    NodePtr bufferView;
     if (srcId) {
-      m_root.BufferViews[*srcId].m_json = bufferView;
+      bufferView = m_root.m_json->Get(*srcId);
+      std::dynamic_pointer_cast<gltfjson::tree::ArrayNode>(m_bufferViews)
+        ->Value.push_back(bufferView);
     } else {
+      bufferView = m_bufferViews->Add(ObjectValue{});
       bufferView->SetProperty(u8"buffer", 0.0f);
     }
     bufferView->SetProperty(u8"byteOffset", (float)offset);

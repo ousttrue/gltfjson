@@ -51,3 +51,4 @@ TEST(TestTreeWriter, BinWriter)
   auto bufferView2 = result2->Get(u8"bufferViews")->Get(0);
   EXPECT_EQ(*bufferView3, *bufferView2);
 }
+
