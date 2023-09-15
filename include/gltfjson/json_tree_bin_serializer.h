@@ -90,7 +90,8 @@ public:
     auto bufferViewId = m_bufferViews->Size();
     NodePtr bufferView;
     if (srcId) {
-      bufferView = m_root.m_json->Get(*srcId);
+      bufferView = m_root.BufferViews[*srcId].m_json;
+      assert(bufferView);
       std::dynamic_pointer_cast<gltfjson::tree::ArrayNode>(m_bufferViews)
         ->Value.push_back(bufferView);
     } else {
