@@ -5,6 +5,15 @@
 #include <gtest/gtest.h>
 #include <sstream>
 
+static bool
+eq(std::span<const uint8_t> lhs, std::span<const uint8_t> rhs)
+{
+  if (lhs.size() != rhs.size()) {
+    return false;
+  }
+  return memcmp(lhs.data(), rhs.data(), lhs.size()) == 0;
+}
+
 TEST(TestTreeWriter, BinWriter)
 {
   gltfjson::tree::Parser parser(MINIMUM);
@@ -43,12 +52,28 @@ TEST(TestTreeWriter, BinWriter)
   gltfjson::tree::Parser parser2(jsonchunk);
   auto result2 = parser2.Parse();
   EXPECT_TRUE(result2);
+  gltfjson::Root root2(result2);
+  gltfjson::Bin bin2{ dir, bytes };
 
   gltfjson::tree::Parser parser3(MINIMUM);
   auto result3 = parser3.Parse();
+  gltfjson::Root root3(result3);
 
-  auto bufferView3 = result3->Get(u8"bufferViews")->Get(0);
-  auto bufferView2 = result2->Get(u8"bufferViews")->Get(0);
-  EXPECT_EQ(*bufferView3, *bufferView2);
+  // auto bufferView3 = result3->Get(u8"bufferViews")->Get(0);
+  // auto bufferView2 = result2->Get(u8"bufferViews")->Get(0);
+  // EXPECT_EQ(*bufferView3, *bufferView2);
+
+  // images
+  for (int i = 0; i < root3.Images.size(); ++i) {
+    auto lhs = *bin.GetImageBytes(root3, i);
+    auto rhs = *bin2.GetImageBytes(root2, i);
+    EXPECT_TRUE(eq(lhs, rhs));
+  }
+
+  // accessors
+  for (int i = 0; i < root3.Accessors.size(); ++i) {
+    auto lhs = *bin.GetAccessorBlock(root3, i);
+    auto rhs = *bin2.GetAccessorBlock(root2, i);
+    EXPECT_TRUE(eq(lhs.Span, rhs.Span));
+  }
 }
-
