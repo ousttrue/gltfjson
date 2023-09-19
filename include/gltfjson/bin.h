@@ -32,6 +32,22 @@ struct MemoryBlock
     Span = span.subspan(offset);
     // assert(Span.size() == Count * Stride);
   }
+  std::vector<uint8_t> EvalStride()
+  {
+    auto span = Span.subspan(0, ItemSize * ItemCount);
+    std::vector<uint8_t> buf;
+    if (Stride) {
+      auto p = span.data();
+      for (int i = 0; i < ItemCount; ++i, p += Stride) {
+        for (int i = 0; i < ItemSize; ++i) {
+          buf.push_back(p[i]);
+        }
+      }
+    } else {
+      buf.assign(span.begin(), span.end());
+    }
+    return buf;
+  }
 };
 
 struct Bin

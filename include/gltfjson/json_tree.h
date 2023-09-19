@@ -53,6 +53,7 @@ struct Node
   NodeType Type;
   virtual ~Node() {}
   virtual bool operator==(const Node& rhs) const = 0;
+  virtual std::shared_ptr<Node> Clone() const = 0;
 
 protected:
   Node(NodeType t)
@@ -90,6 +91,8 @@ struct NullNode : Node
   {
   }
 
+  NodePtr Clone() const override { return std::make_shared<NullNode>(); }
+
   bool operator==(const Node& rhs) const override
   {
     if (dynamic_cast<const NullNode*>(&rhs)) {
@@ -109,6 +112,8 @@ struct BoolNode : Node
   {
   }
 
+  NodePtr Clone() const override { return std::make_shared<BoolNode>(Value); }
+
   bool operator==(const Node& rhs) const override
   {
     if (auto r = dynamic_cast<const BoolNode*>(&rhs)) {
@@ -127,6 +132,8 @@ struct NumberNode : Node
     , Value(value)
   {
   }
+
+  NodePtr Clone() const override { return std::make_shared<NumberNode>(Value); }
 
   bool operator==(const Node& rhs) const override
   {
@@ -153,6 +160,8 @@ struct StringNode : Node
   {
   }
 
+  NodePtr Clone() const override { return std::make_shared<StringNode>(Value); }
+
   bool operator==(const Node& rhs) const override
   {
     if (auto r = dynamic_cast<const StringNode*>(&rhs)) {
@@ -171,6 +180,16 @@ struct ArrayNode : Node
     : Node(NodeType::Array)
     , Value(value)
   {
+  }
+
+  NodePtr Clone() const override
+  {
+    auto a = std::make_shared<ArrayNode>(ArrayValue{});
+    // deep copy
+    for (auto e : Value) {
+      a->Value.push_back(e->Clone());
+    }
+    return a;
   }
 
   bool operator==(const Node& rhs) const override
@@ -201,6 +220,16 @@ struct ObjectNode : Node
     : Node(NodeType::Object)
     , Value(value)
   {
+  }
+
+  NodePtr Clone() const override
+  {
+    auto o = std::make_shared<ObjectNode>(ObjectValue{});
+    // deep copy
+    for (auto& [k, v] : Value) {
+      o->Value.insert({ k, v->Clone() });
+    }
+    return o;
   }
 
   bool operator==(const Node& rhs) const override
@@ -284,6 +313,11 @@ inline std::shared_ptr<ObjectNode>
 NewNode(const ObjectValue& value)
 {
   return std::make_shared<ObjectNode>(value);
+}
+inline NodePtr
+NewNode(const std::shared_ptr<Node>& node)
+{
+  return node;
 }
 
 template<>
@@ -449,7 +483,7 @@ Node::SetProperty(std::u8string_view key, const T& value)
 {
   if (auto o = dynamic_cast<ObjectNode*>(this)) {
     auto n = NewNode(value);
-    o->Value.insert({ { key.begin(), key.end() }, n });
+    o->Value[{ key.begin(), key.end() }] = n;
     return n;
   }
   return {};

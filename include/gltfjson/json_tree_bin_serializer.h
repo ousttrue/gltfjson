@@ -83,21 +83,11 @@ public:
     m_root = Root(m_root.m_json);
   }
 
-  uint32_t PushBufferView(uint32_t offset,
-                          uint32_t length,
-                          std::optional<uint32_t> srcId = {})
+  uint32_t PushBufferView(uint32_t offset, uint32_t length)
   {
     auto bufferViewId = m_bufferViews->Size();
-    NodePtr bufferView;
-    if (srcId) {
-      bufferView = m_root.BufferViews[*srcId].m_json;
-      assert(bufferView);
-      std::dynamic_pointer_cast<gltfjson::tree::ArrayNode>(m_bufferViews)
-        ->Value.push_back(bufferView);
-    } else {
-      bufferView = m_bufferViews->Add(ObjectValue{});
-      bufferView->SetProperty(u8"buffer", 0.0f);
-    }
+    auto bufferView = m_bufferViews->Add(ObjectValue{});
+    bufferView->SetProperty(u8"buffer", 0.0f);
     bufferView->SetProperty(u8"byteOffset", (float)offset);
     bufferView->SetProperty(u8"byteLength", (float)length);
     return bufferViewId;
@@ -263,11 +253,11 @@ public:
       // push bin
       auto [offset, length] = m_writer.PushBufferView(span);
       // push bufferview
-      auto bufferViewId = PushBufferView(offset, length, *image.BufferViewId());
+      auto bufferViewId = PushBufferView(offset, length);
       // push image
-      auto new_image = m_images->Add(ObjectValue{});
-      image.m_json = new_image;
+      auto new_image = image.m_json->Clone();
       new_image->SetProperty(u8"bufferView", (float)bufferViewId);
+      m_images->Add(new_image);
     }
   }
 
@@ -277,33 +267,32 @@ public:
                              (float)PushAccessorFloat16(values));
   }
 
+  std::vector<uint8_t> m_buf;
   void SerializeAccessors(const GetReplaceBytes& replaceAccessors)
   {
+    m_buf.clear();
     for (int i = 0; i < m_root.Accessors.size(); ++i) {
       auto accessor = m_root.Accessors[i];
-      std::span<const uint8_t> span;
       if (replaceAccessors) {
-        span = replaceAccessors(i);
+        auto span = replaceAccessors(i);
+        m_buf.assign(span.begin(), span.end());
       }
-      if (span.empty()) {
+      if (m_buf.empty()) {
         // use old
         if (auto block = m_bin.GetAccessorBlock(m_root, i)) {
-          span = block->Span;
+          m_buf = block->EvalStride();
         } else {
           throw std::runtime_error("GetAccessorBlock");
         }
       }
       // push bin
-      auto [offset, length] = m_writer.PushBufferView(span);
+      auto [offset, length] = m_writer.PushBufferView(m_buf);
       // push bufferview
-      auto bufferViewId =
-        PushBufferView(offset, length, *accessor.BufferViewId());
+      auto bufferViewId = PushBufferView(offset, length);
       // push accessor
-      auto o =
-        std::dynamic_pointer_cast<gltfjson::tree::ObjectNode>(accessor.m_json);
-      auto new_accessor = m_accessors->Add(o ? o->Value : ObjectValue{});
-      accessor.m_json = new_accessor;
+      auto new_accessor = accessor.m_json->Clone();
       new_accessor->SetProperty(u8"bufferView", (float)bufferViewId);
+      m_accessors->Add(new_accessor);
     }
   }
 };
