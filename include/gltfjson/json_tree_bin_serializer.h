@@ -270,8 +270,8 @@ public:
   std::vector<uint8_t> m_buf;
   void SerializeAccessors(const GetReplaceBytes& replaceAccessors)
   {
-    m_buf.clear();
     for (int i = 0; i < m_root.Accessors.size(); ++i) {
+      m_buf.clear();
       auto accessor = m_root.Accessors[i];
       if (replaceAccessors) {
         auto span = replaceAccessors(i);
