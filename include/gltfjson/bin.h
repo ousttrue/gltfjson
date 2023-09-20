@@ -277,11 +277,13 @@ struct Bin
                 GetBufferViewBytes(gltf, *sparse_indices.BufferViewId())) {
             auto begin = (const uint8_t*)sparse_indices_bytes->data();
             auto indices_span = std::span(begin, begin + sparse_count);
-            if (auto result = GetSparseValue(gltf,
-                                             indices_span,
-                                             *sparse_values.BufferViewId(),
-                                             sparse_span,
-                                             accessor.Stride())) {
+            if (auto result = GetSparseValue(
+                  gltf,
+                  indices_span,
+                  *sparse_values.BufferViewId(),
+                  { (uint8_t*)sparse_span.data(),
+                    (uint8_t*)(sparse_span.data() + sparse_span.size()) },
+                  accessor.Stride())) {
               return sparse_span;
             } else {
               // { result.error() };
@@ -297,11 +299,13 @@ struct Bin
                 GetBufferViewBytes(gltf, *sparse_indices.BufferViewId())) {
             auto begin = (const uint16_t*)sparse_indices_bytes->data();
             auto indices_span = std::span(begin, begin + sparse_count);
-            if (auto result = GetSparseValue(gltf,
-                                             indices_span,
-                                             *sparse_values.BufferViewId(),
-                                             sparse_span,
-                                             accessor.Stride())) {
+            if (auto result = GetSparseValue(
+                  gltf,
+                  indices_span,
+                  *sparse_values.BufferViewId(),
+                  { (uint8_t*)sparse_span.data(),
+                    (uint8_t*)(sparse_span.data() + sparse_span.size()) },
+                  accessor.Stride())) {
 
               return sparse_span;
             } else {
@@ -317,11 +321,13 @@ struct Bin
                 GetBufferViewBytes(gltf, *sparse_indices.BufferViewId())) {
             auto begin = (const uint32_t*)sparse_indices_bytes->data();
             auto indices_span = std::span(begin, begin + sparse_count);
-            if (auto result = GetSparseValue(gltf,
-                                             indices_span,
-                                             *sparse_values.BufferViewId(),
-                                             sparse_span,
-                                             accessor.Stride())) {
+            if (auto result = GetSparseValue(
+                  gltf,
+                  indices_span,
+                  *sparse_values.BufferViewId(),
+                  { (uint8_t*)sparse_span.data(),
+                    (uint8_t*)(sparse_span.data() + sparse_span.size()) },
+                  accessor.Stride())) {
               return sparse_span;
             } else {
               // { result.error() };
