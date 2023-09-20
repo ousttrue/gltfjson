@@ -15,13 +15,20 @@ namespace gltfjson {
 
 struct MemoryBlock
 {
-  // Accessor ItemSize(type x element)
+  // Accessor ItemSize
+  // (ComponentType("float", ...) x Type("SCALAR", "VEC3", ...))
   uint32_t ItemSize;
+
+  // Accessor.Count
   uint32_t ItemCount;
+
   uint32_t RequiredSize() const { return ItemSize * ItemCount; }
+
   std::span<const uint8_t> Span;
+
   // BufferView stride
   uint32_t Stride;
+
   void SetSpan(std::span<const uint8_t> span,
                uint32_t offset,
                const float* stride = nullptr)
@@ -88,17 +95,22 @@ struct Bin
     }
   }
 
-  template<typename S, typename T>
+  // fill dst
+  template<typename T>
   bool GetSparseValue(const Root& gltf,
-                      std::span<const S> indices,
+                      std::span<const T> indices,
                       uint32_t buffer_view_index,
-                      std::span<T> dst) const
+                      std::span<uint8_t> dst,
+                      uint32_t stride) const
   {
-    if (auto span = GetBufferViewBytes(gltf, buffer_view_index)) {
-      assert(indices.size() == span->size() / sizeof(T));
-      auto p = (const T*)span->data();
-      for (int i = 0; i < indices.size(); ++i) {
-        dst[i] = p[indices[i]];
+    if (auto src = GetBufferViewBytes(gltf, buffer_view_index)) {
+      assert(indices.size() == src->size() / stride);
+      auto pDst = dst.data();
+      for (int i = 0; i < indices.size(); ++i, pDst += stride) {
+        auto index = indices[i];
+        auto pSrc = src->data() + (index * stride);
+        // dst[i] = p[];
+        memcpy(pDst, pSrc, stride);
       }
       return true;
     } else {
@@ -159,7 +171,8 @@ struct Bin
             if (auto result = GetSparseValue(gltf,
                                              indices_span,
                                              *sparse_values.BufferViewId(),
-                                             sparse_span)) {
+                                             sparse_span,
+                                             accessor.Stride())) {
               // return sparse_span;
               block.SetSpan(sparse_span, 0);
               return block;
@@ -180,7 +193,8 @@ struct Bin
             if (auto result = GetSparseValue(gltf,
                                              indices_span,
                                              *sparse_values.BufferViewId(),
-                                             sparse_span)) {
+                                             sparse_span,
+                                             accessor.Stride())) {
 
               block.SetSpan(sparse_span, 0);
               return block;
@@ -200,7 +214,8 @@ struct Bin
             if (auto result = GetSparseValue(gltf,
                                              indices_span,
                                              *sparse_values.BufferViewId(),
-                                             sparse_span)) {
+                                             sparse_span,
+                                             accessor.Stride())) {
               block.SetSpan(sparse_span, 0);
               return block;
             } else {
@@ -265,7 +280,8 @@ struct Bin
             if (auto result = GetSparseValue(gltf,
                                              indices_span,
                                              *sparse_values.BufferViewId(),
-                                             sparse_span)) {
+                                             sparse_span,
+                                             accessor.Stride())) {
               return sparse_span;
             } else {
               // { result.error() };
@@ -284,7 +300,8 @@ struct Bin
             if (auto result = GetSparseValue(gltf,
                                              indices_span,
                                              *sparse_values.BufferViewId(),
-                                             sparse_span)) {
+                                             sparse_span,
+                                             accessor.Stride())) {
 
               return sparse_span;
             } else {
@@ -303,7 +320,8 @@ struct Bin
             if (auto result = GetSparseValue(gltf,
                                              indices_span,
                                              *sparse_values.BufferViewId(),
-                                             sparse_span)) {
+                                             sparse_span,
+                                             accessor.Stride())) {
               return sparse_span;
             } else {
               // { result.error() };
