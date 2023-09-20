@@ -55,8 +55,12 @@ struct Humanoid : JsonObject
   JsonArray<HumanBone, u8"humanBones"> HumanBones;
 };
 
+// https://github.com/vrm-c/vrm-specification/blob/master/specification/0.0/schema/vrm.firstperson.meshannotation.schema.json
 struct MeshAnnotation : JsonObject
-{};
+{
+  auto MeshId() const { return m_id<u8"mesh">(); }
+  auto FirstPersonFlag() const { return m_string<u8"firstPersonFlag">(); }
+};
 
 struct DegreeMap : JsonObject
 {};
