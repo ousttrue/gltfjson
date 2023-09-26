@@ -6,20 +6,6 @@
 #include <gtest/gtest.h>
 #include <iostream>
 
-static std::vector<uint8_t>
-ReadAllBytes(const std::filesystem::path& filename)
-{
-  std::ifstream ifs(filename, std::ios::binary | std::ios::ate);
-  if (!ifs) {
-    return {};
-  }
-  auto pos = ifs.tellg();
-  std::vector<uint8_t> buffer(pos);
-  ifs.seekg(0, std::ios::beg);
-  ifs.read((char*)buffer.data(), pos);
-  return buffer;
-}
-
 TEST(Vrm0, Alicia)
 {
   std::filesystem::path path(
@@ -29,18 +15,11 @@ TEST(Vrm0, Alicia)
     std::cerr << path << " not exists" << std::endl;
     return;
   }
-  auto bytes = ReadAllBytes(path);
-  if (bytes.empty()) {
-    std::cerr << path << " 0 bytes" << std::endl;
-    return;
-  }
-  auto glb = gltfjson::Glb::Parse(bytes);
-  EXPECT_TRUE(glb);
-  gltfjson::tree::Parser parser(glb->JsonChunk);
-  auto result = parser.Parse();
-  EXPECT_TRUE(result);
 
-  auto root = gltfjson::Root(result);
+  auto parsed = gltfjson::FromPath(path);
+  EXPECT_TRUE(parsed);
+
+  auto &root = parsed->Root;
   auto extensions = root.Extensions();
   EXPECT_TRUE(extensions);
   auto extension = extensions->Get(u8"VRM");

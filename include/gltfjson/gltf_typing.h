@@ -669,7 +669,7 @@ struct Asset : JsonObject
 // https://github.com/KhronosGroup/glTF/blob/main/specification/2.0/schema/glTF.schema.json
 struct Root : GltfProperty
 {
-  Root(const tree::NodePtr& json)
+  Root(const tree::NodePtr& json = {})
     : GltfProperty(json)
     , Accessors(json)
     , Animations(json)

@@ -4,11 +4,9 @@
 
 TEST(GltfTestTree, Parse)
 {
-  gltfjson::tree::Parser parser(MINIMUM);
-  auto result = parser.Parse();
-  EXPECT_TRUE(result);
-
-  gltfjson::Root gltf(result);
+  auto parsed = gltfjson::FromU8(MINIMUM);
+  EXPECT_TRUE(parsed);
+  auto &gltf = parsed->Root;
 
   // asset
   EXPECT_EQ(gltf.Asset()->VersionString(), u8"2.0");

@@ -87,9 +87,8 @@ TEST(GlbExport, minimal)
   // }
 
   // libvrm::gltf::GltfRoot scene;
-  gltfjson::tree::Parser parser(SRC);
-  auto result = parser.Parse();
-  EXPECT_TRUE(result);
+  auto parsed = gltfjson::FromU8(SRC);
+  EXPECT_TRUE(parsed);
 
   // libvrm::gltf::Exporter exporter;
   // exporter.Export(scene);

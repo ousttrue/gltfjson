@@ -1,4 +1,6 @@
 #pragma once
+#include "json_tree.h"
+#include "readallbytes.h"
 #include <filesystem>
 #include <fstream>
 #include <stdint.h>
@@ -6,24 +8,6 @@
 #include <vector>
 
 namespace gltfjson {
-
-inline std::optional<std::vector<uint8_t>>
-ReadAllBytes(const std::filesystem::path& path)
-{
-  std::ifstream ifs(path, std::ios::binary | std::ios::ate);
-  if (!ifs) {
-    auto u8 = path.u8string();
-    // { std::string("fail to open: ") +
-    //                         std::string((const char*)u8.data(), u8.size()) };
-    return {};
-  }
-
-  auto pos = ifs.tellg();
-  std::vector<uint8_t> buffer(pos);
-  ifs.seekg(0, std::ios::beg);
-  ifs.read((char*)buffer.data(), pos);
-  return buffer;
-}
 
 const std::string BASE64_PREFIX[]{
   "data:application/octet-stream;base64,",
@@ -58,9 +42,10 @@ struct Directory
     }
 
     auto path = Base / uri;
-    if (auto bytes = ReadAllBytes(path)) {
+    auto bytes = ReadAllBytes(path);
+    if (bytes.size()) {
       std::string key{ uri.begin(), uri.end() };
-      FileCaches.insert({ key, *bytes });
+      FileCaches.insert({ key, bytes });
       return FileCaches[key];
     } else {
       return {};

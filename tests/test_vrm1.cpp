@@ -12,20 +12,6 @@ std::filesystem::path static get_path(std::string_view relative)
   return base / relative;
 }
 
-static std::vector<uint8_t>
-ReadAllBytes(const std::filesystem::path& filename)
-{
-  std::ifstream ifs(filename, std::ios::binary | std::ios::ate);
-  if (!ifs) {
-    return {};
-  }
-  auto pos = ifs.tellg();
-  std::vector<uint8_t> buffer(pos);
-  ifs.seekg(0, std::ios::beg);
-  ifs.read((char*)buffer.data(), pos);
-  return buffer;
-}
-
 TEST(Vrm1, SeedSan)
 {
   auto path = get_path("Seed-san/vrm/Seed-san.vrm");
@@ -33,18 +19,11 @@ TEST(Vrm1, SeedSan)
     std::cerr << path << " not exists" << std::endl;
     return;
   }
-  auto bytes = ReadAllBytes(path);
-  if (bytes.empty()) {
-    std::cerr << path << " 0 bytes" << std::endl;
-    return;
-  }
-  auto glb = gltfjson::Glb::Parse(bytes);
-  EXPECT_TRUE(glb);
-  gltfjson::tree::Parser parser(glb->JsonChunk);
-  auto result = parser.Parse();
-  EXPECT_TRUE(result);
 
-  auto root = gltfjson::Root(result);
+  auto glb = gltfjson::FromPath(path);
+  EXPECT_TRUE(glb);
+
+  auto &root = glb->Root;
   auto extensions = root.Extensions();
   EXPECT_TRUE(extensions);
   auto extension = extensions->Get(u8"VRMC_vrm");
