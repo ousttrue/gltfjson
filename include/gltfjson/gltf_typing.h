@@ -549,9 +549,8 @@ struct Mesh : ChildOfRootProperty
   JsonArray<MeshPrimitive, u8"primitives"> Primitives;
   NumberArray<float, u8"weights"> Weights;
 
-  void SetTargetNames(const std::vector<std::string>& names)
+  void SetTargetNames(const std::vector<std::u8string>& names)
   {
-
     auto extras = Extras();
     if (!extras) {
       extras = m_json->SetProperty(u8"extras", tree::ObjectValue{});
@@ -569,9 +568,40 @@ struct Mesh : ChildOfRootProperty
     }
 
     for (auto& name : names) {
-      auto u8 = to_u8(name);
-      targetNames->Add(std::u8string{ u8.begin(), u8.end() });
+      targetNames->Add(name);
     }
+  }
+
+  std::vector<std::u8string> GetTargetNames() const
+  {
+    if (auto extras = Extras()) {
+      if (auto targetNames = extras->Get(u8"targetNames")) {
+        if (auto a = std::dynamic_pointer_cast<tree::ArrayNode>(targetNames)) {
+          std::vector<std::u8string> targetNames;
+          for (auto v : a->Value) {
+            targetNames.push_back(v->U8String());
+          }
+          return targetNames;
+        }
+      }
+    }
+
+    for (auto prim : Primitives) {
+      if (auto extras = prim.m_json->Get(u8"extras")) {
+        if (auto targetNames = extras->Get(u8"targetNames")) {
+          if (auto a =
+                std::dynamic_pointer_cast<tree::ArrayNode>(targetNames)) {
+            std::vector<std::u8string> targetNames;
+            for (auto v : a->Value) {
+              targetNames.push_back(v->U8String());
+            }
+            return targetNames;
+          }
+        }
+      }
+    }
+
+    return {};
   }
 };
 
