@@ -229,7 +229,8 @@ public:
     auto target = targets->Add(gltfjson::tree::ObjectValue{});
     std::vector<Float3> positions(vertex_count, Float3{ 0, 0, 0 });
     target->SetProperty(u8"POSITION", (float)PushAccessorFloat3(positions));
-    target->SetProperty(u8"NORMAL", (float)PushAccessorFloat3(positions));
+    // BUG: Corrupt existing buffers
+    // target->SetProperty(u8"NORMAL", (float)PushAccessorFloat3(positions));
     std::vector<Float2> uv(vertex_count, Float2{ 0, 0 });
     target->SetProperty(u8"TEXCOORD_0", (float)PushAccessorFloat2(uv));
   }
