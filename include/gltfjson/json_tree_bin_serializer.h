@@ -52,7 +52,7 @@ using GetReplaceBytes = std::function<std::span<const uint8_t>(uint32_t)>;
 struct BinSerializer
 {
   Root& m_root;
-  Bin& m_bin;
+  const Bin& m_bin;
   BinWriter m_writer;
 
   NodePtr m_bufferViews;
@@ -60,7 +60,7 @@ struct BinSerializer
   NodePtr m_images;
 
 public:
-  BinSerializer(Root& root, Bin& bin, std::vector<uint8_t>& buf)
+  BinSerializer(Root& root, const Bin& bin, std::vector<uint8_t>& buf)
     : m_root(root)
     , m_bin(bin)
     , m_writer(buf)
@@ -95,6 +95,7 @@ public:
 
   uint32_t PushAccessorFloat2(std::span<const Float2> values)
   {
+    assert(values.size());
     auto [offset, length] = m_writer.PushBufferView(values);
     auto bufferView = PushBufferView(offset, length);
 
@@ -109,6 +110,7 @@ public:
 
   uint32_t PushAccessorFloat3(std::span<const Float3> values)
   {
+    assert(values.size());
     auto [offset, length] = m_writer.PushBufferView(values);
     auto bufferView = PushBufferView(offset, length);
 
@@ -123,6 +125,7 @@ public:
 
   uint32_t PushAccessorFloat4(std::span<const Float4> values)
   {
+    assert(values.size());
     auto [offset, length] = m_writer.PushBufferView(values);
     auto bufferView = PushBufferView(offset, length);
 
@@ -203,10 +206,10 @@ public:
     prim.m_json->SetProperty(u8"mode", 4.0f);
   }
 
-  void PushMorph(const MeshPrimitive& prim,
-                 std::span<const Float3> positions,
-                 std::span<const Float3> normal,
-                 std::span<const Float2> uv)
+  void CreateMorph(const MeshPrimitive& prim,
+                   uint32_t pos,
+                   std::optional<uint32_t> nom = {},
+                   std::optional<uint32_t> uv = {})
   {
     auto targets = prim.m_json->Get(u8"targets");
     if (!targets) {
@@ -214,25 +217,36 @@ public:
         prim.m_json->SetProperty(u8"targets", gltfjson::tree::ArrayValue{});
     }
     auto target = targets->Add(gltfjson::tree::ObjectValue{});
-    target->SetProperty(u8"POSITION", (float)PushAccessorFloat3(positions));
-    target->SetProperty(u8"NORMAL", (float)PushAccessorFloat3(normal));
-    target->SetProperty(u8"TEXCOORD_0", (float)PushAccessorFloat2(uv));
+    target->SetProperty(u8"POSITION", (float)pos);
+    if (nom) {
+      target->SetProperty(u8"NORMAL", (float)*nom);
+    }
+    if (uv) {
+      target->SetProperty(u8"TEXCOORD_0", (float)*uv);
+    }
+  }
+
+  void PushMorph(const MeshPrimitive& prim,
+                 std::span<const Float3> positions,
+                 std::span<const Float3> normal = {},
+                 std::span<const Float2> uv = {})
+  {
+
+    std::optional<uint32_t> _nom;
+    if (normal.size()) {
+      _nom = PushAccessorFloat3(normal);
+    }
+    std::optional<uint32_t> _uv;
+    if (uv.size()) {
+      _uv = PushAccessorFloat2(uv);
+    }
+    CreateMorph(prim, PushAccessorFloat3(positions), _nom, _uv);
   }
 
   void PushMorphEmpty(const MeshPrimitive& prim, uint32_t vertex_count)
   {
-    auto targets = prim.m_json->Get(u8"targets");
-    if (!targets) {
-      targets =
-        prim.m_json->SetProperty(u8"targets", gltfjson::tree::ArrayValue{});
-    }
-    auto target = targets->Add(gltfjson::tree::ObjectValue{});
     std::vector<Float3> positions(vertex_count, Float3{ 0, 0, 0 });
-    target->SetProperty(u8"POSITION", (float)PushAccessorFloat3(positions));
-    // BUG: Corrupt existing buffers
-    // target->SetProperty(u8"NORMAL", (float)PushAccessorFloat3(positions));
-    std::vector<Float2> uv(vertex_count, Float2{ 0, 0 });
-    target->SetProperty(u8"TEXCOORD_0", (float)PushAccessorFloat2(uv));
+    CreateMorph(prim, PushAccessorFloat3(positions));
   }
 
   void SerializeImages(const GetReplaceBytes& replaceImages)
