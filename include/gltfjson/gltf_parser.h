@@ -13,8 +13,8 @@ struct GltfData
 {
   // owned bytes
   std::vector<uint8_t> Bytes;
-  Root Root;
-  Bin Bin;
+  struct Root Root;
+  struct Bin Bin;
 
   bool Parse(const std::shared_ptr<Directory>& dir = {})
   {
